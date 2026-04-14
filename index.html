@@ -1,0 +1,2733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PacktRite — Pack Smart, Travel Well</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream:#f5f0e8; --cream-dark:#ede6d6; --parchment:#e8dfc8;
+    --espresso:#2c1a0e; --espresso-mid:#4a2e1a; --espresso-light:#7a5c3e;
+    --ink:#1a1008; --burgundy:#8B1A1A; --burgundy-light:#b52a2a;
+    --gold:#c9a84c; --gold-light:#e8c97a; --sage:#6b8c6b; --warm-gray:#9a8e82;
+    --shadow:rgba(44,26,14,0.15); --shadow-deep:rgba(44,26,14,0.3);
+    --bg:var(--cream); --bg-card:#ffffff; --bg-input:#faf7f2;
+    --text-primary:var(--espresso); --text-secondary:var(--espresso-light);
+    --text-muted:var(--warm-gray); --border:rgba(44,26,14,0.12); --border-strong:rgba(44,26,14,0.25);
+    --font-display:'Playfair Display',Georgia,serif;
+    --font-body:'Lato',sans-serif;
+    --font-accent:'Cormorant Garamond',Georgia,serif;
+    --radius:4px; --radius-lg:8px; --transition:0.2s ease;
+  }
+  [data-theme="dark"] {
+    --bg:#1a120a; --bg-card:#261a0f; --bg-input:#1f1509;
+    --text-primary:#f0e8d8; --text-secondary:#c4a882; --text-muted:#7a6a58;
+    --border:rgba(240,232,216,0.1); --border-strong:rgba(240,232,216,0.2);
+    --cream:#f0e8d8; --shadow:rgba(0,0,0,0.4); --shadow-deep:rgba(0,0,0,0.6);
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary);min-height:100vh;transition:background var(--transition),color var(--transition);position:relative;}
+  body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.4;}
+  h1,h2,h3{font-family:var(--font-display);font-weight:600;}
+  h4,h5{font-family:var(--font-accent);font-weight:600;letter-spacing:0.02em;}
+  .display-title{font-family:var(--font-display);font-size:clamp(2rem,5vw,3.5rem);font-weight:700;line-height:1.1;}
+  .label-small{font-family:var(--font-body);font-size:0.65rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);}
+  .screen{display:none;min-height:100vh;position:relative;z-index:1;}
+  .screen.active{display:flex;flex-direction:column;}
+  .container{max-width:1100px;margin:0 auto;padding:0 1.5rem;}
+
+  /* BUTTONS */
+  .btn{display:inline-flex;align-items:center;gap:0.4rem;padding:0.6rem 1.2rem;border:none;border-radius:var(--radius);font-family:var(--font-body);font-size:0.8rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all var(--transition);text-decoration:none;}
+  .btn-primary{background:var(--espresso);color:var(--cream);}
+  .btn-primary:hover{background:var(--ink);transform:translateY(-1px);box-shadow:0 4px 12px var(--shadow-deep);}
+  .btn-secondary{background:transparent;color:var(--text-primary);border:1px solid var(--border-strong);}
+  .btn-secondary:hover{background:var(--border);}
+  .btn-danger{background:var(--burgundy);color:white;}
+  .btn-danger:hover{background:var(--burgundy-light);}
+  .btn-ghost{background:transparent;color:var(--text-secondary);padding:0.4rem 0.6rem;}
+  .btn-ghost:hover{color:var(--text-primary);background:var(--border);}
+  .btn-gold{background:var(--gold);color:var(--espresso);}
+  .btn-gold:hover{background:var(--gold-light);transform:translateY(-1px);}
+
+  /* FORMS */
+  .form-group{margin-bottom:1.2rem;}
+  .form-group label{display:block;font-size:0.65rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.4rem;}
+  input,select,textarea{width:100%;padding:0.65rem 0.9rem;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:var(--radius);font-family:var(--font-body);font-size:0.9rem;color:var(--text-primary);transition:border-color var(--transition),box-shadow var(--transition);outline:none;}
+  input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,0.15);}
+  textarea{resize:vertical;min-height:80px;}
+
+  /* CARDS */
+  .card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:0 2px 8px var(--shadow);overflow:hidden;transition:box-shadow var(--transition),transform var(--transition);}
+  .card:hover{box-shadow:0 6px 20px var(--shadow-deep);}
+  .card-header{padding:1rem 1.25rem 0.75rem;border-bottom:1px solid var(--border);background:linear-gradient(135deg,transparent,rgba(201,168,76,0.04));}
+  .card-body{padding:1.25rem;}
+
+  /* TOP NAV */
+  .topnav{background:var(--espresso);color:var(--cream);position:sticky;top:0;z-index:100;box-shadow:0 2px 12px var(--shadow-deep);}
+  [data-theme="dark"] .topnav{background:#0f0a05;}
+  .topnav-inner{max-width:1100px;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;gap:1rem;height:56px;}
+  .topnav-brand{font-family:var(--font-display);font-size:1.3rem;font-weight:700;color:var(--gold);letter-spacing:0.02em;flex:1;cursor:pointer;}
+  .topnav-brand span{font-style:italic;font-weight:400;color:rgba(240,232,216,0.5);font-size:0.9rem;margin-left:0.5rem;}
+  .topnav-nav{display:flex;align-items:center;gap:0.25rem;}
+  .nav-btn{padding:0.4rem 0.75rem;background:transparent;border:none;color:rgba(240,232,216,0.7);font-family:var(--font-body);font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;border-radius:var(--radius);transition:all var(--transition);}
+  .nav-btn:hover,.nav-btn.active{color:var(--gold);background:rgba(201,168,76,0.1);}
+  .nav-divider{width:1px;height:20px;background:rgba(240,232,216,0.15);margin:0 0.25rem;}
+
+  /* LOGIN */
+  #screen-login{background:var(--espresso);display:flex;align-items:center;justify-content:center;min-height:100vh;position:relative;overflow:hidden;}
+  #screen-login.active{display:flex;}
+  .login-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(201,168,76,0.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(139,26,26,0.1) 0%,transparent 50%);}
+  .login-card{background:var(--cream);border-radius:var(--radius-lg);padding:3rem 2.5rem;width:100%;max-width:400px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.4);border-top:5px solid var(--gold);animation:fadeUp 0.5s ease;}
+  [data-theme="dark"] .login-card{background:#261a0f;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+  .login-logo{text-align:center;margin-bottom:2rem;}
+  .login-logo .wordmark{font-family:var(--font-display);font-size:2.2rem;font-weight:700;color:var(--espresso);}
+  [data-theme="dark"] .login-logo .wordmark{color:var(--gold);}
+  .login-logo .tagline{font-family:var(--font-accent);font-style:italic;font-size:0.95rem;color:var(--warm-gray);margin-top:0.25rem;}
+  .pin-display{display:flex;justify-content:center;gap:0.75rem;margin:1.5rem 0;}
+  .pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border-strong);transition:all var(--transition);}
+  .pin-dot.filled{background:var(--espresso);border-color:var(--espresso);transform:scale(1.1);}
+  [data-theme="dark"] .pin-dot.filled{background:var(--gold);border-color:var(--gold);}
+  .pin-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-top:1rem;}
+  .pin-key{aspect-ratio:1;border:1px solid var(--border-strong);background:var(--bg-input);border-radius:var(--radius);font-family:var(--font-display);font-size:1.4rem;color:var(--text-primary);cursor:pointer;transition:all var(--transition);display:flex;align-items:center;justify-content:center;}
+  .pin-key:hover{background:var(--parchment);transform:scale(1.05);}
+  .pin-key:active{transform:scale(0.95);}
+  .pin-key.wide{font-size:0.75rem;font-family:var(--font-body);letter-spacing:0.05em;}
+  .user-select{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.5rem;}
+  .user-btn{padding:0.75rem 1rem;border:1px solid var(--border-strong);border-radius:var(--radius);background:var(--bg-input);color:var(--text-primary);font-family:var(--font-accent);font-size:1rem;cursor:pointer;transition:all var(--transition);text-align:left;display:flex;align-items:center;gap:0.75rem;}
+  .user-btn:hover{background:var(--parchment);border-color:var(--gold);}
+  .user-avatar{width:32px;height:32px;border-radius:50%;background:var(--espresso);color:var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:0.85rem;font-weight:700;flex-shrink:0;}
+  .login-error{text-align:center;color:var(--burgundy);font-size:0.8rem;margin-top:0.75rem;min-height:1rem;font-family:var(--font-accent);font-style:italic;}
+
+  /* DASHBOARD */
+
+  .dashboard-title-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;margin-top:0.25rem;}
+  .archive-header{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 1rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);cursor:pointer;margin-bottom:0;transition:background var(--transition);}
+  .archive-header:hover{background:var(--bg-input);}
+  .trip-card.archived{opacity:0.72;}
+  .trip-card.archived .trip-name{color:var(--text-secondary);}
+  .archived-badge{display:inline-block;padding:0.12rem 0.45rem;border-radius:2px;font-size:0.58rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;background:rgba(154,142,130,0.15);color:var(--warm-gray);margin-bottom:0.35rem;}
+  .dashboard-header{padding:2.5rem 0 1.5rem;border-bottom:1px solid var(--border);}
+  .dashboard-greeting{font-family:var(--font-accent);font-style:italic;color:var(--text-muted);font-size:1rem;margin-bottom:0.25rem;}
+  .trips-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem;padding:1.5rem 0;}
+  .trip-card{cursor:pointer;position:relative;transition:all var(--transition);}
+  .trip-card:hover{transform:translateY(-3px);}
+  .trip-card-top{padding:1.25rem 1.25rem 1rem;border-bottom:1px solid var(--border);}
+  .trip-type-badge{display:inline-block;padding:0.2rem 0.6rem;border-radius:2px;font-size:0.6rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.5rem;}
+  .badge-business{background:rgba(44,26,14,0.1);color:var(--espresso-mid);}
+  .badge-leisure{background:rgba(107,140,107,0.15);color:var(--sage);}
+  .badge-shared{background:rgba(201,168,76,0.15);color:#8a6b1e;}
+  [data-theme="dark"] .badge-business{background:rgba(240,232,216,0.1);color:var(--text-secondary);}
+  .trip-name{font-family:var(--font-display);font-size:1.3rem;font-weight:600;color:var(--text-primary);margin-bottom:0.1rem;}
+  .trip-destination-sub{font-family:var(--font-accent);font-style:italic;font-size:0.9rem;color:var(--text-secondary);margin-bottom:0.25rem;}
+  .trip-dates{font-family:var(--font-accent);font-style:italic;font-size:0.85rem;color:var(--text-muted);}
+  .trip-weather-strip{display:flex;gap:0.5rem;overflow-x:auto;padding:0.75rem 1.25rem;scrollbar-width:none;}
+  .trip-weather-strip::-webkit-scrollbar{display:none;}
+  .weather-day-mini{flex-shrink:0;text-align:center;min-width:40px;}
+  .weather-day-mini .wd-day{font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);}
+  .weather-day-mini .wd-icon{font-size:1.1rem;margin:0.2rem 0;}
+  .weather-day-mini .wd-temp{font-size:0.7rem;font-weight:700;color:var(--text-primary);}
+  .trip-progress{padding:0.75rem 1.25rem;border-top:1px solid var(--border);}
+  .progress-bar-wrap{background:var(--border);border-radius:2px;height:4px;overflow:hidden;margin-top:0.35rem;}
+  .progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));border-radius:2px;transition:width 0.5s ease;}
+  .progress-bar-fill.complete{background:linear-gradient(90deg,var(--sage),#8aad8a);}
+  .trip-card-footer{padding:0.6rem 1.25rem;display:flex;justify-content:space-between;align-items:center;}
+  .shared-avatars{display:flex;}
+  .shared-avatar-mini{width:22px;height:22px;border-radius:50%;background:var(--espresso-mid);color:var(--gold);font-size:0.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg-card);margin-left:-6px;font-family:var(--font-display);}
+  .shared-avatar-mini:first-child{margin-left:0;}
+  .trip-card-add{border:2px dashed var(--border-strong);border-radius:var(--radius-lg);display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;cursor:pointer;transition:all var(--transition);background:transparent;color:var(--text-muted);gap:0.75rem;}
+  .trip-card-add:hover{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,0.04);}
+  .trip-card-add .add-icon{font-size:2rem;}
+  .trip-card-add .add-label{font-family:var(--font-accent);font-style:italic;font-size:1rem;}
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(26,18,10,0.7);z-index:1000;display:none;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px);}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--bg-card);border-radius:var(--radius-lg);width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:fadeUp 0.25s ease;border-top:4px solid var(--gold);}
+  .modal-header{padding:1.5rem 1.5rem 1rem;display:flex;align-items:flex-start;justify-content:space-between;border-bottom:1px solid var(--border);}
+  .modal-header h3{font-size:1.4rem;font-weight:600;}
+  .modal-close{background:none;border:none;font-size:1.3rem;color:var(--text-muted);cursor:pointer;padding:0.2rem;line-height:1;transition:color var(--transition);}
+  .modal-close:hover{color:var(--text-primary);}
+  .modal-body{padding:1.5rem;}
+  .modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:0.75rem;}
+
+  /* TRIP DETAIL */
+  .trip-detail-header{background:var(--espresso);color:var(--cream);padding:2rem 0;position:relative;overflow:hidden;}
+  [data-theme="dark"] .trip-detail-header{background:#0f0a05;}
+  .trip-detail-header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 70% 50%,rgba(201,168,76,0.08),transparent 60%);}
+  .trip-detail-header .container{position:relative;}
+  .trip-detail-back{display:inline-flex;align-items:center;gap:0.4rem;color:rgba(240,232,216,0.6);font-size:0.75rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:color var(--transition);margin-bottom:1rem;background:none;border:none;}
+  .trip-detail-back:hover{color:var(--gold);}
+  .trip-detail-name{font-family:var(--font-display);font-size:clamp(1.8rem,4vw,3rem);font-weight:700;color:var(--cream);margin-bottom:0.2rem;}
+  .trip-detail-dest{font-family:var(--font-accent);font-style:italic;color:rgba(240,232,216,0.75);font-size:1.1rem;margin-bottom:0.25rem;}
+  .trip-detail-meta{font-family:var(--font-accent);font-style:italic;color:rgba(240,232,216,0.55);font-size:0.9rem;}
+  .trip-detail-tabs{background:var(--bg-card);border-bottom:1px solid var(--border);position:sticky;top:56px;z-index:90;}
+  .tabs-inner{max-width:1100px;margin:0 auto;padding:0 1.5rem;display:flex;gap:0;overflow-x:auto;scrollbar-width:none;}
+  .tab-btn{padding:1rem 1.25rem;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-family:var(--font-body);font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all var(--transition);white-space:nowrap;flex-shrink:0;}
+  .tab-btn:hover{color:var(--text-primary);}
+  .tab-btn.active{color:var(--espresso);border-bottom-color:var(--gold);}
+  [data-theme="dark"] .tab-btn.active{color:var(--gold);}
+  .tab-content{display:none;padding:2rem 0;}
+  .tab-content.active{display:block;}
+
+  /* PACKING LIST */
+  .overall-progress{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1.5rem;}
+  .progress-ring-wrap{position:relative;flex-shrink:0;}
+  .progress-ring{transform:rotate(-90deg);}
+  .progress-ring-bg{fill:none;stroke:var(--border);stroke-width:4;}
+  .progress-ring-fill{fill:none;stroke:var(--gold);stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset 0.5s ease;}
+  .progress-ring-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:0.9rem;font-weight:700;color:var(--text-primary);}
+  .category-section{margin-bottom:1.5rem;}
+  .category-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border);}
+  .category-title-wrap{display:flex;align-items:center;gap:0.75rem;}
+  .category-icon{font-size:1.1rem;}
+  .category-name{font-family:var(--font-display);font-size:1.05rem;font-weight:600;}
+  .category-count{font-size:0.7rem;color:var(--text-muted);font-family:var(--font-body);}
+  .category-progress-mini{display:flex;align-items:center;gap:0.5rem;}
+  .mini-bar{width:80px;height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+  .mini-bar-fill{height:100%;background:var(--gold);transition:width 0.4s ease;}
+
+  /* PACKING ITEM — updated with qty */
+  .packing-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 0.5rem;border-radius:var(--radius);transition:background var(--transition);border-bottom:1px solid var(--border);}
+  .packing-item:last-of-type{border-bottom:none;}
+  .packing-item:hover{background:rgba(201,168,76,0.04);}
+  .item-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border-strong);flex-shrink:0;cursor:pointer;transition:all var(--transition);display:flex;align-items:center;justify-content:center;background:transparent;}
+  .item-check.checked{background:var(--sage);border-color:var(--sage);color:white;}
+  .item-check.checked::after{content:'✓';font-size:0.65rem;font-weight:700;}
+  .item-info{flex:1;min-width:0;}
+  .item-name{font-size:0.88rem;font-weight:600;color:var(--text-primary);transition:all var(--transition);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .item-name.checked{text-decoration:line-through;color:var(--text-muted);}
+  .item-description{font-size:0.75rem;color:var(--text-muted);font-family:var(--font-accent);font-style:italic;margin-top:0.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .item-meta-row{display:flex;align-items:center;gap:0.4rem;margin-top:0.15rem;flex-wrap:wrap;}
+  .item-essential{color:var(--gold);font-size:0.72rem;font-weight:700;}
+  .item-outfit-badge{display:inline-flex;align-items:center;gap:0.2rem;padding:0.1rem 0.4rem;background:rgba(107,140,107,0.15);border-radius:10px;font-size:0.6rem;font-weight:700;letter-spacing:0.06em;color:var(--sage);text-transform:uppercase;}
+  .item-in-use-badge{display:inline-flex;align-items:center;gap:0.2rem;padding:0.1rem 0.4rem;background:rgba(201,168,76,0.15);border-radius:10px;font-size:0.6rem;font-weight:700;letter-spacing:0.06em;color:#8a6b1e;text-transform:uppercase;}
+
+  /* QUANTITY CONTROL */
+  .qty-control{display:flex;align-items:center;gap:0;border:1px solid var(--border-strong);border-radius:var(--radius);overflow:hidden;flex-shrink:0;}
+  .qty-btn{width:22px;height:22px;border:none;background:var(--bg-input);color:var(--text-secondary);font-size:0.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--transition);line-height:1;}
+  .qty-btn:hover{background:var(--border);color:var(--text-primary);}
+  .qty-value{width:28px;height:22px;text-align:center;font-size:0.75rem;font-weight:700;font-family:var(--font-body);color:var(--text-primary);background:var(--bg-card);border:none;border-left:1px solid var(--border-strong);border-right:1px solid var(--border-strong);outline:none;padding:0;}
+  .qty-value:focus{background:rgba(201,168,76,0.08);}
+
+  .item-actions{display:none;gap:0.25rem;flex-shrink:0;}
+  .packing-item:hover .item-actions{display:flex;}
+  .add-item-form{margin-top:0.75rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-lg);padding:0.75rem;}
+  .add-item-form .form-row{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem;}
+  .add-item-form input{font-size:0.82rem;padding:0.5rem 0.7rem;}
+  .add-item-form .form-actions{display:flex;justify-content:flex-end;gap:0.4rem;}
+
+  /* WEATHER */
+  .weather-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:1.5rem;}
+  .weather-header{padding:1rem 1.25rem;background:linear-gradient(135deg,var(--espresso),var(--espresso-mid));color:var(--cream);display:flex;justify-content:space-between;align-items:center;}
+  [data-theme="dark"] .weather-header{background:#0f0a05;}
+  .weather-header h4{font-family:var(--font-display);font-size:1rem;color:var(--cream);}
+  .weather-days{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:0;}
+  .weather-day{padding:1rem 0.75rem;text-align:center;border-right:1px solid var(--border);border-bottom:1px solid var(--border);}
+  .weather-day:last-child{border-right:none;}
+  .wd-date{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);}
+  .wd-icon{font-size:1.8rem;margin:0.4rem 0;}
+  .wd-temps{font-size:0.75rem;font-weight:700;}
+  .wd-temps .high{color:var(--text-primary);}
+  .wd-temps .low{color:var(--text-muted);}
+  .wd-desc{font-size:0.65rem;color:var(--text-muted);margin-top:0.25rem;font-family:var(--font-accent);font-style:italic;}
+
+  /* AI PANEL */
+  .ai-panel{background:linear-gradient(135deg,rgba(201,168,76,0.06),rgba(201,168,76,0.02));border:1px solid rgba(201,168,76,0.3);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1.5rem;}
+  .ai-panel-header{display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;}
+  .ai-icon{font-size:1.2rem;}
+  .ai-panel-header h4{font-size:0.9rem;color:var(--text-primary);font-family:var(--font-display);}
+  .ai-loading{display:flex;align-items:center;gap:0.5rem;color:var(--text-muted);font-family:var(--font-accent);font-style:italic;font-size:0.9rem;}
+  .ai-dots span{display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--gold);animation:dot-pulse 1.4s ease-in-out infinite;}
+  .ai-dots span:nth-child(2){animation-delay:0.2s;}
+  .ai-dots span:nth-child(3){animation-delay:0.4s;}
+  @keyframes dot-pulse{0%,80%,100%{opacity:0.3;transform:scale(0.8);}40%{opacity:1;transform:scale(1);}}
+  .ai-suggestions-list{display:flex;flex-wrap:wrap;gap:0.4rem;}
+  .ai-suggestion-chip{display:inline-flex;align-items:center;gap:0.3rem;padding:0.3rem 0.6rem;background:var(--bg-card);border:1px solid var(--border-strong);border-radius:20px;font-size:0.78rem;color:var(--text-primary);cursor:pointer;transition:all var(--transition);}
+  .ai-suggestion-chip:hover{border-color:var(--gold);background:rgba(201,168,76,0.08);}
+  .ai-suggestion-chip.added{background:rgba(107,140,107,0.15);border-color:var(--sage);color:var(--sage);}
+
+  /* OUTFIT BUILDER — multi-outfit per day */
+  .outfit-calendar{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;margin-bottom:1.5rem;}
+  .outfit-day-card{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--bg-card);transition:all var(--transition);}
+  .outfit-day-card:hover{box-shadow:0 4px 16px var(--shadow);}
+  .outfit-day-header{padding:0.75rem 1rem;background:var(--espresso);color:var(--cream);display:flex;justify-content:space-between;align-items:center;}
+  [data-theme="dark"] .outfit-day-header{background:#0f0a05;}
+  .outfit-day-date{font-family:var(--font-display);font-size:0.9rem;}
+  .outfit-day-weather{font-size:0.85rem;}
+  .outfit-day-body{padding:0;}
+
+  /* Individual outfit slot within a day */
+  .outfit-slot{border-bottom:1px solid var(--border);padding:0.7rem 0.85rem;position:relative;}
+  .outfit-slot:last-of-type{border-bottom:none;}
+  .outfit-slot-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.35rem;}
+  .outfit-slot-time{display:inline-flex;align-items:center;gap:0.3rem;font-size:0.6rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:0.15rem 0.5rem;border-radius:10px;background:rgba(201,168,76,0.15);color:#8a6b1e;}
+  .outfit-slot-time.morning{background:rgba(255,200,100,0.15);color:#a06820;}
+  .outfit-slot-time.afternoon{background:rgba(107,140,107,0.15);color:var(--sage);}
+  .outfit-slot-time.evening{background:rgba(44,26,14,0.12);color:var(--espresso-light);}
+  .outfit-slot-time.night{background:rgba(60,40,80,0.12);color:#6a4a8a;}
+  .outfit-slot-actions{display:flex;gap:0.2rem;opacity:0;transition:opacity var(--transition);}
+  .outfit-slot:hover .outfit-slot-actions{opacity:1;}
+  .outfit-event{font-family:var(--font-accent);font-style:italic;font-size:0.78rem;color:var(--text-secondary);margin-bottom:0.3rem;}
+  .outfit-occasion-label{font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.25rem;}
+  .outfit-pieces{display:flex;flex-direction:column;gap:0.25rem;}
+  .outfit-piece{display:flex;align-items:center;gap:0.4rem;font-size:0.76rem;color:var(--text-secondary);}
+  .outfit-piece-label{font-size:0.58rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);min-width:50px;}
+  .outfit-piece-photo{width:22px;height:22px;border-radius:3px;object-fit:cover;border:1px solid var(--border);flex-shrink:0;}
+  .outfit-add-slot{display:flex;align-items:center;justify-content:center;gap:0.4rem;padding:0.6rem;cursor:pointer;color:var(--text-muted);font-size:0.75rem;font-family:var(--font-accent);font-style:italic;transition:all var(--transition);border-top:1px dashed var(--border);}
+  .outfit-add-slot:hover{color:var(--gold);background:rgba(201,168,76,0.04);}
+
+  .outfit-combos{margin-top:1.5rem;}
+  .outfit-combo-card{border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem;margin-bottom:0.75rem;background:var(--bg-card);display:flex;align-items:center;justify-content:space-between;gap:1rem;transition:all var(--transition);}
+  .outfit-combo-card:hover{border-color:var(--gold);box-shadow:0 2px 8px var(--shadow);}
+  .outfit-combo-name{font-family:var(--font-display);font-size:1rem;color:var(--text-primary);}
+  .outfit-combo-event{font-family:var(--font-accent);font-style:italic;font-size:0.82rem;color:var(--text-secondary);margin-top:0.15rem;}
+  .outfit-combo-tags{display:flex;flex-wrap:wrap;gap:0.3rem;margin-top:0.35rem;}
+  .outfit-tag{font-size:0.65rem;padding:0.15rem 0.5rem;background:rgba(201,168,76,0.12);border-radius:20px;color:var(--espresso-light);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;}
+  .outfit-piece-row{display:grid;grid-template-columns:85px 1fr;gap:0.5rem;align-items:center;margin-bottom:0.5rem;}
+  .outfit-piece-row label{font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin:0;}
+  
+
+
+  /* CLOSET */
+  .closet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:0.75rem;margin-bottom:1rem;}
+  .closet-item-card{border:1px solid var(--border);border-radius:var(--radius-lg);padding:0.85rem;background:var(--bg-card);transition:all var(--transition);cursor:pointer;}
+  .closet-item-card:hover{border-color:var(--gold);box-shadow:0 2px 8px var(--shadow);}
+  .closet-item-card.selectable.selected{border-color:var(--sage);background:rgba(107,140,107,0.06);}
+  .closet-item-name{font-weight:700;font-size:0.88rem;margin-bottom:0.2rem;}
+  .closet-item-desc{font-size:0.73rem;color:var(--text-muted);font-family:var(--font-accent);font-style:italic;}
+  .closet-item-cat{display:inline-block;font-size:0.58rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:0.1rem 0.4rem;border-radius:10px;background:rgba(201,168,76,0.12);color:#8a6b1e;margin-bottom:0.3rem;}
+  .closet-cat-section{margin-bottom:1.25rem;}
+
+  .closet-list{display:flex;flex-direction:column;}
+  .closet-list-row{display:flex;align-items:center;gap:0.75rem;padding:0.45rem 0.75rem;border-bottom:1px solid var(--border);cursor:pointer;transition:background var(--transition);}
+  .closet-list-row:last-child{border-bottom:none;}
+  .closet-list-row:hover{background:rgba(201,168,76,0.04);}
+  .closet-list-name{font-weight:600;font-size:0.85rem;flex-shrink:0;}
+  .closet-list-color{font-size:0.73rem;color:var(--text-secondary);background:rgba(201,168,76,0.1);padding:0.08rem 0.35rem;border-radius:10px;flex-shrink:0;}
+  .closet-list-desc{font-size:0.73rem;color:var(--text-muted);font-family:var(--font-accent);font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+  .closet-list-edit{margin-left:auto;font-size:0.7rem;color:var(--text-muted);opacity:0;transition:opacity var(--transition);flex-shrink:0;}
+  .closet-list-row:hover .closet-list-edit{opacity:1;}
+  .closet-cat-title{cursor:pointer;user-select:none;}
+  .closet-cat-title{font-family:var(--font-display);font-size:1rem;font-weight:600;margin-bottom:0.55rem;padding-bottom:0.35rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:0.5rem;}
+  /* TRIP DETAIL INFO ROW */
+  .trip-detail-info-row{display:flex;flex-wrap:wrap;gap:0.5rem 1.25rem;margin-top:0.5rem;}
+  .trip-info-pill{display:inline-flex;align-items:center;gap:0.3rem;font-size:0.78rem;color:rgba(240,232,216,0.7);font-family:var(--font-accent);font-style:italic;}
+  .trip-info-tz{background:rgba(201,168,76,0.15);border-radius:3px;padding:0.12rem 0.45rem;font-family:var(--font-body);font-size:0.68rem;font-weight:700;color:var(--gold);letter-spacing:0.05em;}
+  .trip-info-currency{background:rgba(107,140,107,0.2);border-radius:3px;padding:0.12rem 0.45rem;font-family:var(--font-body);font-size:0.68rem;font-weight:700;color:#9ecf9e;letter-spacing:0.05em;}
+  /* WEATHER INTEL */
+  .weather-intel-panel{background:linear-gradient(135deg,rgba(107,140,107,0.08),rgba(107,140,107,0.03));border:1px solid rgba(107,140,107,0.3);border-radius:var(--radius-lg);padding:1.1rem;margin-bottom:1.25rem;}
+  .weather-intel-header{margin-bottom:0.5rem;}
+  .intel-item{display:flex;align-items:flex-start;gap:0.5rem;padding:0.38rem 0;border-bottom:1px solid var(--border);}
+  .intel-item:last-child{border-bottom:none;}
+  .intel-icon{font-size:0.88rem;flex-shrink:0;margin-top:0.1rem;}
+  .intel-text{font-size:0.81rem;color:var(--text-secondary);line-height:1.4;}
+  .intel-text strong{color:var(--text-primary);}
+
+  /* PERSONAL CARE */
+  .personal-care-banner{background:linear-gradient(135deg,rgba(139,26,26,0.06),rgba(139,26,26,0.02));border:1px solid rgba(139,26,26,0.2);border-radius:var(--radius-lg);padding:0.75rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:0.75rem;font-size:0.8rem;color:var(--text-secondary);}
+  .personal-care-banner span{font-size:1rem;}
+
+  /* ADMIN */
+  .admin-user-row{display:flex;align-items:center;padding:0.75rem 1rem;border-bottom:1px solid var(--border);gap:1rem;}
+  .admin-user-row:last-child{border-bottom:none;}
+  .admin-avatar{width:36px;height:36px;border-radius:50%;background:var(--espresso-mid);color:var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:0.9rem;font-weight:700;flex-shrink:0;}
+  .admin-user-info{flex:1;}
+  .admin-user-name{font-weight:700;font-size:0.9rem;}
+  .admin-user-role{font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;}
+
+  /* TEMPLATES */
+  .template-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;}
+  .template-card{border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;background:var(--bg-card);cursor:pointer;transition:all var(--transition);}
+  .template-card:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 4px 16px var(--shadow);}
+  .template-icon{font-size:1.8rem;margin-bottom:0.75rem;}
+  .template-name{font-family:var(--font-display);font-size:1rem;font-weight:600;margin-bottom:0.35rem;}
+  .template-count{font-size:0.75rem;color:var(--text-muted);}
+
+  /* TOAST */
+  #toast-container{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:0.5rem;}
+  .toast{background:var(--espresso);color:var(--cream);padding:0.75rem 1.25rem;border-radius:var(--radius);font-size:0.85rem;box-shadow:0 4px 16px var(--shadow-deep);animation:slideIn 0.3s ease,fadeOut 0.3s ease 2.7s forwards;border-left:3px solid var(--gold);max-width:320px;}
+  [data-theme="dark"] .toast{background:#261a0f;}
+  .toast.success{border-left-color:var(--sage);}
+  .toast.error{border-left-color:var(--burgundy);}
+  @keyframes slideIn{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
+  @keyframes fadeOut{from{opacity:1;}to{opacity:0;pointer-events:none;}}
+
+  /* UTIL */
+  .flex{display:flex;} .flex-between{display:flex;justify-content:space-between;align-items:center;}
+  .gap-sm{gap:0.5rem;} .gap-md{gap:1rem;} .mt-1{margin-top:0.5rem;} .mt-2{margin-top:1rem;} .mt-3{margin-top:1.5rem;}
+  .mb-1{margin-bottom:0.5rem;} .mb-2{margin-bottom:1rem;}
+  .text-muted{color:var(--text-muted);} .text-gold{color:var(--gold);} .italic{font-style:italic;font-family:var(--font-accent);}
+  .empty-state{text-align:center;padding:3rem 1.5rem;color:var(--text-muted);}
+  .empty-state .empty-icon{font-size:2.5rem;margin-bottom:0.75rem;}
+  .empty-state p{font-family:var(--font-accent);font-style:italic;font-size:1rem;}
+  .section-title{font-family:var(--font-display);font-size:1.4rem;font-weight:600;margin-bottom:1rem;display:flex;align-items:center;gap:0.75rem;}
+  .section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+  ::-webkit-scrollbar{width:6px;height:6px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px;}
+  ::-webkit-scrollbar-thumb:hover{background:var(--warm-gray);}
+  
+  /* MOBILE NAV */
+  .hamburger-btn{display:none;background:none;border:none;color:rgba(240,232,216,0.8);font-size:1.3rem;cursor:pointer;padding:0.3rem;margin-left:auto;}
+  .mobile-nav-item{display:block;width:100%;text-align:left;padding:0.7rem 0.85rem;background:transparent;border:none;border-radius:var(--radius);color:rgba(240,232,216,0.8);font-family:var(--font-body);font-size:0.85rem;cursor:pointer;transition:all var(--transition);}
+  .mobile-nav-item:hover{background:rgba(201,168,76,0.12);color:var(--gold);}
+  @media(max-width:640px){
+    .hamburger-btn{display:block;}
+    .topnav-nav{display:none;}
+    .nav-user{display:none;}
+    .trips-grid{grid-template-columns:1fr;}
+    .outfit-calendar{grid-template-columns:1fr;}
+    #mobile-nav-drawer{display:none;flex-direction:column;}
+    #mobile-nav-drawer.open{display:flex !important;}
+    #mobile-nav-overlay.open{display:block !important;}
+  }
+
+
+
+
+  /* OUTFIT SUMMARY VIEW */
+  .outfit-summary-list{display:flex;flex-direction:column;gap:0;}
+  .outfit-summary-row{display:flex;align-items:flex-start;gap:1rem;padding:0.75rem 0;border-bottom:1px solid var(--border);}
+  .outfit-summary-row:last-child{border-bottom:none;}
+  .outfit-summary-date{font-family:var(--font-display);font-size:0.82rem;font-weight:600;min-width:80px;flex-shrink:0;color:var(--text-secondary);}
+  .outfit-summary-slot{font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;min-width:68px;flex-shrink:0;padding:0.18rem 0.4rem;border-radius:10px;text-align:center;}
+  .outfit-summary-slot.morning{background:rgba(255,200,100,0.15);color:#a06820;}
+  .outfit-summary-slot.afternoon{background:rgba(107,140,107,0.15);color:var(--sage);}
+  .outfit-summary-slot.evening{background:rgba(44,26,14,0.1);color:var(--espresso-light);}
+  .outfit-summary-slot.night{background:rgba(60,40,80,0.12);color:#6a4a8a;}
+  .outfit-summary-details{flex:1;min-width:0;}
+  .outfit-summary-event{font-family:var(--font-accent);font-style:italic;font-size:0.82rem;color:var(--text-secondary);margin-bottom:0.2rem;}
+  .outfit-summary-occasion{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:0.25rem;}
+  .outfit-summary-pieces{font-size:0.78rem;color:var(--text-primary);line-height:1.6;}
+  .outfit-summary-pieces strong{color:var(--text-muted);font-size:0.62rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:700;}
+  /* DRAG TO REORDER */
+  .category-section{transition:opacity 0.2s;}
+  .category-section.dragging{opacity:0.4;}
+  .category-section.drag-over{border-top:2px solid var(--gold);}
+  .drag-handle{cursor:grab;color:var(--text-muted);font-size:0.85rem;padding:0 0.3rem;user-select:none;flex-shrink:0;}
+  .drag-handle:active{cursor:grabbing;}
+  .drag-handle:hover{color:var(--gold);}
+  /* SLOT-BY-SLOT OUTFIT BUILDER */
+  .outfit-builder-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:0.5rem;}
+  .outfit-builder-header{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;border-bottom:1px solid var(--border);background:linear-gradient(135deg,transparent,rgba(201,168,76,0.03));}
+  .outfit-slots-grid{display:flex;flex-direction:column;gap:0;}
+  .outfit-builder-footer{display:flex;align-items:center;justify-content:flex-end;gap:0.5rem;padding:0.6rem 1rem;border-top:1px solid var(--border);background:var(--bg-input);}
+
+  /* SLOT ROW */
+  .outfit-slot-row{display:grid;grid-template-columns:80px 1fr;border-bottom:1px solid var(--border);}
+  .outfit-slot-row:last-child{border-bottom:none;}
+  .slot-label-col{padding:0.6rem 0.75rem;background:var(--bg-input);border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:center;gap:0.2rem;}
+  .slot-label{font-size:0.65rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);}
+  .slot-selected-name{font-size:0.75rem;font-weight:600;color:var(--sage);line-height:1.2;}
+  .slot-items-col{padding:0.45rem 0.65rem;display:flex;flex-wrap:wrap;gap:0.3rem;align-items:center;min-height:44px;}
+  .slot-item-chip{display:inline-flex;align-items:center;gap:0.25rem;padding:0.2rem 0.5rem;border:1px solid var(--border-strong);border-radius:20px;font-size:0.72rem;cursor:pointer;transition:all var(--transition);background:var(--bg-card);white-space:nowrap;max-width:180px;overflow:hidden;text-overflow:ellipsis;}
+  .slot-item-chip:hover{border-color:var(--gold);}
+  .slot-item-chip.selected{background:rgba(107,140,107,0.12);border-color:var(--sage);color:var(--sage);}
+  .slot-item-chip .chip-color{font-size:0.6rem;color:var(--text-muted);margin-left:0.15rem;}
+  .slot-item-chip.selected .chip-color{color:var(--sage);opacity:0.7;}
+  .slot-empty{font-size:0.75rem;color:var(--text-muted);font-family:var(--font-accent);font-style:italic;}
+  .slot-search{font-size:0.72rem;padding:0.2rem 0.45rem;border-radius:20px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-primary);outline:none;width:110px;}
+  .slot-search:focus{border-color:var(--gold);}
+
+  /* CLOSET PALETTE (outfits tab) */
+  .closet-palette-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:0.5rem;}
+  .closet-palette-header{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1rem;border-bottom:1px solid var(--border);background:linear-gradient(135deg,transparent,rgba(201,168,76,0.03));}
+  .closet-palette-footer{display:flex;align-items:center;justify-content:space-between;padding:0.55rem 1rem;border-top:1px solid var(--border);background:var(--bg-input);}
+  .palette-chip{display:inline-flex;align-items:center;gap:0.3rem;padding:0.25rem 0.55rem;border:1px solid var(--border-strong);border-radius:20px;font-size:0.73rem;cursor:pointer;transition:all var(--transition);background:var(--bg-card);white-space:nowrap;}
+  .palette-chip:hover{border-color:var(--gold);background:rgba(201,168,76,0.06);}
+  .palette-chip.selected{background:rgba(107,140,107,0.12);border-color:var(--sage);color:var(--sage);}
+  .palette-chip .chip-cat{font-size:0.58rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-right:0.1rem;}
+  .palette-chip.selected .chip-cat{color:var(--sage);opacity:0.7;}
+  .palette-empty{color:var(--text-muted);font-family:var(--font-accent);font-style:italic;font-size:0.85rem;padding:0.5rem 0;}
+
+  /* TWO-STEP OUTFIT MODAL */
+  .outfit-modal-steps{display:flex;align-items:center;margin-top:0.25rem;}
+  .outfit-step{font-size:0.68rem;font-weight:700;letter-spacing:0.08em;color:var(--text-muted);text-transform:uppercase;}
+  .outfit-step.active{color:var(--gold);}
+  .piece-grid{display:flex;flex-direction:column;gap:0.35rem;}
+  .piece-row{display:grid;grid-template-columns:80px 1fr;gap:0.5rem;align-items:center;}
+  .piece-label{font-size:0.63rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);}
+  .outfit-step2-preview{margin-top:1rem;padding:0.75rem;background:var(--bg-input);border-radius:var(--radius);border:1px solid var(--border);font-size:0.8rem;color:var(--text-secondary);line-height:1.6;}
+  .outfit-step2-preview strong{color:var(--text-primary);display:block;font-family:var(--font-display);font-size:0.88rem;margin-bottom:0.35rem;}
+</style>
+</head>
+<body>
+
+<div id="toast-container"></div>
+
+<!-- ══════════════════════════════════════════════
+     LOGIN
+══════════════════════════════════════════════ -->
+<div id="screen-login" class="screen active">
+  <div class="login-bg"></div>
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="wordmark">Packt<em>Rite</em></div>
+      <div class="tagline">pack smart, travel well</div>
+    </div>
+    <div id="login-step-user">
+      <div class="label-small mb-1">Who's packing?</div>
+      <div class="user-select" id="user-select-list"></div>
+    </div>
+    <div id="login-step-pin" style="display:none;">
+      <div class="flex-between mb-1">
+        <div class="label-small">Enter PIN for <span id="pin-username-label"></span></div>
+        <button class="btn-ghost btn" onclick="backToUserSelect()" style="font-size:0.7rem;padding:0.2rem 0.4rem;">← Back</button>
+      </div>
+      <div class="pin-display">
+        <div class="pin-dot" id="dot-0"></div><div class="pin-dot" id="dot-1"></div>
+        <div class="pin-dot" id="dot-2"></div><div class="pin-dot" id="dot-3"></div>
+      </div>
+      <div class="pin-keypad">
+        <button class="pin-key" onclick="pinKey('1')">1</button>
+        <button class="pin-key" onclick="pinKey('2')">2</button>
+        <button class="pin-key" onclick="pinKey('3')">3</button>
+        <button class="pin-key" onclick="pinKey('4')">4</button>
+        <button class="pin-key" onclick="pinKey('5')">5</button>
+        <button class="pin-key" onclick="pinKey('6')">6</button>
+        <button class="pin-key" onclick="pinKey('7')">7</button>
+        <button class="pin-key" onclick="pinKey('8')">8</button>
+        <button class="pin-key" onclick="pinKey('9')">9</button>
+        <button class="pin-key wide" onclick="pinClear()">Clear</button>
+        <button class="pin-key" onclick="pinKey('0')">0</button>
+        <button class="pin-key wide" onclick="pinDelete()">⌫</button>
+      </div>
+      <div class="login-error" id="login-error"></div>
+    <div style="text-align:center;margin-top:0.5rem;">
+      <button class="btn btn-ghost" style="font-size:0.65rem;color:var(--warm-gray);" onclick="hardResetApp()">Reset app data</button>
+    </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MAIN APP
+══════════════════════════════════════════════ -->
+<div id="screen-app" class="screen">
+  <nav class="topnav">
+    <div class="topnav-inner">
+      <div class="topnav-brand" onclick="showDashboard()">Packt<em>Rite</em> <span id="nav-username-display"></span></div>
+      <div class="topnav-nav">
+        <button class="nav-btn active" id="nav-trips" onclick="showDashboard()">Trips</button>
+        <button class="nav-btn" id="nav-closet" onclick="showCloset()">Closet</button>
+        <button class="nav-btn" id="nav-library" onclick="showLibrary()">My Items</button>
+        <button class="nav-btn" id="nav-templates" onclick="showTemplates()">Templates</button>
+        <div class="nav-divider"></div>
+        <button class="nav-btn" id="nav-admin" onclick="showAdmin()" style="display:none;">Admin</button>
+        <button class="nav-btn" onclick="toggleTheme()">◐ Theme</button>
+        <button class="nav-btn" onclick="logout()">Sign Out</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- DASHBOARD -->
+  <div id="view-dashboard" class="container">
+    <div class="dashboard-header">
+      <div class="dashboard-greeting" id="dashboard-greeting"></div>
+      <div class="dashboard-title-row">
+        <h1 class="display-title">Your Trips</h1>
+        <button class="btn btn-primary" onclick="openNewTripModal()">+ New Trip</button>
+      </div>
+    </div>
+    <div class="trips-grid" id="trips-grid"></div>
+    <!-- ARCHIVE -->
+    <div id="archive-section" style="display:none;">
+      <div class="archive-header" onclick="toggleArchive()">
+        <span class="label-small">Past Trips</span>
+        <span id="archive-count" class="label-small"></span>
+        <span id="archive-chevron" style="margin-left:auto;font-size:0.75rem;color:var(--text-muted);">▼</span>
+      </div>
+      <div class="trips-grid" id="archive-grid" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- TEMPLATES -->
+  <div id="view-templates" class="container" style="display:none;">
+    <div class="dashboard-header"><h1 class="display-title">Packing Templates</h1></div>
+    <div class="mt-3">
+      <div class="section-title">Saved Templates</div>
+      <div class="template-grid" id="template-grid"></div>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div id="view-admin" class="container" style="display:none;">
+    <div class="dashboard-header">
+      <div class="dashboard-greeting">Admin Panel</div>
+      <div class="flex-between">
+        <h1 class="display-title">User Management</h1>
+        <button class="btn btn-primary" onclick="openNewUserModal()">+ Add User</button>
+      </div>
+    </div>
+    <div class="card mt-3">
+      <div class="card-header"><h3>Users</h3></div>
+      <div id="admin-user-list"></div>
+    </div>
+  </div>
+
+
+  <!-- CLOSET -->
+  <div id="view-closet" class="container" style="display:none;">
+    <div class="dashboard-header">
+      <div class="dashboard-greeting" id="closet-greeting"></div>
+      <div class="dashboard-title-row">
+        <h1 class="display-title">My Closet</h1>
+        <button class="btn btn-primary" onclick="openAddClosetItem()">+ Add Item</button>
+      </div>
+      <div style="margin-top:0.75rem;">
+        <input type="text" id="closet-search" placeholder="Search items..." style="max-width:280px;font-size:0.82rem;" oninput="renderCloset(this.value)">
+      </div>
+    </div>
+    <div id="closet-content" class="mt-3"></div>
+  </div>
+
+
+  <!-- PERSONAL ITEM LIBRARY -->
+  <div id="view-library" class="container" style="display:none;">
+    <div class="dashboard-header">
+      <div class="dashboard-greeting">Frequently packed items — add to any trip's packing list</div>
+      <div class="dashboard-title-row">
+        <h1 class="display-title">My Items</h1>
+        <button class="btn btn-primary" onclick="openAddLibraryItem()">+ Add Item</button>
+      </div>
+      <div style="margin-top:0.75rem;">
+        <input type="text" id="library-search" placeholder="Search items..." style="max-width:280px;font-size:0.82rem;" oninput="renderLibrary(this.value)">
+      </div>
+    </div>
+    <div id="library-content" class="mt-3"></div>
+  </div>
+
+  <!-- TRIP DETAIL -->
+  <div id="view-trip-detail" style="display:none;">
+    <div class="trip-detail-header">
+      <div class="container">
+        <button class="trip-detail-back" onclick="showDashboard()">← All Trips</button>
+        <div class="trip-detail-name" id="detail-name"></div>
+        <div class="trip-detail-info-row" id="detail-info-row" style="display:flex;flex-wrap:wrap;gap:0.5rem 1.25rem;margin-top:0.5rem;"></div>
+      </div>
+    </div>
+    <div class="trip-detail-tabs">
+      <div class="tabs-inner">
+        <button class="tab-btn active" onclick="showTab('packing')">📋 Packing List</button>
+        <button class="tab-btn" onclick="showTab('weather')">🌤 Weather</button>
+        <button class="tab-btn" onclick="showTab('outfits');renderClosetPalette();">👗 Outfits</button>
+        <button class="tab-btn" onclick="showTab('share')">👥 Sharing</button>
+        <button class="tab-btn" onclick="showTab('settings')">⚙ Settings</button>
+      </div>
+    </div>
+    <div class="container">
+
+      <!-- PACKING TAB -->
+      <div id="tab-packing" class="tab-content active">
+        <div class="overall-progress">
+          <div class="progress-ring-wrap">
+            <svg class="progress-ring" width="60" height="60">
+              <circle class="progress-ring-bg" cx="30" cy="30" r="24"/>
+              <circle class="progress-ring-fill" id="progress-ring-fill" cx="30" cy="30" r="24" stroke-dasharray="150.8" stroke-dashoffset="150.8"/>
+            </svg>
+            <div class="progress-ring-text" id="progress-pct">0%</div>
+          </div>
+          <div>
+            <div class="label-small">Packing Progress</div>
+            <div style="font-family:var(--font-display);font-size:1.1rem;margin-top:0.2rem;" id="progress-label">0 of 0 items packed</div>
+            <div class="italic text-muted" style="font-size:0.8rem;margin-top:0.1rem;" id="progress-sublabel"></div>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:0.5rem;align-items:center;">
+            <button class="btn btn-secondary" onclick="exportList()">Export</button>
+            <button class="btn btn-secondary" onclick="openImportModal()">Import</button>
+          </div>
+        </div>
+        <div id="weather-intel-container"></div>
+        <div class="ai-panel" id="ai-panel">
+          <div class="ai-panel-header">
+            <span class="ai-icon">✦</span>
+            <h4>AI Packing Suggestions</h4>
+            <button class="btn btn-ghost" style="margin-left:auto;font-size:0.7rem;" onclick="regenerateAI()">Regenerate</button>
+          </div>
+          <div id="ai-content"><div class="ai-loading"><span>Generating suggestions</span><div class="ai-dots"><span></span><span></span><span></span></div></div></div>
+        </div>
+        <div id="packing-categories"></div>
+      </div>
+
+      <!-- WEATHER TAB -->
+      <div id="tab-weather" class="tab-content">
+        <div class="weather-panel" id="weather-panel">
+          <div class="weather-header">
+            <h4>Weather Forecast</h4>
+            <span id="weather-location-label" style="font-size:0.75rem;opacity:0.7;"></span>
+          </div>
+          <div class="weather-days" id="weather-days-full"><div style="padding:2rem;color:var(--text-muted);font-family:var(--font-accent);font-style:italic;">Loading forecast...</div></div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;"><h4>Weather-Smart Packing</h4><button class="btn btn-gold" style="font-size:0.72rem;" onclick="runWeatherIntelligence()">✦ Analyze My List</button></div>
+            <p id="weather-packing-notes" class="italic text-muted" style="font-size:0.85rem;line-height:1.6;">Click "Analyze My List" for AI-powered packing recommendations based on your forecast. Each analysis uses your Anthropic API.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- OUTFITS TAB -->
+      <div id="tab-outfits" class="tab-content">
+
+        <!-- SLOT-BY-SLOT OUTFIT BUILDER -->
+        <div class="outfit-builder-panel" id="outfit-builder-panel">
+          <div class="outfit-builder-header">
+            <div>
+              <span style="font-family:var(--font-display);font-size:1rem;font-weight:600;">Build an Outfit</span>
+              <span class="italic text-muted" style="font-size:0.78rem;margin-left:0.6rem;">Pick one item per slot from your closet</span>
+            </div>
+            <button class="btn btn-secondary" style="font-size:0.68rem;padding:0.28rem 0.6rem;" onclick="showCloset()">Manage Closet →</button>
+          </div>
+          <div class="outfit-slots-grid" id="outfit-slots-grid"></div>
+          <div class="outfit-builder-footer">
+            <button class="btn btn-ghost" style="font-size:0.72rem;" onclick="clearBuilderSelections()">Clear All</button>
+            <button class="btn btn-gold" id="builder-plan-btn" onclick="openOutfitFromBuilder()">Assign to a Day →</button>
+          </div>
+        </div>
+
+        <!-- CALENDAR -->
+        <div class="flex-between mb-2 mt-3">
+          <div class="section-title" style="margin:0;">Trip Days</div>
+          <div style="display:flex;gap:0.5rem;">
+            <button class="btn btn-secondary" style="font-size:0.72rem;" id="outfit-view-toggle" onclick="toggleOutfitView()">☰ All Outfits</button>
+            <button class="btn btn-primary" style="font-size:0.72rem;" onclick="openOutfitDayModal()">+ Plan Outfit</button>
+          </div>
+        </div>
+        <div id="outfit-summary-view" style="display:none;"></div>
+        <div class="outfit-calendar" id="outfit-calendar"></div>
+      </div>
+
+      <!-- SHARE TAB -->
+      <div id="tab-share" class="tab-content">
+        <div class="card">
+          <div class="card-header"><h3>Trip Sharing</h3></div>
+          <div class="card-body">
+            <div class="label-small mb-1">Currently shared with</div>
+            <div id="shared-with-list" style="margin-bottom:1.5rem;"></div>
+            <div class="label-small mb-1">Share with user</div>
+            <div style="display:flex;gap:0.5rem;">
+              <select id="share-user-select" style="flex:1;"><option value="">Select a user...</option></select>
+              <button class="btn btn-primary" onclick="shareWithUser()">Share</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS TAB -->
+      <div id="tab-settings" class="tab-content">
+        <div class="card mb-2">
+          <div class="card-header"><h3>Trip Settings</h3></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>Trip Name</label>
+              <input type="text" id="settings-tripname" placeholder="e.g. Anniversary Trip, Work Summit" onchange="saveSettings()">
+            </div>
+            <div class="form-group">
+              <label>Destination</label>
+              <input type="text" id="settings-destination" onchange="saveSettings()">
+            </div>
+            <div class="form-group">
+              <label>Reason for Trip</label>
+              <input type="text" id="settings-reason" placeholder="e.g. Anniversary, Work conference, Honeymoon" onchange="saveSettings()">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+              <div class="form-group"><label>Start Date</label><input type="date" id="settings-start" onchange="saveSettings()"></div>
+              <div class="form-group"><label>End Date</label><input type="date" id="settings-end" onchange="saveSettings()"></div>
+            </div>
+            <div class="form-group">
+              <label>Trip Type</label>
+              <select id="settings-type" onchange="saveSettings()">
+                <option value="leisure">Leisure / Vacation</option>
+                <option value="business">Business</option>
+                <option value="adventure">Outdoor / Adventure</option>
+                <option value="international">International</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" onclick="saveAsTemplate()">Save as Template</button>
+          </div>
+        </div>
+        <div id="profile-settings-panel" style="display:none;">
+          <div class="card mb-2">
+            <div class="card-header"><h3>Personal Care Settings</h3></div>
+            <div class="card-body">
+              <p class="italic text-muted mb-2" style="font-size:0.85rem;">This is private and only visible to you. Used to auto-suggest personal care items when your cycle overlaps with trip dates.</p>
+              <div class="form-group">
+                <label>Last Period Start Date</label>
+                <input type="date" id="settings-cycle-start" onchange="saveCycleSettings()">
+              </div>
+              <div class="form-group">
+                <label>Average Cycle Length (days)</label>
+                <input type="number" id="settings-cycle-length" min="21" max="45" value="28" style="width:120px;" onchange="saveCycleSettings()">
+              </div>
+              <div style="display:flex;align-items:center;gap:0.75rem;">
+                <input type="checkbox" id="settings-include-personal-care" style="width:auto;" onchange="saveCycleSettings()">
+                <label for="settings-include-personal-care" style="margin:0;font-size:0.85rem;text-transform:none;letter-spacing:0;color:var(--text-primary);">Always include Personal Care category on this trip</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card mb-2">
+          <div class="card-header"><h3>Trip Actions</h3></div>
+          <div class="card-body" style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+            <button class="btn btn-secondary" onclick="duplicateTrip()">⊕ Duplicate Trip</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Danger Zone</h3></div>
+          <div class="card-body"><button class="btn btn-danger" onclick="deleteTrip()">Delete This Trip</button></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MODALS
+══════════════════════════════════════════════ -->
+
+<!-- New Trip -->
+<div class="modal-overlay" id="modal-new-trip">
+  <div class="modal">
+    <div class="modal-header"><h3>New Trip</h3><button class="modal-close" onclick="closeModal('modal-new-trip')">×</button></div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div class="form-group"><label>Trip Name</label><input type="text" id="new-trip-name" placeholder="e.g. Italy Anniversary"></div>
+        <div class="form-group"><label>Destination (City, Country)</label><input type="text" id="new-trip-dest" placeholder="e.g. Rome, Italy"></div>
+      </div>
+      <div class="form-group"><label>Reason for Trip</label><input type="text" id="new-trip-reason" placeholder="e.g. Anniversary, Work conference, Honeymoon"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div class="form-group"><label>Start Date</label><input type="date" id="new-trip-start"></div>
+        <div class="form-group"><label>End Date</label><input type="date" id="new-trip-end"></div>
+      </div>
+      <div class="form-group"><label>Trip Type</label>
+        <select id="new-trip-type">
+          <option value="leisure">Leisure / Vacation</option>
+          <option value="business">Business</option>
+          <option value="adventure">Outdoor / Adventure</option>
+          <option value="international">International</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Start from Template (optional)</label>
+        <select id="new-trip-template"><option value="">Blank list</option></select>
+      </div>
+      <div id="personal-care-toggle-wrap" style="display:none;margin-top:0.5rem;">
+        <div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem;background:rgba(139,26,26,0.05);border-radius:var(--radius);border:1px solid rgba(139,26,26,0.15);">
+          <input type="checkbox" id="new-trip-personal-care" style="width:auto;">
+          <label for="new-trip-personal-care" style="margin:0;font-size:0.85rem;text-transform:none;letter-spacing:0;color:var(--text-primary);">Include Personal Care items</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-new-trip')">Cancel</button>
+      <button class="btn btn-primary" onclick="createTrip()">Create Trip</button>
+    </div>
+  </div>
+</div>
+
+<!-- New User -->
+<div class="modal-overlay" id="modal-new-user">
+  <div class="modal">
+    <div class="modal-header"><h3>Add User</h3><button class="modal-close" onclick="closeModal('modal-new-user')">×</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Display Name</label><input type="text" id="new-user-name" placeholder="e.g. Sarah"></div>
+      <div class="form-group"><label>PIN (4 digits)</label><input type="password" id="new-user-pin" placeholder="••••" maxlength="4" pattern="[0-9]{4}"></div>
+      <div class="form-group"><label>Role</label>
+        <select id="new-user-role"><option value="user">Standard User</option><option value="admin">Admin</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-new-user')">Cancel</button>
+      <button class="btn btn-primary" onclick="createUser()">Add User</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit User -->
+<div class="modal-overlay" id="modal-edit-user">
+  <div class="modal">
+    <div class="modal-header"><h3>Edit User</h3><button class="modal-close" onclick="closeModal('modal-edit-user')">×</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-user-id">
+      <div class="form-group"><label>Display Name</label><input type="text" id="edit-user-name"></div>
+      <div class="form-group"><label>New PIN (leave blank to keep current)</label><input type="password" id="edit-user-pin" placeholder="••••" maxlength="4"></div>
+      <div class="form-group"><label>Role</label>
+        <select id="edit-user-role"><option value="user">Standard User</option><option value="admin">Admin</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-user')">Cancel</button>
+      <button class="btn btn-danger" onclick="deleteUserFromModal()" style="margin-right:auto;">Delete User</button>
+      <button class="btn btn-primary" onclick="saveUserEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Packing Item -->
+<div class="modal-overlay" id="modal-edit-item">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header"><h3>Edit Item</h3><button class="modal-close" onclick="closeModal('modal-edit-item')">×</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-item-cat">
+      <input type="hidden" id="edit-item-id">
+      <div class="form-group"><label>Item Name</label><input type="text" id="edit-item-name" placeholder="e.g. Navy Blazer"></div>
+      <div class="form-group"><label>Description / Details</label><input type="text" id="edit-item-description" placeholder="e.g. slim fit, H&M, packed in carry-on"></div>
+      <div class="form-group"><label>Notes</label><textarea id="edit-item-notes" placeholder="Color, brand, where it's packed, why it's on the list..."></textarea></div>
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <input type="checkbox" id="edit-item-essential" style="width:auto;">
+        <label for="edit-item-essential" style="margin:0;font-size:0.85rem;text-transform:none;letter-spacing:0;color:var(--text-primary);">Mark as essential</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-item')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveItemEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Outfit Day -->
+<div class="modal-overlay" id="modal-outfit-day">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-header">
+      <div>
+        <h3 id="outfit-modal-title">Plan Outfit</h3>
+        <div class="outfit-modal-steps">
+          <span class="outfit-step active" id="step-label-1">① Pieces</span>
+          <span style="color:var(--border-strong);margin:0 0.3rem;">›</span>
+          <span class="outfit-step" id="step-label-2">② When</span>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-outfit-day')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="outfit-edit-id">
+
+      <!-- STEP 1: Pieces -->
+      <div id="outfit-step-1">
+        <div class="label-small mb-1">Outfit Pieces <span class="italic text-muted" style="font-weight:400;text-transform:none;letter-spacing:0;">— fill what applies</span></div>
+        <div class="piece-grid">
+          <div class="piece-row"><span class="piece-label">Top</span><input type="text" id="piece-top" placeholder="e.g. white linen blouse"></div>
+          <div class="piece-row"><span class="piece-label">Bottom</span><input type="text" id="piece-bottom" placeholder="e.g. high-waist trousers"></div>
+          <div class="piece-row"><span class="piece-label">Shoes</span><input type="text" id="piece-shoes" placeholder="e.g. tan leather sandals"></div>
+          <div class="piece-row"><span class="piece-label">Outerwear</span><input type="text" id="piece-outer" placeholder="e.g. light trench coat"></div>
+          <div class="piece-row"><span class="piece-label">Accessories</span><input type="text" id="piece-accessories" placeholder="e.g. gold hoops, silk scarf"></div>
+          <div class="piece-row"><span class="piece-label">Bag</span><input type="text" id="piece-bag" placeholder="e.g. crossbody rattan bag"></div>
+        </div>
+        <div class="form-group mt-2"><label>Notes (optional)</label><textarea id="outfit-notes" placeholder="Styling notes..." style="min-height:55px;"></textarea></div>
+      </div>
+
+      <!-- STEP 2: When -->
+      <div id="outfit-step-2" style="display:none;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div class="form-group"><label>Date</label><input type="date" id="outfit-date"></div>
+          <div class="form-group"><label>Time of Day</label>
+            <select id="outfit-timeslot">
+              <option value="morning">🌅 Morning</option>
+              <option value="afternoon">☀️ Afternoon</option>
+              <option value="evening" selected>🌆 Evening</option>
+              <option value="night">🌙 Night</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div class="form-group"><label>Occasion</label>
+            <select id="outfit-occasion">
+              <option value="casual">Casual</option><option value="dinner">Dinner / Evening</option>
+              <option value="beach">Beach / Pool</option><option value="business">Business</option>
+              <option value="sightseeing">Sightseeing</option><option value="formal">Formal / Event</option>
+              <option value="travel">Travel Day</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Event Name (optional)</label><input type="text" id="outfit-event" placeholder="e.g. Rehearsal Dinner"></div>
+        </div>
+        <div class="outfit-step2-preview" id="outfit-step2-preview"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-outfit-day')" id="outfit-cancel-btn">Cancel</button>
+      <button class="btn btn-secondary" onclick="outfitStepBack()" id="outfit-back-btn" style="display:none;">← Back</button>
+      <button class="btn btn-gold" id="outfit-next-btn" onclick="outfitStepNext()">Next: Set Day & Time →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Save Combo modal removed - combos saved inline from outfit flow -->
+
+
+
+<!-- Add Library Item -->
+<div class="modal-overlay" id="modal-add-library">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-header"><h3 id="library-modal-title">Add Item</h3><button class="modal-close" onclick="closeModal('modal-add-library')">×</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="library-edit-id">
+      <div class="form-group"><label>Item Name</label><input type="text" id="library-item-name" placeholder="e.g. Reef-safe sunscreen"></div>
+      <div class="form-group"><label>Category</label>
+        <select id="library-item-cat">
+          <option>Clothing</option><option>Toiletries</option><option>Documents</option>
+          <option>Tech</option><option>Health</option><option>Misc</option><option>Other</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Description (optional)</label><input type="text" id="library-item-desc" placeholder="e.g. SPF 50, 3oz travel size"></div>
+      <div class="form-group"><label>Notes (optional)</label><textarea id="library-item-notes" placeholder="Brand, where to buy, packing tips..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-library')">Cancel</button>
+      <button class="btn btn-danger" id="library-delete-btn" onclick="deleteLibraryItem()" style="margin-right:auto;display:none;">Delete</button>
+      <button class="btn btn-primary" onclick="saveLibraryItem()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Closet Item -->
+<div class="modal-overlay" id="modal-add-closet">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header"><h3 id="closet-modal-title">Add Closet Item</h3><button class="modal-close" onclick="closeModal('modal-add-closet')">×</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="closet-edit-id">
+      <div class="form-group"><label>Item Name</label><input type="text" id="closet-item-name" placeholder="e.g. Navy Blazer"></div>
+      <div class="form-group"><label>Description</label><input type="text" id="closet-item-desc" placeholder="e.g. slim fit, wool blend, H&M"></div>
+      <div class="form-group"><label>Category</label>
+        <select id="closet-item-cat">
+          <option value="Tops">Tops</option><option value="Bottoms">Bottoms</option>
+          <option value="Dresses & Jumpsuits">Dresses & Jumpsuits</option><option value="Outerwear">Outerwear</option>
+          <option value="Shoes">Shoes</option><option value="Accessories">Accessories</option>
+          <option value="Bags">Bags</option><option value="Swimwear">Swimwear</option>
+          <option value="Activewear">Activewear</option><option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Color(s)</label><input type="text" id="closet-item-color" placeholder="e.g. Navy, White & Black"></div>
+      <div class="form-group"><label>Notes</label><textarea id="closet-item-notes" placeholder="Brand, size, occasion notes..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-closet')">Cancel</button>
+      <button class="btn btn-danger" id="closet-delete-btn" onclick="deleteClosetItem()" style="margin-right:auto;display:none;">Delete</button>
+      <button class="btn btn-primary" onclick="saveClosetItem()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import -->
+<div class="modal-overlay" id="modal-import">
+  <div class="modal">
+    <div class="modal-header"><h3>Import Packing List</h3><button class="modal-close" onclick="closeModal('modal-import')">×</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Paste JSON or plain text (one item per line)</label><textarea id="import-text" style="min-height:150px;" placeholder="Paste your list here..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-import')">Cancel</button>
+      <button class="btn btn-primary" onclick="importList()">Import</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════
+const CONFIG = { workerUrl: 'YOUR_CLOUDFLARE_WORKER_URL', localFallback: true };
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let state = {
+  currentUser: null, users: [], trips: [], templates: [],
+  currentTrip: null, weather: null, pinBuffer: '', selectedUserId: null,
+  theme: localStorage.getItem('pr_theme') || 'light',
+};
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  applyTheme();
+  // Always start with hardcoded defaults, then layer in saved data
+  state.users = [
+    { id: 'u1', name: 'Zak', pin: '1234', role: 'admin', initials: 'Z' },
+    { id: 'u2', name: 'Swishy', pin: '5678', role: 'user', initials: 'S', showPersonalCare: true },
+  ];
+  // Try to load saved data on top
+  try {
+    const savedUsers = localStorage.getItem('pr_users');
+    if (savedUsers) { const u = JSON.parse(savedUsers); if (Array.isArray(u) && u.length > 0) state.users = u; }
+  } catch(e) {}
+  try {
+    const savedTrips = localStorage.getItem('pr_trips');
+    if (savedTrips) { const t = JSON.parse(savedTrips); if (Array.isArray(t)) state.trips = t; }
+  } catch(e) {}
+  try {
+    const savedTpls = localStorage.getItem('pr_templates');
+    if (savedTpls) { const t = JSON.parse(savedTpls); if (Array.isArray(t)) state.templates = t; }
+  } catch(e) {}
+  // Seed templates if none
+  if (!state.templates.length) { loadDefaultTemplates(); }
+  renderLoginUsers();
+});
+
+// ═══════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════
+
+function hardResetApp() {
+  if (!confirm('This will clear all app data and restore default users. Continue?')) return;
+  localStorage.removeItem('pr_users');
+  localStorage.removeItem('pr_trips');
+  localStorage.removeItem('pr_templates');
+  localStorage.removeItem('pr_theme');
+  loadFromStorage();
+  renderLoginUsers();
+  document.getElementById('login-step-user').style.display = 'block';
+  document.getElementById('login-step-pin').style.display = 'none';
+  toast('App reset. PIN: Zak=1234, Swishy=5678');
+}
+function seedDefaultUsers() {
+  state.users = [
+    { id: 'u1', name: 'Zak', pin: '1234', role: 'admin', initials: 'Z' },
+    { id: 'u2', name: 'Swishy', pin: '5678', role: 'user', initials: 'S', showPersonalCare: true },
+  ];
+  saveUsers();
+}
+
+function loadFromStorage() {
+  try { state.users = JSON.parse(localStorage.getItem('pr_users') || '[]'); } catch(e) { state.users = []; }
+  try { state.trips = JSON.parse(localStorage.getItem('pr_trips') || '[]'); } catch(e) { state.trips = []; }
+  try { state.templates = JSON.parse(localStorage.getItem('pr_templates') || '[]'); } catch(e) { state.templates = []; }
+  // Ensure valid non-empty array of users
+  if (!Array.isArray(state.users) || state.users.length === 0) {
+    seedDefaultUsers();
+  }
+}
+
+function loadDefaultTemplates() {
+  state.templates = [
+    { id:'tpl-business', name:'Business Travel', icon:'💼', categories:{
+      'Clothing':['Dress shirts (x3)','Dress pants (x2)','Blazer','Undershirts','Socks','Dress shoes','Belt','Tie','Casual outfit (evenings)'],
+      'Toiletries':['Toothbrush & toothpaste','Deodorant','Razor & shaving cream','Cologne/Perfume','Face wash & moisturizer','Hair products'],
+      'Documents':['Passport / ID','Business cards','Travel itinerary','Hotel confirmation','Flight tickets'],
+      'Tech':['Laptop & charger','Phone charger','Headphones','Power bank','Universal adapter'],
+      'Misc':['Notebook & pen','Pain relievers','Snacks','Reusable water bottle'],
+    }},
+    { id:'tpl-leisure', name:'Leisure Vacation', icon:'🌴', categories:{
+      'Clothing':['T-shirts (x4)','Shorts/Casual pants (x3)','Swimsuit (x2)','Sundress/Casual dress','Light jacket/Cardigan','Comfortable shoes','Sandals','Underwear & socks'],
+      'Toiletries':['Toothbrush & toothpaste','Deodorant','Sunscreen SPF 50+','After-sun lotion','Shampoo & conditioner','Face care routine'],
+      'Documents':['Passport / ID','Travel insurance docs','Hotel confirmation','Flight tickets','Emergency contacts'],
+      'Tech':['Phone & charger','Camera','Power bank','Universal adapter','Headphones'],
+      'Misc':['Sunglasses','Beach bag','Snacks','Reusable water bottle','Guidebook / Maps','First aid kit'],
+    }},
+  ];
+  try { saveTemplates(); } catch(e) {}
+}
+
+function saveUsers() { try { localStorage.setItem('pr_users', JSON.stringify(state.users)); } catch(e) {} }
+function saveTrips() { try { localStorage.setItem('pr_trips', JSON.stringify(state.trips)); } catch(e) {} }
+function saveTemplates() { try { localStorage.setItem('pr_templates', JSON.stringify(state.templates)); } catch(e) {} }
+
+// ═══════════════════════════════════════════════
+// THEME
+// ═══════════════════════════════════════════════
+function toggleTheme() { state.theme = state.theme==='light'?'dark':'light'; localStorage.setItem('pr_theme',state.theme); applyTheme(); }
+function applyTheme() { document.documentElement.setAttribute('data-theme', state.theme==='dark'?'dark':''); }
+
+// ═══════════════════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════════════════
+function renderLoginUsers() {
+  document.getElementById('user-select-list').innerHTML = state.users.map(u => `
+    <button class="user-btn" onclick="selectUser('${u.id}')">
+      <div class="user-avatar">${u.initials||u.name[0].toUpperCase()}</div>
+      <div><div style="font-weight:600;">${u.name}</div><div style="font-size:0.7rem;color:var(--text-muted);letter-spacing:0.1em;text-transform:uppercase;">${u.role}</div></div>
+    </button>`).join('');
+}
+function selectUser(userId) {
+  state.selectedUserId = userId;
+  const user = state.users.find(u => u.id === userId);
+  document.getElementById('pin-username-label').textContent = user.name;
+  document.getElementById('login-step-user').style.display = 'none';
+  document.getElementById('login-step-pin').style.display = 'block';
+  state.pinBuffer = ''; updatePinDisplay();
+}
+function backToUserSelect() {
+  state.selectedUserId = null; state.pinBuffer = '';
+  document.getElementById('login-step-user').style.display = 'block';
+  document.getElementById('login-step-pin').style.display = 'none';
+  document.getElementById('login-error').textContent = '';
+}
+function pinKey(digit) { if(state.pinBuffer.length>=4) return; state.pinBuffer+=digit; updatePinDisplay(); if(state.pinBuffer.length===4) attemptLogin(); }
+function pinDelete() { state.pinBuffer=state.pinBuffer.slice(0,-1); updatePinDisplay(); }
+function pinClear() { state.pinBuffer=''; updatePinDisplay(); }
+function updatePinDisplay() { for(let i=0;i<4;i++) document.getElementById(`dot-${i}`).classList.toggle('filled',i<state.pinBuffer.length); }
+function attemptLogin() {
+  const user = state.users.find(u => u.id===state.selectedUserId);
+  if (user && state.pinBuffer===user.pin) {
+    state.currentUser = user;
+    document.getElementById('screen-login').classList.remove('active');
+    document.getElementById('screen-app').classList.add('active');
+    document.getElementById('nav-username-display').textContent = `/ ${user.name}`;
+    if (user.role==='admin') document.getElementById('nav-admin').style.display='inline-flex';
+    showDashboard();
+    toast(`Welcome back, ${user.name}!`);
+  } else {
+    document.getElementById('login-error').textContent='Incorrect PIN. Please try again.';
+    state.pinBuffer=''; updatePinDisplay();
+    setTimeout(()=>{ document.getElementById('login-error').textContent=''; },2000);
+  }
+}
+function logout() {
+  state.currentUser=null; state.currentTrip=null; state.pinBuffer=''; state.selectedUserId=null;
+  document.getElementById('screen-app').classList.remove('active');
+  document.getElementById('screen-login').classList.add('active');
+  document.getElementById('nav-admin').style.display='none';
+  document.getElementById('login-step-user').style.display='block';
+  document.getElementById('login-step-pin').style.display='none';
+  renderLoginUsers();
+}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+function hideAllViews() {
+  ['view-dashboard','view-closet','view-library','view-templates','view-admin','view-trip-detail'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.style.display='none';
+  });
+  ['nav-trips','nav-closet','nav-library','nav-templates','nav-admin'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.classList.remove('active');
+  });
+}
+function showDashboard(skipHistory) {
+  hideAllViews();
+  document.getElementById('view-dashboard').style.display='block';
+  document.getElementById('nav-trips').classList.add('active');
+  renderDashboard();
+  if (!skipHistory) history.pushState({view:'dashboard'}, '', '');
+}
+function showTemplates() { hideAllViews(); document.getElementById('view-templates').style.display='block'; document.getElementById('nav-templates').classList.add('active'); renderTemplates(); }
+function showAdmin() { hideAllViews(); document.getElementById('view-admin').style.display='block'; document.getElementById('nav-admin').classList.add('active'); renderAdmin(); }
+
+function showTripDetail(tripId, skipHistory) {
+  const trip = state.trips.find(t=>t.id===tripId);
+  if (!trip) return;
+  state.currentTrip = trip;
+  hideAllViews();
+  document.getElementById('view-trip-detail').style.display='block';
+  renderTripDetailHeader();
+  if (!skipHistory) history.pushState({view:'trip', tripId}, '', '');
+  document.getElementById('settings-tripname').value = trip.tripName || '';
+  document.getElementById('settings-destination').value = trip.destination || '';
+  if(document.getElementById('settings-reason')) document.getElementById('settings-reason').value = trip.reason || '';
+  document.getElementById('settings-start').value = trip.startDate || '';
+  document.getElementById('settings-end').value = trip.endDate || '';
+  document.getElementById('settings-type').value = trip.type || 'leisure';
+
+  // Show personal care settings only for users with showPersonalCare flag
+  const pcPanel = document.getElementById('profile-settings-panel');
+  if (state.currentUser.showPersonalCare) {
+    pcPanel.style.display = 'block';
+    const profile = getUserProfile();
+    document.getElementById('settings-cycle-start').value = profile.cycleStart || '';
+    document.getElementById('settings-cycle-length').value = profile.cycleLength || 28;
+    document.getElementById('settings-include-personal-care').checked = trip.includePersonalCare || false;
+  } else { pcPanel.style.display='none'; }
+
+  showTab('packing');
+  renderPackingList();
+  fetchWeather(trip);
+  generateAISuggestions(trip);
+  renderOutfitCalendar();
+  renderClosetPalette();
+  renderShareTab();
+}
+
+function showTab(tabName) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.getElementById(`tab-${tabName}`).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b=>{ if(b.getAttribute('onclick')===`showTab('${tabName}')`) b.classList.add('active'); });
+}
+
+// ═══════════════════════════════════════════════
+// USER PROFILE (private, stored per user)
+// ═══════════════════════════════════════════════
+function getUserProfile() {
+  try { return JSON.parse(localStorage.getItem(`pr_profile_${state.currentUser.id}`) || '{}'); } catch { return {}; }
+}
+function saveUserProfile(data) { localStorage.setItem(`pr_profile_${state.currentUser.id}`, JSON.stringify(data)); }
+function saveCycleSettings() {
+  const profile = getUserProfile();
+  profile.cycleStart = document.getElementById('settings-cycle-start').value;
+  profile.cycleLength = parseInt(document.getElementById('settings-cycle-length').value) || 28;
+  saveUserProfile(profile);
+  state.currentTrip.includePersonalCare = document.getElementById('settings-include-personal-care').checked;
+  saveTrips();
+  toast('Personal care settings saved', 'success');
+}
+
+function shouldIncludePersonalCare(trip) {
+  if (!state.currentUser.showPersonalCare) return false;
+  if (trip.includePersonalCare) return true;
+  const profile = getUserProfile();
+  if (!profile.cycleStart || !trip.startDate) return false;
+  const cycleLen = profile.cycleLength || 28;
+  const lastPeriod = new Date(profile.cycleStart);
+  const tripStart = new Date(trip.startDate);
+  const tripEnd = trip.endDate ? new Date(trip.endDate) : new Date(tripStart.getTime() + 7*86400000);
+  // Predict next periods within 6 months
+  for (let i = 0; i < 6; i++) {
+    const periodStart = new Date(lastPeriod.getTime() + i * cycleLen * 86400000);
+    const periodEnd = new Date(periodStart.getTime() + 6 * 86400000);
+    if (periodStart <= tripEnd && periodEnd >= tripStart) return true;
+  }
+  return false;
+}
+
+const PERSONAL_CARE_ITEMS = [
+  'Tampons / Pads (varied absorbency)', 'Panty liners', 'Period underwear',
+  'Pain reliever (Ibuprofen/Midol)', 'Heating pad (travel size)', 'Stain remover pen',
+  'Extra underwear', 'Dark wash cloth', 'Comfort snacks',
+];
+
+// ═══════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════
+function isTripArchived(trip) {
+  if (!trip.endDate) return false;
+  const end = new Date(trip.endDate);
+  end.setDate(end.getDate() + 2); // 2-day grace period
+  return new Date() > end;
+}
+
+function buildTripCard(trip, archived) {
+  const card = document.createElement('div');
+  card.className = 'card trip-card' + (archived ? ' archived' : '');
+  card.onclick = () => showTripDetail(trip.id);
+  const isShared = trip.ownerId !== state.currentUser.id || (trip.sharedWith && trip.sharedWith.length > 0);
+  const badgeClass = trip.type==='business' ? 'badge-business' : isShared ? 'badge-shared' : 'badge-leisure';
+  const {packed, total} = getTripProgress(trip);
+  const pct = total > 0 ? Math.round((packed/total)*100) : 0;
+  const weatherHtml = trip.weatherCache ? renderWeatherStrip(trip.weatherCache) : '';
+  const displayName = trip.tripName || trip.destination || 'Untitled Trip';
+  const showDest = trip.tripName && trip.destination && trip.tripName !== trip.destination;
+  const pcBadge = (state.currentUser?.showPersonalCare && shouldIncludePersonalCare(trip))
+    ? '<span title="Personal care items included" style="font-size:0.85rem;margin-left:auto;margin-right:0.25rem;">🌸</span>'
+    : '';
+  card.innerHTML = `
+    <div class="trip-card-top">
+      ${archived ? '<div class="archived-badge">Past Trip</div>' : ''}
+      <div class="trip-type-badge ${badgeClass}">${isShared?'Shared':trip.type||'Leisure'}</div>
+      <div class="trip-name">${displayName}</div>
+      ${showDest ? `<div class="trip-destination-sub">📍 ${trip.destination}</div>` : ''}
+      ${trip.reason ? `<div class="trip-reason-sub" style="font-size:0.73rem;color:var(--text-muted);">✦ ${trip.reason}</div>` : ''}
+      <div class="trip-dates">${formatDateRange(trip.startDate, trip.endDate)}</div>
+    </div>
+    ${weatherHtml ? `<div class="trip-weather-strip">${weatherHtml}</div>` : ''}
+    <div class="trip-progress">
+      <div class="flex-between"><span class="label-small">${packed} / ${total} packed</span><span class="label-small">${pct}%</span></div>
+      <div class="progress-bar-wrap mt-1"><div class="progress-bar-fill ${pct===100?'complete':''}" style="width:${pct}%"></div></div>
+    </div>
+    <div class="trip-card-footer"><span class="label-small" style="color:var(--text-muted);">${trip.type||'leisure'}</span>${renderSharedAvatars(trip)}</div>`;
+  return card;
+}
+
+let archiveOpen = false;
+function toggleArchive() {
+  archiveOpen = !archiveOpen;
+  document.getElementById('archive-grid').style.display = archiveOpen ? 'grid' : 'none';
+  document.getElementById('archive-chevron').textContent = archiveOpen ? '▲' : '▼';
+}
+
+function renderDashboard() {
+  const hour = new Date().getHours();
+  document.getElementById('dashboard-greeting').textContent = `${hour<12?'Good morning':hour<17?'Good afternoon':'Good evening'}, ${state.currentUser.name}.`;
+
+  const userTrips = state.trips.filter(t => t.ownerId===state.currentUser.id || (t.sharedWith&&t.sharedWith.includes(state.currentUser.id)));
+  const active = userTrips.filter(t => !isTripArchived(t));
+  const archived = userTrips.filter(t => isTripArchived(t)).sort((a,b) => new Date(b.endDate)-new Date(a.endDate));
+
+  // Active trips
+  const grid = document.getElementById('trips-grid');
+  grid.innerHTML = '';
+
+  // Empty state for brand new users
+  if (!userTrips.length) {
+    grid.innerHTML = `
+      <div style="grid-column:1/-1;padding:2.5rem 1.5rem;text-align:center;background:var(--bg-card);border:2px dashed var(--border);border-radius:var(--radius-lg);">
+        <div style="font-size:2.5rem;margin-bottom:1rem;">✈️</div>
+        <h3 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:0.5rem;">Where are you heading?</h3>
+        <p style="font-family:var(--font-accent);font-style:italic;color:var(--text-muted);margin-bottom:1.25rem;font-size:0.95rem;">Create your first trip to start building a packing list and planning outfits.</p>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;align-items:center;margin-bottom:1.5rem;">
+          <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.82rem;color:var(--text-secondary);">📋 <span>Build a packing list from templates or scratch</span></div>
+          <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.82rem;color:var(--text-secondary);">👗 <span>Plan outfits by day using your closet</span></div>
+          <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.82rem;color:var(--text-secondary);">🌤 <span>Get weather-smart packing suggestions</span></div>
+        </div>
+        <button class="btn btn-primary" onclick="openNewTripModal()" style="font-size:0.88rem;padding:0.7rem 1.5rem;">+ Plan Your First Trip</button>
+      </div>`;
+    document.getElementById('archive-section').style.display = 'none';
+    return;
+  }
+
+  active.forEach(trip => grid.appendChild(buildTripCard(trip, false)));
+  const addCard = document.createElement('div');
+  addCard.className = 'trip-card-add'; addCard.onclick = openNewTripModal;
+  addCard.innerHTML = '<div class="add-icon">+</div><div class="add-label">Plan a new trip</div>';
+  grid.appendChild(addCard);
+
+  // Archive section
+  const archiveSection = document.getElementById('archive-section');
+  const archiveGrid = document.getElementById('archive-grid');
+  const archiveCount = document.getElementById('archive-count');
+  if (archived.length) {
+    archiveSection.style.display = 'block';
+    archiveCount.textContent = `${archived.length} trip${archived.length!==1?'s':''}`;
+    archiveGrid.innerHTML = '';
+    archived.forEach(trip => archiveGrid.appendChild(buildTripCard(trip, true)));
+  } else {
+    archiveSection.style.display = 'none';
+  }
+}
+function renderWeatherStrip(weather) {
+  if(!weather||!weather.daily) return '';
+  return weather.daily.slice(0,7).map(d=>`<div class="weather-day-mini"><div class="wd-day">${new Date(d.date).toLocaleDateString('en-US',{weekday:'short'})}</div><div class="wd-icon">${weatherIcon(d.code)}</div><div class="wd-temp">${Math.round(d.tempMax)}°</div></div>`).join('');
+}
+function renderSharedAvatars(trip) {
+  if(!trip.sharedWith||trip.sharedWith.length===0) return '';
+  const users=[trip.ownerId,...trip.sharedWith].map(id=>state.users.find(u=>u.id===id)).filter(Boolean);
+  return `<div class="shared-avatars">${users.map(u=>`<div class="shared-avatar-mini" title="${u.name}">${u.initials||u.name[0]}</div>`).join('')}</div>`;
+}
+function getTripProgress(trip) {
+  let packed=0,total=0;
+  if(!trip.categories) return {packed:0,total:0};
+  Object.values(trip.categories).forEach(cat=>cat.forEach(item=>{ total++; if(item.checked) packed++; }));
+  return {packed,total};
+}
+
+// ═══════════════════════════════════════════════
+// TRIP CREATION
+// ═══════════════════════════════════════════════
+function openNewTripModal() {
+  const sel=document.getElementById('new-trip-template');
+  sel.innerHTML='<option value="">Blank list</option>';
+  state.templates.forEach(t=>{ sel.innerHTML+=`<option value="${t.id}">${t.name}</option>`; });
+  document.getElementById('new-trip-start').value=new Date().toISOString().split('T')[0];
+  document.getElementById('new-trip-dest').value='';
+  document.getElementById('new-trip-name').value='';
+  // Show personal care toggle only for eligible users
+  const pcWrap = document.getElementById('personal-care-toggle-wrap');
+  pcWrap.style.display = state.currentUser.showPersonalCare ? 'block' : 'none';
+  document.getElementById('new-trip-personal-care').checked = false;
+  openModal('modal-new-trip');
+}
+
+function createTrip() {
+  const dest=document.getElementById('new-trip-dest').value.trim();
+  const tripName=document.getElementById('new-trip-name').value.trim();
+  if (!dest) { toast('Please enter a destination','error'); return; }
+  const templateId=document.getElementById('new-trip-template').value;
+  const template=state.templates.find(t=>t.id===templateId);
+  let categories={};
+  if (template) {
+    Object.entries(template.categories).forEach(([cat,items])=>{
+      categories[cat]=items.map(name=>({id:uid(),name,description:'',notes:'',qty:1,checked:false,essential:false}));
+    });
+  } else {
+    ['Clothing','Toiletries','Documents','Tech','Misc'].forEach(c=>{categories[c]=[];});
+  }
+  const includePC = state.currentUser.showPersonalCare && document.getElementById('new-trip-personal-care').checked;
+  const trip = {
+    id:uid(), destination:dest, tripName, reason:document.getElementById('new-trip-reason').value.trim(),
+    startDate:document.getElementById('new-trip-start').value,
+    endDate:document.getElementById('new-trip-end').value, type:document.getElementById('new-trip-type').value,
+    ownerId:state.currentUser.id, sharedWith:[], categories, outfits:{}, outfitCombos:[],
+    includePersonalCare:includePC, createdAt:new Date().toISOString(),
+  };
+  // Auto-detect personal care
+  if (shouldIncludePersonalCare(trip) || includePC) {
+    categories['Personal Care'] = PERSONAL_CARE_ITEMS.map(name=>({id:uid(),name,description:'',notes:'',qty:1,checked:false,essential:false}));
+  }
+  state.trips.push(trip); saveTrips();
+  closeModal('modal-new-trip');
+  toast(`Trip${tripName?' "'+tripName+'"':''} created!`,'success');
+  showTripDetail(trip.id);
+}
+
+// ═══════════════════════════════════════════════
+// PACKING LIST — with qty, descriptions, outfit badges
+// ═══════════════════════════════════════════════
+const CATEGORY_ICONS={'Clothing':'👕','Toiletries':'🧴','Documents':'📄','Tech':'💻','Gear':'🎒','Misc':'📦','Personal Care':'🌸','Imported':'📥'};
+
+// Build a map of itemName → outfit days that use it
+function buildOutfitItemMap() {
+  const trip = state.currentTrip;
+  const map = {}; // itemName.toLowerCase() → [dateKey or comboName]
+  if (!trip) return map;
+  // From day outfits (all users) — now arrays per day
+  Object.entries(trip.outfits || {}).forEach(([userId, days]) => {
+    Object.entries(days).forEach(([dateKey, outfitsOrSingle]) => {
+      const outfits = Array.isArray(outfitsOrSingle) ? outfitsOrSingle : [outfitsOrSingle];
+      outfits.forEach(outfit => {
+        const label = outfit.event || outfit.occasion || dateKey;
+        ['top','bottom','shoes','outer','accessories','bag'].forEach(piece => {
+          if (outfit[piece]) {
+            const key = outfit[piece].toLowerCase().trim();
+            if (!map[key]) map[key] = [];
+            map[key].push(label);
+          }
+        });
+      });
+    });
+  });
+  // From saved combos
+  (trip.outfitCombos || []).forEach(combo => {
+    ['top','bottom','shoes','outer','accessories','bag'].forEach(piece => {
+      if (combo[piece]) {
+        const key = combo[piece].toLowerCase().trim();
+        if (!map[key]) map[key] = [];
+        map[key].push(combo.name);
+      }
+    });
+  });
+  return map;
+}
+
+function renderPackingList() {
+  const trip = state.currentTrip; if (!trip) return;
+  updateProgressRing();
+  const outfitMap = buildOutfitItemMap();
+  const container = document.getElementById('packing-categories');
+  container.innerHTML = '';
+
+  // Personal care notice
+  if (trip.categories['Personal Care'] && state.currentUser.showPersonalCare) {
+    const banner = document.createElement('div');
+    banner.className = 'personal-care-banner';
+    banner.innerHTML = '<span>🌸</span> Personal Care items are included based on your cycle settings — only visible to you.';
+    container.appendChild(banner);
+  }
+
+  Object.entries(trip.categories).forEach(([catName, items]) => {
+    // Hide Personal Care from other users
+    if (catName === 'Personal Care' && !state.currentUser.showPersonalCare) return;
+    const packed = items.filter(i=>i.checked).length;
+    const pct = items.length>0?Math.round((packed/items.length)*100):0;
+    const section = document.createElement('div');
+    section.className = 'category-section';
+    section.setAttribute('data-cat', catName);
+    section.setAttribute('draggable', 'true');
+    section.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', catName); section.classList.add('dragging'); });
+    section.addEventListener('dragend', () => section.classList.remove('dragging'));
+    section.addEventListener('dragover', e => { e.preventDefault(); section.classList.add('drag-over'); });
+    section.addEventListener('dragleave', () => section.classList.remove('drag-over'));
+    section.addEventListener('drop', e => { e.preventDefault(); section.classList.remove('drag-over'); const from=e.dataTransfer.getData('text/plain'); reorderCategory(from, catName); });
+    section.innerHTML = `
+      <div class="category-header">
+        <div class="category-title-wrap">
+          <span class="drag-handle" draggable="true" onmousedown="initCatDrag(event,'${catName}')">⠿</span>
+          <span class="category-icon">${CATEGORY_ICONS[catName]||'📦'}</span>
+          <span class="category-name">${catName}</span>
+          <span class="category-count">${packed}/${items.length}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <button class="btn btn-ghost" style="font-size:0.62rem;padding:0.15rem 0.4rem;opacity:0.7;" onclick="checkAllInCategory('${catName}',true)" title="Check all">✓ All</button>
+          <button class="btn btn-ghost" style="font-size:0.62rem;padding:0.15rem 0.4rem;opacity:0.7;" onclick="checkAllInCategory('${catName}',false)" title="Uncheck all">○ None</button>
+          <div class="mini-bar"><div class="mini-bar-fill" style="width:${pct}%"></div></div>
+          <span class="label-small">${pct}%</span>
+        </div>
+      </div>
+      <div class="packing-items" id="cat-${sanitize(catName)}">
+        ${items.map(item=>renderPackingItem(catName,item,outfitMap)).join('')}
+      </div>
+      <div class="add-item-form">
+        <div class="add-item-form .form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem;">
+          <input type="text" placeholder="Item name *" id="add-name-${sanitize(catName)}" onkeydown="if(event.key==='Enter')addItem('${catName}')">
+          <input type="text" placeholder="Description (optional)" id="add-desc-${sanitize(catName)}" onkeydown="if(event.key==='Enter')addItem('${catName}')">
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:0.4rem;">
+          <button class="btn btn-secondary" style="font-size:0.72rem;padding:0.35rem 0.75rem;" onclick="addItem('${catName}')">+ Add Item</button>
+        </div>
+      </div>`;
+    container.appendChild(section);
+  });
+
+  const addCat = document.createElement('div');
+  addCat.innerHTML=`<button class="btn btn-ghost mt-2" onclick="addCategory()">+ Add Category</button>`;
+  container.appendChild(addCat);
+}
+
+function renderPackingItem(catName, item, outfitMap) {
+  const outfitUses = findOutfitUses(item, outfitMap);
+  const isInOutfit = outfitUses.length > 0;
+  const outfitBadges = isInOutfit
+    ? `<span class="item-in-use-badge">👗 In Outfit</span> <span class="item-outfit-badge" title="${outfitUses.join(', ')}">${outfitUses[0]}${outfitUses.length>1?` +${outfitUses.length-1}`:''}</span>`
+    : '';
+  return `
+    <div class="packing-item" id="item-${item.id}">
+      <div class="item-check ${item.checked?'checked':''}" onclick="toggleItem('${catName}','${item.id}')"></div>
+      <div class="item-info">
+        <div class="item-name ${item.checked?'checked':''}">${item.name}${item.essential?' <span class="item-essential">★</span>':''}</div>
+        ${item.description?`<div class="item-description">${item.description}</div>`:''}
+        ${item.notes?`<div class="item-description" style="color:var(--text-muted);">📝 ${item.notes}</div>`:''}
+        ${outfitBadges?`<div class="item-meta-row">${outfitBadges}</div>`:''}
+      </div>
+      <div class="qty-control">
+        <button class="qty-btn" onclick="changeQty('${catName}','${item.id}',-1)">−</button>
+        <input class="qty-value" type="number" min="1" value="${item.qty||1}" onchange="setQty('${catName}','${item.id}',this.value)" onblur="setQty('${catName}','${item.id}',this.value)">
+        <button class="qty-btn" onclick="changeQty('${catName}','${item.id}',1)">+</button>
+      </div>
+      <div class="item-actions">
+        <button class="btn btn-ghost" style="font-size:0.72rem;padding:0.2rem 0.4rem;" onclick="openEditItem('${catName}','${item.id}')" title="Edit">✎</button>
+        <button class="btn btn-ghost" style="font-size:0.72rem;padding:0.2rem 0.4rem;" onclick="openMoveItem('${catName}','${item.id}')" title="Move to category">⇄</button>
+        <button class="btn btn-ghost" style="font-size:0.72rem;padding:0.2rem 0.4rem;color:var(--burgundy);" onclick="removeItem('${catName}','${item.id}')">×</button>
+      </div>
+    </div>`;
+}
+
+function findOutfitUses(item, outfitMap) {
+  const name = item.name.toLowerCase().trim();
+  const desc = (item.description||'').toLowerCase().trim();
+  const results = new Set();
+  Object.entries(outfitMap).forEach(([key, uses]) => {
+    if (name && (key.includes(name) || name.includes(key))) uses.forEach(u=>results.add(u));
+    if (desc && (key.includes(desc) || desc.includes(key))) uses.forEach(u=>results.add(u));
+  });
+  return [...results];
+}
+
+function toggleItem(catName, itemId) {
+  const item = state.currentTrip.categories[catName].find(i=>i.id===itemId);
+  if (item) { item.checked=!item.checked; saveTrips(); renderPackingList(); }
+}
+
+function changeQty(catName, itemId, delta) {
+  const item = state.currentTrip.categories[catName].find(i=>i.id===itemId);
+  if (item) { item.qty = Math.max(1, (item.qty||1)+delta); saveTrips(); renderPackingList(); }
+}
+
+function setQty(catName, itemId, val) {
+  const item = state.currentTrip.categories[catName].find(i=>i.id===itemId);
+  if (item) { item.qty = Math.max(1, parseInt(val)||1); saveTrips(); }
+}
+
+function removeItem(catName, itemId) {
+  const item = state.currentTrip.categories[catName].find(i=>i.id===itemId);
+  const outfitMap = buildOutfitItemMap();
+  const uses = findOutfitUses(item, outfitMap);
+  if (uses.length > 0) {
+    if (!confirm(`"${item.name}" is used in outfit(s): ${uses.join(', ')}.\n\nRemove it from the packing list anyway?`)) return;
+  }
+  state.currentTrip.categories[catName]=state.currentTrip.categories[catName].filter(i=>i.id!==itemId);
+  saveTrips(); renderPackingList();
+}
+
+function addItem(catName) {
+  const nameInput = document.getElementById(`add-name-${sanitize(catName)}`);
+  const descInput = document.getElementById(`add-desc-${sanitize(catName)}`);
+  const name = nameInput.value.trim();
+  if (!name) return;
+  state.currentTrip.categories[catName].push({id:uid(),name,description:descInput.value.trim(),notes:'',qty:1,checked:false,essential:false});
+  saveTrips(); renderPackingList();
+}
+
+function addCategory() {
+  const name=prompt('Category name:'); if(!name||!name.trim()) return;
+  const n=name.trim();
+  if (state.currentTrip.categories[n]) { toast('Category already exists','error'); return; }
+  state.currentTrip.categories[n]=[]; saveTrips(); renderPackingList();
+}
+
+function openEditItem(catName, itemId) {
+  const item = state.currentTrip.categories[catName].find(i=>i.id===itemId);
+  if (!item) return;
+  document.getElementById('edit-item-cat').value=catName;
+  document.getElementById('edit-item-id').value=itemId;
+  document.getElementById('edit-item-name').value=item.name;
+  document.getElementById('edit-item-description').value=item.description||'';
+  document.getElementById('edit-item-notes').value=item.notes||'';
+  document.getElementById('edit-item-essential').checked=item.essential||false;
+  openModal('modal-edit-item');
+}
+
+function saveItemEdit() {
+  const catName=document.getElementById('edit-item-cat').value;
+  const itemId=document.getElementById('edit-item-id').value;
+  const item=state.currentTrip.categories[catName].find(i=>i.id===itemId);
+  if (!item) return;
+  item.name=document.getElementById('edit-item-name').value.trim()||item.name;
+  item.description=document.getElementById('edit-item-description').value.trim();
+  item.notes=document.getElementById('edit-item-notes').value.trim();
+  item.essential=document.getElementById('edit-item-essential').checked;
+  saveTrips(); closeModal('modal-edit-item'); renderPackingList(); toast('Item updated','success');
+}
+
+function updateProgressRing() {
+  const {packed,total}=getTripProgress(state.currentTrip);
+  const pct=total>0?Math.round((packed/total)*100):0;
+  const circumference=150.8;
+  document.getElementById('progress-ring-fill').style.strokeDashoffset=circumference-(pct/100)*circumference;
+  document.getElementById('progress-pct').textContent=`${pct}%`;
+  document.getElementById('progress-label').textContent=`${packed} of ${total} items packed`;
+  const remaining=total-packed;
+  document.getElementById('progress-sublabel').textContent=pct===100?'All packed — bon voyage! ✈️':`${remaining} item${remaining!==1?'s':''} remaining`;
+}
+
+// ═══════════════════════════════════════════════
+// EXPORT / IMPORT
+// ═══════════════════════════════════════════════
+function exportList() {
+  const trip=state.currentTrip;
+  let text=`PACKING LIST — ${trip.tripName||trip.destination}\n`;
+  if(trip.tripName&&trip.destination) text+=`Destination: ${trip.destination}\n`;
+  text+=`${formatDateRange(trip.startDate,trip.endDate)}\n${'='.repeat(40)}\n\n`;
+  Object.entries(trip.categories).forEach(([cat,items])=>{
+    if(cat==='Personal Care'&&!state.currentUser.showPersonalCare) return;
+    text+=`${cat.toUpperCase()}\n`;
+    items.forEach(item=>{
+      text+=`  ${item.checked?'☑':'☐'} ${item.name}${item.qty>1?` (x${item.qty})`:''}${item.essential?' ★':''}`;
+      if(item.description) text+=` — ${item.description}`;
+      text+='\n';
+      if(item.notes) text+=`     📝 ${item.notes}\n`;
+    });
+    text+='\n';
+  });
+  const blob=new Blob([text],{type:'text/plain'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`${(trip.tripName||trip.destination).replace(/\s+/g,'_')}_packing_list.txt`; a.click();
+  toast('List exported!','success');
+}
+function openImportModal() { openModal('modal-import'); document.getElementById('import-text').value=''; }
+function importList() {
+  const text=document.getElementById('import-text').value.trim(); if(!text) return;
+  let items=[];
+  try { const json=JSON.parse(text); if(Array.isArray(json)) items=json.map(n=>({id:uid(),name:String(n),description:'',notes:'',qty:1,checked:false,essential:false})); }
+  catch { items=text.split('\n').map(l=>l.trim()).filter(l=>l&&!l.startsWith('=')&&!l.startsWith('#')).map(l=>({id:uid(),name:l.replace(/^[☑☐\-*]\s*/,''),description:'',notes:'',qty:1,checked:false,essential:false})); }
+  if(!state.currentTrip.categories['Imported']) state.currentTrip.categories['Imported']=[];
+  state.currentTrip.categories['Imported'].push(...items);
+  saveTrips(); closeModal('modal-import'); renderPackingList();
+  toast(`${items.length} items imported!`,'success');
+}
+
+// ═══════════════════════════════════════════════
+// WEATHER
+// ═══════════════════════════════════════════════
+async function fetchWeather(trip) {
+  if(!trip.destination||!trip.startDate) return;
+  try {
+    const geoRes=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(trip.destination)}&count=1`);
+    const geoData=await geoRes.json();
+    if(!geoData.results||!geoData.results.length) return;
+    const {latitude,longitude,name,country}=geoData.results[0];
+    const start=trip.startDate;
+    const end=trip.endDate&&trip.endDate>start?trip.endDate:new Date(new Date(start).getTime()+7*86400000).toISOString().split('T')[0];
+    const wRes=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=weathercode,temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&forecast_days=14&start_date=${start}&end_date=${end}&timezone=auto`);
+    const wData=await wRes.json();
+    const daily=wData.daily.time.map((date,i)=>({date,code:wData.daily.weathercode[i],tempMax:wData.daily.temperature_2m_max[i],tempMin:wData.daily.temperature_2m_min[i]}));
+    state.weather={daily,location:`${name}, ${country}`};
+    trip.weatherCache={daily:daily.slice(0,7),location:`${name}, ${country}`};
+    saveTrips(); renderWeatherTab(state.weather);
+  } catch(e){ console.warn('Weather fetch failed:',e); }
+}
+function renderWeatherTab(weather) {
+  if(!weather) return;
+  document.getElementById('weather-location-label').textContent=weather.location;
+  document.getElementById('weather-days-full').innerHTML=weather.daily.map(d=>`
+    <div class="weather-day">
+      <div class="wd-date">${new Date(d.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</div>
+      <div class="wd-icon">${weatherIcon(d.code)}</div>
+      <div class="wd-temps"><span class="high">${Math.round(d.tempMax)}°</span><span class="low"> / ${Math.round(d.tempMin)}°</span></div>
+      <div class="wd-desc">${weatherDesc(d.code)}</div>
+    </div>`).join('');
+  const avgHigh=weather.daily.reduce((s,d)=>s+d.tempMax,0)/weather.daily.length;
+  const hasRain=weather.daily.some(d=>[61,63,65,80,81,82].includes(d.code));
+  const hasSnow=weather.daily.some(d=>[71,73,75,77,85,86].includes(d.code));
+  let notes=[];
+  if(avgHigh>85) notes.push('Hot weather — pack light, breathable fabrics, extra sunscreen, and stay hydrated.');
+  else if(avgHigh>65) notes.push('Mild and comfortable temperatures — layers work well for day-to-night.');
+  else if(avgHigh>45) notes.push('Cool weather — bring a mid-weight jacket and warm layers.');
+  else notes.push('Cold weather — pack heavy coats, thermals, and warm accessories.');
+  if(hasRain) notes.push('Rain in the forecast — bring a compact umbrella and waterproof outer layer.');
+  if(hasSnow) notes.push('Snow is possible — waterproof boots and heavy winter gear recommended.');
+  document.getElementById('weather-packing-notes').textContent=notes.join(' ');
+}
+function weatherIcon(code){if(code===0)return'☀️';if([1,2].includes(code))return'⛅';if(code===3)return'☁️';if([45,48].includes(code))return'🌫️';if([51,53,55,61,63,65,80,81,82].includes(code))return'🌧️';if([71,73,75,77,85,86].includes(code))return'❄️';if([95,96,99].includes(code))return'⛈️';return'🌤️';}
+function weatherDesc(code){if(code===0)return'Sunny';if([1,2].includes(code))return'Partly cloudy';if(code===3)return'Overcast';if([45,48].includes(code))return'Foggy';if([51,53,55].includes(code))return'Drizzle';if([61,63,65].includes(code))return'Rainy';if([80,81,82].includes(code))return'Showers';if([71,73,75,77].includes(code))return'Snowy';if([95,96,99].includes(code))return'Thunderstorm';return'Mixed';}
+
+// ═══════════════════════════════════════════════
+// AI SUGGESTIONS
+// ═══════════════════════════════════════════════
+async function generateAISuggestions(trip) {
+  document.getElementById('ai-content').innerHTML=`<div class="ai-loading"><span>Generating suggestions for ${trip.destination}</span><div class="ai-dots"><span></span><span></span><span></span></div></div>`;
+  const weatherSummary=state.weather?`Weather: avg high ${Math.round(state.weather.daily.reduce((s,d)=>s+d.tempMax,0)/state.weather.daily.length)}°F, ${state.weather.daily.some(d=>[61,63,65,80,81,82].includes(d.code))?'rain expected':'no significant rain'}.`:'';
+  const prompt=`You are a smart travel packing assistant. Generate 12-15 specific packing suggestions for this trip. Be practical and specific, not generic.\n\nTrip: ${trip.destination}\nDates: ${formatDateRange(trip.startDate,trip.endDate)}\nType: ${trip.type}\n${weatherSummary}\n\nReturn ONLY a JSON array of strings. No preamble, no markdown.`;
+  try {
+    const response=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const data=await response.json();
+    const text=data.content?.map(c=>c.text||'').join('')||'[]';
+    let suggestions=[];
+    try{suggestions=JSON.parse(text.replace(/```json|```/g,'').trim());}catch{}
+    renderAISuggestions(suggestions);
+  } catch(e) {
+    const fallback=trip.type==='business'?['Business cards (200+)','Power strip with USB','Wrinkle-release spray','Laptop stand','Noise-canceling headphones','Travel iron','Collar stays','Portable wifi hotspot']:['Reef-safe sunscreen SPF 50','Packable day bag','Universal adapter','Dry bag','Portable speaker','Travel-size laundry detergent','Packing cubes','Download offline maps'];
+    renderAISuggestions(fallback);
+  }
+}
+function renderAISuggestions(suggestions) {
+  if(!suggestions.length){document.getElementById('ai-content').innerHTML='<p class="italic text-muted">No suggestions generated.</p>';return;}
+  document.getElementById('ai-content').innerHTML=`<div class="ai-suggestions-list">${suggestions.map(s=>`<div class="ai-suggestion-chip" onclick="addAISuggestion(this,'${s.replace(/'/g,"\\'")}')"><span>+</span> ${s}</div>`).join('')}</div>`;
+}
+function addAISuggestion(chip, itemName) {
+  if(chip.classList.contains('added')) return;
+  if(!state.currentTrip.categories['Misc']) state.currentTrip.categories['Misc']=[];
+  state.currentTrip.categories['Misc'].push({id:uid(),name:itemName,description:'',notes:'',qty:1,checked:false,essential:false});
+  saveTrips(); chip.classList.add('added'); chip.innerHTML='✓ Added'; updateProgressRing();
+  toast(`Added: ${itemName}`,'success');
+}
+function regenerateAI(){if(state.currentTrip) generateAISuggestions(state.currentTrip);}
+
+// ═══════════════════════════════════════════════
+// OUTFIT BUILDER — multi-outfit per day
+// Data model: outfits[userId][dateKey] = [ outfitObj, outfitObj, ... ]
+// Each outfitObj: { id, timeslot, occasion, event, top, bottom, shoes, outer, accessories, bag, notes, photos }
+// ═══════════════════════════════════════════════
+
+const TIME_SLOTS = ['morning','afternoon','evening','night'];
+const TIME_LABELS = {morning:'🌅 Morning', afternoon:'☀️ Afternoon', evening:'🌆 Evening', night:'🌙 Night'};
+
+function getUserDayOutfits(dateKey) {
+  const trip = state.currentTrip;
+  if (!trip.outfits) trip.outfits = {};
+  if (!trip.outfits[state.currentUser.id]) trip.outfits[state.currentUser.id] = {};
+  const day = trip.outfits[state.currentUser.id][dateKey];
+  // Migrate old single-outfit format to array
+  if (day && !Array.isArray(day)) {
+    trip.outfits[state.currentUser.id][dateKey] = [{ id: uid(), timeslot: 'evening', ...day }];
+  }
+  return trip.outfits[state.currentUser.id][dateKey] || [];
+}
+
+function renderOutfitCalendar() {
+  const trip = state.currentTrip;
+  const container = document.getElementById('outfit-calendar');
+  container.innerHTML = '';
+  if (!trip.startDate) { container.innerHTML='<p class="italic text-muted">Set trip dates to plan outfits by day.</p>'; return; }
+  const start = new Date(trip.startDate);
+  const end = trip.endDate ? new Date(trip.endDate) : new Date(start.getTime() + 6*86400000);
+  const days = [];
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) days.push(new Date(d));
+  days.forEach(day => {
+    const dateKey = day.toISOString().split('T')[0];
+    const outfits = getUserDayOutfits(dateKey);
+    const weatherDay = state.weather?.daily.find(d => d.date === dateKey);
+    const card = document.createElement('div');
+    card.className = 'outfit-day-card';
+    const slotsHtml = outfits.length === 0
+      ? `<div class="outfit-add-slot" onclick="openOutfitDayModal('${dateKey}')">+ Plan first outfit</div>`
+      : outfits.sort((a,b) => TIME_SLOTS.indexOf(a.timeslot)-TIME_SLOTS.indexOf(b.timeslot))
+          .map(o => renderOutfitSlot(o, dateKey)).join('') +
+        `<div class="outfit-add-slot" onclick="openOutfitDayModal('${dateKey}')">+ Add another outfit</div>`;
+    card.innerHTML = `
+      <div class="outfit-day-header">
+        <span class="outfit-day-date">${day.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</span>
+        <span class="outfit-day-weather">${weatherDay?`${weatherIcon(weatherDay.code)} ${Math.round(weatherDay.tempMax)}°`:''}</span>
+      </div>
+      <div class="outfit-day-body">${slotsHtml}</div>`;
+    container.appendChild(card);
+  });
+}
+
+function renderOutfitSlot(outfit, dateKey) {
+  const pieces = [['Top',outfit.top],['Bottom',outfit.bottom],['Shoes',outfit.shoes],['Outer',outfit.outer],['Acc.',outfit.accessories],['Bag',outfit.bag]]
+    .filter(([,v]) => v);
+  return `
+    <div class="outfit-slot">
+      <div class="outfit-slot-header">
+        <span class="outfit-slot-time ${outfit.timeslot}">${TIME_LABELS[outfit.timeslot]||outfit.timeslot}</span>
+        <div class="outfit-slot-actions">
+          <button class="btn btn-ghost" style="font-size:0.68rem;padding:0.15rem 0.35rem;" onclick="openOutfitDayModal('${dateKey}','${outfit.id}')">✎</button>
+          <button class="btn btn-ghost" style="font-size:0.68rem;padding:0.15rem 0.35rem;color:var(--burgundy);" onclick="deleteOutfitSlot('${dateKey}','${outfit.id}')">×</button>
+        </div>
+      </div>
+      ${outfit.occasion?`<div class="outfit-occasion-label">${outfit.occasion}</div>`:''}
+      ${outfit.event?`<div class="outfit-event">📅 ${outfit.event}</div>`:''}
+      <div class="outfit-pieces">
+        ${pieces.map(([label,value])=>`<div class="outfit-piece"><span class="outfit-piece-label">${label}</span><span>${value}</span></div>`).join('')}
+      </div>
+      ${outfit.notes?`<div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.3rem;font-style:italic;">📝 ${outfit.notes}</div>`:''}
+    </div>`;
+}
+
+// ── SLOT-BY-SLOT OUTFIT BUILDER ──────────────────────────────────────────────
+const OUTFIT_SLOTS = [
+  { key:'top',         label:'Top',        cats:['Tops','Dresses & Jumpsuits'] },
+  { key:'bottom',      label:'Bottom',     cats:['Bottoms','Dresses & Jumpsuits'] },
+  { key:'shoes',       label:'Shoes',      cats:['Shoes'] },
+  { key:'outer',       label:'Outerwear',  cats:['Outerwear'] },
+  { key:'accessories', label:'Accessories',cats:['Accessories'] },
+  { key:'bag',         label:'Bag',        cats:['Bags'] },
+];
+
+// Builder state: selected item per slot
+let builderSelections = {}; // { top: {id, name, color}, ... }
+
+function renderClosetPalette() {
+  const grid = document.getElementById('outfit-slots-grid');
+  if (!grid) return;
+  const items = getCloset();
+
+  if (!items.length) {
+    grid.innerHTML = `<div style="padding:1.5rem;text-align:center;color:var(--text-muted);font-family:var(--font-accent);font-style:italic;">
+      Your closet is empty. <a href="#" onclick="showCloset();return false;" style="color:var(--gold);">Add items</a> to build outfits from here.
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = OUTFIT_SLOTS.map(slot => {
+    const slotItems = items.filter(i => slot.cats.includes(i.cat));
+    const sel = builderSelections[slot.key];
+    const selLabel = sel ? `<span class="slot-selected-name">✓ ${sel.name}${sel.color?' · '+sel.color:''}</span>` : '';
+    const chips = slotItems.length
+      ? slotItems.map(item => `
+          <div class="slot-item-chip ${builderSelections[slot.key]?.id===item.id?'selected':''}"
+               data-slot="${slot.key}" data-id="${item.id}"
+               data-name="${item.name}" data-color="${item.color||''}"
+               onclick="selectSlotItem(this)">
+            ${item.name}${item.color?`<span class="chip-color">${item.color}</span>`:''}
+          </div>`).join('')
+      : `<span class="slot-empty">No ${slot.label.toLowerCase()} items in closet</span>`;
+
+    // Per-slot search only if 5+ items
+    const searchBox = slotItems.length >= 5
+      ? `<input class="slot-search" placeholder="Filter..." oninput="filterSlot('${slot.key}',this.value)" style="margin-right:0.35rem;">`
+      : '';
+
+    return `
+      <div class="outfit-slot-row" id="slot-row-${slot.key}">
+        <div class="slot-label-col">
+          <span class="slot-label">${slot.label}</span>
+          ${selLabel}
+          ${sel ? `<button class="btn btn-ghost" style="font-size:0.6rem;padding:0.08rem 0.25rem;color:var(--burgundy);margin-top:0.15rem;" onclick="clearSlot('${slot.key}')">× clear</button>` : ''}
+        </div>
+        <div class="slot-items-col" id="slot-items-${slot.key}">
+          ${searchBox}${chips}
+        </div>
+      </div>`;
+  }).join('');
+
+  updateBuilderButton();
+}
+
+function selectSlotItem(el) {
+  const slotKey = el.dataset.slot;
+  const id = el.dataset.id;
+  const name = el.dataset.name;
+  const color = el.dataset.color;
+
+  // Toggle: click selected item to deselect
+  if (builderSelections[slotKey]?.id === id) {
+    delete builderSelections[slotKey];
+  } else {
+    builderSelections[slotKey] = { id, name, color };
+  }
+  renderClosetPalette();
+}
+
+function clearSlot(slotKey) {
+  delete builderSelections[slotKey];
+  renderClosetPalette();
+}
+
+function clearBuilderSelections() {
+  builderSelections = {};
+  renderClosetPalette();
+}
+
+function filterSlot(slotKey, query) {
+  const q = query.toLowerCase();
+  document.querySelectorAll(`#slot-items-${slotKey} .slot-item-chip`).forEach(chip => {
+    const name = (chip.dataset.name + ' ' + chip.dataset.color).toLowerCase();
+    chip.style.display = name.includes(q) ? '' : 'none';
+  });
+}
+
+function updateBuilderButton() {
+  const btn = document.getElementById('builder-plan-btn');
+  if (!btn) return;
+  const count = Object.keys(builderSelections).length;
+  btn.disabled = count === 0;
+  btn.textContent = count > 0 ? `Assign to a Day → (${count} piece${count!==1?'s':''})` : 'Assign to a Day →';
+}
+
+function openOutfitFromBuilder() {
+  if (!Object.keys(builderSelections).length) { toast('Select at least one item','error'); return; }
+  // Reset modal state
+  document.getElementById('outfit-edit-id').value = '';
+  document.getElementById('outfit-timeslot').value = 'evening';
+  document.getElementById('outfit-occasion').value = 'casual';
+  document.getElementById('outfit-event').value = '';
+  document.getElementById('outfit-notes').value = '';
+  // Pre-fill piece fields from builder selections, blank the rest
+  ['top','bottom','shoes','outer','accessories','bag'].forEach(p => {
+    const el = document.getElementById(`piece-${p}`);
+    if (!el) return;
+    const sel = builderSelections[p];
+    el.value = sel ? (sel.name + (sel.color ? ' (' + sel.color + ')' : '')) : '';
+  });
+  // Set default date to trip start
+  const defaultDate = state.currentTrip?.startDate || new Date().toISOString().split('T')[0];
+  document.getElementById('outfit-date').value = defaultDate;
+  // Open modal directly at step 2 — pieces chosen from builder
+  document.getElementById('outfit-modal-title').textContent = 'Assign Outfit to a Day';
+  openModal('modal-outfit-day');
+  outfitGoToStep(2);
+}
+
+// ── TWO-STEP OUTFIT MODAL ────────────────────────────────────────────────────
+function outfitGoToStep(step) {
+  document.getElementById('outfit-step-1').style.display = step===1 ? 'block' : 'none';
+  document.getElementById('outfit-step-2').style.display = step===2 ? 'block' : 'none';
+  document.getElementById('step-label-1').classList.toggle('active', step===1);
+  document.getElementById('step-label-2').classList.toggle('active', step===2);
+  document.getElementById('outfit-back-btn').style.display = step===2 ? 'inline-flex' : 'none';
+  document.getElementById('outfit-cancel-btn').style.display = step===1 ? 'inline-flex' : 'none';
+  document.getElementById('outfit-next-btn').textContent = step===1 ? 'Next: Set Day & Time →' : 'Save Outfit';
+  document.getElementById('outfit-next-btn').onclick = step===1 ? outfitStepNext : saveOutfitDay;
+  if (step===2) renderOutfitStep2Preview();
+}
+
+function outfitStepNext() {
+  const hasPiece = ['top','bottom','shoes','outer','accessories','bag'].some(p => document.getElementById(`piece-${p}`).value.trim());
+  if (!hasPiece) { toast('Add at least one outfit piece','error'); return; }
+  outfitGoToStep(2);
+}
+
+function outfitStepBack() { outfitGoToStep(1); }
+
+function renderOutfitStep2Preview() {
+  const pieces = [['Top','piece-top'],['Bottom','piece-bottom'],['Shoes','piece-shoes'],['Outerwear','piece-outer'],['Accessories','piece-accessories'],['Bag','piece-bag']]
+    .map(([label,id]) => [label, document.getElementById(id)?.value.trim()])
+    .filter(([,v]) => v);
+  const preview = document.getElementById('outfit-step2-preview');
+  if (!preview) return;
+  preview.innerHTML = `<strong>Outfit summary</strong>${pieces.map(([l,v])=>`<span style="display:block;"><span style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);min-width:70px;display:inline-block;">${l}</span>${v}</span>`).join('')}`;
+}
+
+function openOutfitDayModal(dateKey, outfitId) {
+  const today = dateKey || (state.currentTrip?.startDate) || new Date().toISOString().split('T')[0];
+  document.getElementById('outfit-date').value = today;
+  document.getElementById('outfit-edit-id').value = outfitId || '';
+  document.getElementById('outfit-timeslot').value = 'evening';
+  document.getElementById('outfit-occasion').value = 'casual';
+  document.getElementById('outfit-event').value = '';
+  document.getElementById('outfit-notes').value = '';
+  ['top','bottom','shoes','outer','accessories','bag'].forEach(p => document.getElementById(`piece-${p}`).value = '');
+  if (outfitId) {
+    const existing = getUserDayOutfits(today).find(o => o.id === outfitId);
+    if (existing) {
+      document.getElementById('outfit-timeslot').value = existing.timeslot || 'evening';
+      document.getElementById('outfit-occasion').value = existing.occasion || 'casual';
+      document.getElementById('outfit-event').value = existing.event || '';
+      document.getElementById('outfit-notes').value = existing.notes || '';
+      ['top','bottom','shoes','outer','accessories','bag'].forEach(p => {
+        if (existing[p]) document.getElementById(`piece-${p}`).value = existing[p];
+      });
+      // When editing, go straight to step 1 (pieces)
+    }
+  }
+  outfitGoToStep(1);
+  document.getElementById('outfit-modal-title').textContent = outfitId ? 'Edit Outfit' : 'Plan Outfit';
+  openModal('modal-outfit-day');
+}
+
+function saveOutfitDay() {
+  const dateKey = document.getElementById('outfit-date').value;
+  if (!dateKey) { toast('Please select a date','error'); return; }
+  const editId = document.getElementById('outfit-edit-id').value;
+  const outfit = {
+    id: editId || uid(),
+    timeslot: document.getElementById('outfit-timeslot').value,
+    occasion: document.getElementById('outfit-occasion').value,
+    event: document.getElementById('outfit-event').value.trim(),
+    top: document.getElementById('piece-top').value.trim(),
+    bottom: document.getElementById('piece-bottom').value.trim(),
+    shoes: document.getElementById('piece-shoes').value.trim(),
+    outer: document.getElementById('piece-outer').value.trim(),
+    accessories: document.getElementById('piece-accessories').value.trim(),
+    bag: document.getElementById('piece-bag').value.trim(),
+    notes: document.getElementById('outfit-notes').value.trim(),
+  };
+  if (!state.currentTrip.outfits) state.currentTrip.outfits = {};
+  if (!state.currentTrip.outfits[state.currentUser.id]) state.currentTrip.outfits[state.currentUser.id] = {};
+  const dayOutfits = getUserDayOutfits(dateKey);
+  if (editId) {
+    const idx = dayOutfits.findIndex(o => o.id === editId);
+    if (idx >= 0) dayOutfits[idx] = outfit; else dayOutfits.push(outfit);
+  } else {
+    const slotTaken = dayOutfits.find(o => o.timeslot === outfit.timeslot);
+    if (slotTaken && !confirm(`Already have a ${TIME_LABELS[outfit.timeslot]} outfit this day. Add anyway?`)) return;
+    dayOutfits.push(outfit);
+  }
+  state.currentTrip.outfits[state.currentUser.id][dateKey] = dayOutfits;
+  syncOutfitToPackingList(outfit);
+  saveTrips(); closeModal('modal-outfit-day');
+  renderOutfitCalendar(); renderPackingList();
+  clearPaletteSelection();
+  toast('Outfit saved!','success');
+}
+
+function deleteOutfitSlot(dateKey, outfitId) {
+  if (!confirm('Remove this outfit?')) return;
+  state.currentTrip.outfits[state.currentUser.id][dateKey] = getUserDayOutfits(dateKey).filter(o => o.id !== outfitId);
+  saveTrips(); renderOutfitCalendar(); renderPackingList();
+  toast('Outfit removed');
+}
+
+function syncOutfitToPackingList(outfit) {
+  const trip = state.currentTrip;
+  if (!trip.categories['Clothing']) trip.categories['Clothing'] = [];
+  ['top','bottom','shoes','outer','accessories','bag'].forEach(piece => {
+    const val = outfit[piece]; if (!val?.trim()) return;
+    const exists = Object.values(trip.categories).flat().some(item => item.name.toLowerCase() === val.toLowerCase().trim());
+    if (!exists) trip.categories['Clothing'].push({id:uid(),name:val.trim(),description:`From outfit: ${outfit.event||outfit.occasion||''}`,notes:'',qty:1,checked:false,essential:false});
+  });
+}
+
+// Stubs to prevent errors from removed modal
+function openSaveComboModal() { toast('Save an outfit from the calendar by editing it',''); }
+function saveOutfitCombo() {}
+function renderOutfitCombos() {}
+function deleteCombo() {}
+function applyComboToDay() {}
+
+// ═══════════════════════════════════════════════
+
+
+// ═══════════════════════════════════════════════
+// SHARING
+// ═══════════════════════════════════════════════
+function renderShareTab() {
+  const trip=state.currentTrip; const sharedWith=trip.sharedWith||[];
+  const list=document.getElementById('shared-with-list');
+  if(!sharedWith.length){list.innerHTML='<p class="italic text-muted" style="font-size:0.85rem;">Not shared with anyone yet.</p>';}
+  else{list.innerHTML=sharedWith.map(uid=>{const user=state.users.find(u=>u.id===uid);return user?`<div class="admin-user-row"><div class="admin-avatar">${user.initials||user.name[0]}</div><div class="admin-user-info"><div class="admin-user-name">${user.name}</div><div class="admin-user-role">Can view & edit</div></div><button class="btn btn-ghost" style="color:var(--burgundy);font-size:0.75rem;" onclick="revokeShare('${uid}')">Revoke</button></div>`:''}).join('');}
+  const sel=document.getElementById('share-user-select');
+  const excluded=[trip.ownerId,...sharedWith];
+  sel.innerHTML='<option value="">Select a user...</option>'+state.users.filter(u=>!excluded.includes(u.id)).map(u=>`<option value="${u.id}">${u.name}</option>`).join('');
+}
+function shareWithUser(){
+  const userId=document.getElementById('share-user-select').value; if(!userId){toast('Select a user first','error');return;}
+  if(!state.currentTrip.sharedWith) state.currentTrip.sharedWith=[];
+  state.currentTrip.sharedWith.push(userId); saveTrips();
+  const user=state.users.find(u=>u.id===userId); toast(`Shared with ${user?.name}!`,'success'); renderShareTab();
+}
+function revokeShare(userId){state.currentTrip.sharedWith=state.currentTrip.sharedWith.filter(id=>id!==userId);saveTrips();renderShareTab();toast('Access revoked');}
+
+// ═══════════════════════════════════════════════
+// TRIP SETTINGS
+// ═══════════════════════════════════════════════
+function saveSettings(){
+  if(!state.currentTrip) return;
+  state.currentTrip.tripName=document.getElementById('settings-tripname').value;
+  state.currentTrip.destination=document.getElementById('settings-destination').value;
+  state.currentTrip.reason=document.getElementById('settings-reason').value;
+  state.currentTrip.startDate=document.getElementById('settings-start').value;
+  state.currentTrip.endDate=document.getElementById('settings-end').value;
+  state.currentTrip.type=document.getElementById('settings-type').value;
+  document.getElementById('detail-name').textContent=state.currentTrip.tripName||state.currentTrip.destination;
+  delete state.currentTrip.timezone; delete state.currentTrip.currency;
+  renderTripDetailHeader();
+  saveTrips(); toast('Settings saved');
+}
+function saveAsTemplate(){
+  const name=prompt('Template name:',`${state.currentTrip.tripName||state.currentTrip.destination} Template`); if(!name) return;
+  const template={id:uid(),name,icon:state.currentTrip.type==='business'?'💼':'🌴',categories:{}};
+  Object.entries(state.currentTrip.categories).forEach(([cat,items])=>{
+    if(cat==='Personal Care') return; // Don't save personal care to templates
+    template.categories[cat]=items.map(i=>i.name);
+  });
+  state.templates.push(template); saveTemplates(); toast(`Template "${name}" saved!`,'success');
+}
+function deleteTrip(){
+  if(!confirm(`Delete "${state.currentTrip.tripName||state.currentTrip.destination}"? This cannot be undone.`)) return;
+  state.trips=state.trips.filter(t=>t.id!==state.currentTrip.id); saveTrips();
+  state.currentTrip=null; showDashboard(); toast('Trip deleted');
+}
+
+// ═══════════════════════════════════════════════
+// TEMPLATES
+// ═══════════════════════════════════════════════
+function renderTemplates(){
+  const grid=document.getElementById('template-grid');
+  if(!state.templates.length){grid.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><p>No templates yet. Save a trip as a template from the trip settings.</p></div>';return;}
+  grid.innerHTML=state.templates.map(t=>`<div class="template-card"><div class="template-icon">${t.icon}</div><div class="template-name">${t.name}</div><div class="template-count">${Object.values(t.categories).flat().length} items across ${Object.keys(t.categories).length} categories</div><div style="margin-top:1rem;display:flex;gap:0.5rem;"><button class="btn btn-primary" style="font-size:0.72rem;" onclick="useTemplate('${t.id}')">Use Template</button>${!['tpl-business','tpl-leisure'].includes(t.id)?`<button class="btn btn-ghost" style="color:var(--burgundy);font-size:0.72rem;" onclick="deleteTemplate('${t.id}')">Delete</button>`:''}</div></div>`).join('');
+}
+function useTemplate(templateId){document.getElementById('new-trip-template').value=templateId;openNewTripModal();}
+function deleteTemplate(templateId){if(!confirm('Delete this template?')) return;state.templates=state.templates.filter(t=>t.id!==templateId);saveTemplates();renderTemplates();toast('Template deleted');}
+
+// ═══════════════════════════════════════════════
+// ADMIN
+// ═══════════════════════════════════════════════
+function renderAdmin(){
+  document.getElementById('admin-user-list').innerHTML=state.users.map(u=>`<div class="admin-user-row"><div class="admin-avatar">${u.initials||u.name[0].toUpperCase()}</div><div class="admin-user-info"><div class="admin-user-name">${u.name} ${u.id===state.currentUser.id?'<span style="color:var(--gold);font-size:0.7rem;">(you)</span>':''}</div><div class="admin-user-role">${u.role} · PIN: ${'•'.repeat(u.pin.length)} ${u.showPersonalCare?'· 🌸':''}</div></div><button class="btn btn-secondary" style="font-size:0.72rem;" onclick="openEditUserModal('${u.id}')">Edit</button></div>`).join('');
+}
+function openNewUserModal(){document.getElementById('new-user-name').value='';document.getElementById('new-user-pin').value='';document.getElementById('new-user-role').value='user';openModal('modal-new-user');}
+function createUser(){
+  const name=document.getElementById('new-user-name').value.trim();
+  const pin=document.getElementById('new-user-pin').value.trim();
+  const role=document.getElementById('new-user-role').value;
+  if(!name){toast('Enter a name','error');return;}
+  if(!/^\d{4}$/.test(pin)){toast('PIN must be exactly 4 digits','error');return;}
+  const user={id:uid(),name,pin,role,initials:name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2)};
+  state.users.push(user); saveUsers(); closeModal('modal-new-user'); renderAdmin();
+  toast(`User "${name}" created!`,'success');
+}
+function openEditUserModal(userId){
+  const user=state.users.find(u=>u.id===userId); if(!user) return;
+  document.getElementById('edit-user-id').value=userId;
+  document.getElementById('edit-user-name').value=user.name;
+  document.getElementById('edit-user-pin').value='';
+  document.getElementById('edit-user-role').value=user.role;
+  openModal('modal-edit-user');
+}
+function saveUserEdit(){
+  const userId=document.getElementById('edit-user-id').value;
+  const user=state.users.find(u=>u.id===userId); if(!user) return;
+  const newPin=document.getElementById('edit-user-pin').value.trim();
+  if(newPin&&!/^\d{4}$/.test(newPin)){toast('PIN must be 4 digits','error');return;}
+  user.name=document.getElementById('edit-user-name').value.trim()||user.name;
+  user.role=document.getElementById('edit-user-role').value;
+  user.initials=user.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  if(newPin) user.pin=newPin;
+  saveUsers(); closeModal('modal-edit-user'); renderAdmin(); toast('User updated!','success');
+}
+function deleteUserFromModal(){
+  const userId=document.getElementById('edit-user-id').value;
+  if(userId===state.currentUser.id){toast("Can't delete yourself",'error');return;}
+  if(!confirm('Delete this user?')) return;
+  state.users=state.users.filter(u=>u.id!==userId); saveUsers(); closeModal('modal-edit-user'); renderAdmin(); toast('User deleted');
+}
+
+
+// ═══════════════════════════════════════════
+// #26 — DRAG TO REORDER CATEGORIES
+// ═══════════════════════════════════════════
+function initCatDrag(e, catName) {
+  // handled by section dragstart event
+}
+
+function reorderCategory(fromCat, toCat) {
+  if (fromCat === toCat) return;
+  const cats = state.currentTrip.categories;
+  const keys = Object.keys(cats);
+  const fromIdx = keys.indexOf(fromCat);
+  const toIdx = keys.indexOf(toCat);
+  if (fromIdx < 0 || toIdx < 0) return;
+  // Rebuild ordered object
+  keys.splice(fromIdx, 1);
+  keys.splice(toIdx, 0, fromCat);
+  const reordered = {};
+  keys.forEach(k => reordered[k] = cats[k]);
+  state.currentTrip.categories = reordered;
+  saveTrips(); renderPackingList();
+}
+
+// ═══════════════════════════════════════════
+// #29 — SLOT BUILDER: EXPANDED ALTERNATIVES
+// (slot already shows all items — this adds
+//  a per-slot expand/collapse for long lists)
+// ═══════════════════════════════════════════
+const slotExpanded = {};
+function toggleSlotExpand(slotKey) {
+  slotExpanded[slotKey] = !slotExpanded[slotKey];
+  renderClosetPalette();
+}
+
+// ═══════════════════════════════════════════
+// #30 — ALL OUTFITS SUMMARY VIEW
+// ═══════════════════════════════════════════
+let outfitViewMode = 'calendar'; // 'calendar' | 'summary'
+
+function toggleOutfitView() {
+  outfitViewMode = outfitViewMode === 'calendar' ? 'summary' : 'calendar';
+  const btn = document.getElementById('outfit-view-toggle');
+  const cal = document.getElementById('outfit-calendar');
+  const sum = document.getElementById('outfit-summary-view');
+  if (outfitViewMode === 'summary') {
+    cal.style.display = 'none';
+    sum.style.display = 'block';
+    if (btn) btn.textContent = '📅 By Day';
+    renderOutfitSummary();
+  } else {
+    cal.style.display = '';
+    sum.style.display = 'none';
+    if (btn) btn.textContent = '☰ All Outfits';
+  }
+}
+
+function renderOutfitSummary() {
+  const trip = state.currentTrip;
+  const container = document.getElementById('outfit-summary-view');
+  if (!container) return;
+  const userOutfits = trip.outfits?.[state.currentUser.id] || {};
+  // Flatten all outfits across all days
+  const all = [];
+  Object.entries(userOutfits).forEach(([dateKey, slots]) => {
+    const dayOutfits = Array.isArray(slots) ? slots : [slots];
+    dayOutfits.forEach(o => all.push({...o, dateKey}));
+  });
+  if (!all.length) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">👗</div><p>No outfits planned yet.</p></div>';
+    return;
+  }
+  // Sort by date then timeslot
+  const slotOrder = {morning:0, afternoon:1, evening:2, night:3};
+  all.sort((a,b) => a.dateKey.localeCompare(b.dateKey) || (slotOrder[a.timeslot]||0)-(slotOrder[b.timeslot]||0));
+  container.innerHTML = '<div class="outfit-summary-list">' + all.map(o => {
+    const pieces = [['Top',o.top],['Bottom',o.bottom],['Shoes',o.shoes],['Outer',o.outer],['Acc.',o.accessories],['Bag',o.bag]].filter(([,v])=>v);
+    const date = new Date(o.dateKey).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+    return `<div class="outfit-summary-row">
+      <div class="outfit-summary-date">${date}</div>
+      <div class="outfit-summary-slot ${o.timeslot}">${TIME_LABELS[o.timeslot]||o.timeslot}</div>
+      <div class="outfit-summary-details">
+        ${o.event ? `<div class="outfit-summary-event">📅 ${o.event}</div>` : ''}
+        ${o.occasion ? `<div class="outfit-summary-occasion">${o.occasion}</div>` : ''}
+        <div class="outfit-summary-pieces">${pieces.map(([l,v])=>`<span><strong>${l}</strong> ${v}</span>`).join(' · ')}</div>
+      </div>
+      <button class="btn btn-ghost" style="font-size:0.68rem;flex-shrink:0;" onclick="openOutfitDayModal('${o.dateKey}','${o.id}')">✎</button>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+// ═══════════════════════════════════════════
+// #17 — PERSONAL ITEM LIBRARY
+// ═══════════════════════════════════════════
+function getLibrary() { try { return JSON.parse(localStorage.getItem('pr_library_' + state.currentUser.id) || '[]'); } catch(e) { return []; } }
+function saveLibrary(items) { try { localStorage.setItem('pr_library_' + state.currentUser.id, JSON.stringify(items)); } catch(e) {} }
+
+function showLibrary(skipHistory) {
+  hideAllViews();
+  document.getElementById('view-library').style.display = 'block';
+  document.getElementById('nav-library').classList.add('active');
+  renderLibrary();
+  if (!skipHistory) history.pushState({view:'library'}, '', '');
+}
+
+function renderLibrary(searchQuery) {
+  const allItems = getLibrary();
+  const container = document.getElementById('library-content');
+  const q = (searchQuery||'').toLowerCase().trim();
+  const items = q ? allItems.filter(i =>
+    i.name.toLowerCase().includes(q) ||
+    (i.cat||'').toLowerCase().includes(q) ||
+    (i.desc||'').toLowerCase().includes(q)
+  ) : allItems;
+
+  if (!allItems.length) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📦</div><p>No saved items yet.<br>Add items you pack on every trip — sunscreen, AirPods, travel pillow.</p></div>`;
+    return;
+  }
+  if (q && !items.length) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><p>No items match "' + q + '"</p></div>';
+    return;
+  }
+  // Group by category
+  const cats = {};
+  items.forEach(i => { if (!cats[i.cat]) cats[i.cat]=[]; cats[i.cat].push(i); });
+  container.innerHTML = Object.entries(cats).map(([cat, catItems]) => `
+    <div class="closet-cat-section">
+      <div class="closet-cat-title">${CATEGORY_ICONS[cat]||'📦'} ${cat} <span style="font-size:0.68rem;font-weight:400;color:var(--text-muted);font-family:var(--font-body);">${catItems.length} item${catItems.length!==1?'s':''}</span></div>
+      <div class="closet-list">
+        ${catItems.map(item => `
+          <div class="closet-list-row">
+            <span class="closet-list-name">${item.name}</span>
+            ${item.desc ? '<span class="closet-list-desc">' + item.desc + '</span>' : ''}
+            <div style="margin-left:auto;display:flex;gap:0.3rem;flex-shrink:0;">
+              <button class="btn btn-secondary" style="font-size:0.65rem;padding:0.18rem 0.5rem;" onclick="addLibraryItemToTrip('${item.id}')">+ Add to Trip</button>
+              <button class="btn btn-ghost" style="font-size:0.68rem;" onclick="openEditLibraryItem('${item.id}')">✎</button>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function openAddLibraryItem() {
+  document.getElementById('library-modal-title').textContent = 'Add Item';
+  document.getElementById('library-edit-id').value = '';
+  ['library-item-name','library-item-desc','library-item-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('library-item-cat').value = 'Misc';
+  document.getElementById('library-delete-btn').style.display = 'none';
+  openModal('modal-add-library');
+}
+
+function openEditLibraryItem(itemId) {
+  const item = getLibrary().find(i => i.id === itemId); if (!item) return;
+  document.getElementById('library-modal-title').textContent = 'Edit Item';
+  document.getElementById('library-edit-id').value = itemId;
+  document.getElementById('library-item-name').value = item.name;
+  document.getElementById('library-item-cat').value = item.cat || 'Misc';
+  document.getElementById('library-item-desc').value = item.desc || '';
+  document.getElementById('library-item-notes').value = item.notes || '';
+  document.getElementById('library-delete-btn').style.display = 'inline-flex';
+  openModal('modal-add-library');
+}
+
+function saveLibraryItem() {
+  const name = document.getElementById('library-item-name').value.trim();
+  if (!name) { toast('Please enter an item name', 'error'); return; }
+  const editId = document.getElementById('library-edit-id').value;
+  const items = getLibrary();
+  const item = {
+    id: editId || uid(), name,
+    cat: document.getElementById('library-item-cat').value,
+    desc: document.getElementById('library-item-desc').value.trim(),
+    notes: document.getElementById('library-item-notes').value.trim(),
+  };
+  if (editId) { const idx = items.findIndex(i => i.id === editId); if (idx >= 0) items[idx] = item; else items.push(item); }
+  else items.push(item);
+  saveLibrary(items);
+  closeModal('modal-add-library'); renderLibrary();
+  toast(editId ? 'Item updated!' : 'Item saved!', 'success');
+}
+
+function deleteLibraryItem() {
+  const editId = document.getElementById('library-edit-id').value;
+  if (!editId || !confirm('Remove this item?')) return;
+  saveLibrary(getLibrary().filter(i => i.id !== editId));
+  closeModal('modal-add-library'); renderLibrary(); toast('Item removed');
+}
+
+function addLibraryItemToTrip(itemId) {
+  if (!state.currentTrip) { toast('Open a trip first', 'error'); return; }
+  const item = getLibrary().find(i => i.id === itemId); if (!item) return;
+  const cat = item.cat || 'Misc';
+  if (!state.currentTrip.categories[cat]) state.currentTrip.categories[cat] = [];
+  const exists = state.currentTrip.categories[cat].some(i => i.name.toLowerCase() === item.name.toLowerCase());
+  if (exists) { toast(item.name + ' already in list', 'error'); return; }
+  state.currentTrip.categories[cat].push({id:uid(), name:item.name, description:item.desc||'', notes:item.notes||'', qty:1, checked:false, essential:false});
+  saveTrips();
+  toast(item.name + ' added to ' + state.currentTrip.tripName, 'success');
+}
+
+// ═══════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function toast(message,type=''){
+  const container=document.getElementById('toast-container');
+  const t=document.createElement('div'); t.className=`toast ${type}`; t.textContent=message;
+  container.appendChild(t); setTimeout(()=>t.remove(),3200);
+}
+function uid(){return Math.random().toString(36).slice(2,9)+Date.now().toString(36);}
+function sanitize(str){return str.replace(/[^a-z0-9]/gi,'_').toLowerCase();}
+function formatDateRange(start,end){
+  if(!start) return 'Dates TBD';
+  const s=new Date(start).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  if(!end) return s;
+  const e=new Date(end).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  return `${s} – ${e}`;
+}
+document.querySelectorAll('.modal-overlay').forEach(overlay=>{overlay.addEventListener('click',e=>{if(e.target===overlay) overlay.classList.remove('open');});});
+
+
+// ═══════════════════════════════════════════
+// #23 — BROWSER BACK BUTTON
+// ═══════════════════════════════════════════
+window.addEventListener('popstate', (e) => {
+  if (!state.currentUser) return; // not logged in, ignore
+  const s = e.state;
+  if (!s) { showDashboard(true); return; }
+  if (s.view === 'dashboard') showDashboard(true);
+  else if (s.view === 'trip' && s.tripId) showTripDetail(s.tripId, true);
+  else if (s.view === 'closet') showCloset(true);
+  else if (s.view === 'library') showLibrary(true);
+  else showDashboard(true);
+});
+// ═══════════════════════════════════════════
+// #25 — MOBILE NAV
+// ═══════════════════════════════════════════
+function toggleMobileNav() {
+  const drawer = document.getElementById('mobile-nav-drawer');
+  const overlay = document.getElementById('mobile-nav-overlay');
+  const open = drawer.classList.toggle('open');
+  overlay.classList.toggle('open', open);
+  // Sync admin button visibility
+  const adminBtn = document.getElementById('mobile-nav-admin');
+  if (adminBtn) adminBtn.style.display = state.currentUser?.role==='admin' ? 'block' : 'none';
+}
+function closeMobileNav() {
+  document.getElementById('mobile-nav-drawer')?.classList.remove('open');
+  document.getElementById('mobile-nav-overlay')?.classList.remove('open');
+}
+
+// ═══════════════════════════════════════════
+// #27 — CHECK ALL / UNCHECK ALL
+// ═══════════════════════════════════════════
+function checkAllInCategory(catName, checked) {
+  const items = state.currentTrip.categories[catName];
+  if (!items) return;
+  items.forEach(item => item.checked = checked);
+  saveTrips(); renderPackingList();
+  toast(checked ? `All ${catName} items checked` : `${catName} cleared`);
+}
+
+// ═══════════════════════════════════════════
+// #28 — MOVE ITEM BETWEEN CATEGORIES
+// ═══════════════════════════════════════════
+function openMoveItem(catName, itemId) {
+  const cats = Object.keys(state.currentTrip.categories).filter(c => c !== catName);
+  if (!cats.length) { toast('No other categories to move to','error'); return; }
+  const catList = cats.map((c,i) => (i+1) + '. ' + c).join('\n');
+  const target = prompt('Move to which category?\n\n' + catList + '\n\nType a category name:');
+  if (!target || !target.trim()) return;
+  const dest = cats.find(c => c.toLowerCase() === target.trim().toLowerCase());
+  if (!dest) { toast('Category "' + target + '" not found', 'error'); return; }
+  const item = state.currentTrip.categories[catName].find(i => i.id === itemId);
+  if (!item) return;
+  state.currentTrip.categories[catName] = state.currentTrip.categories[catName].filter(i => i.id !== itemId);
+  state.currentTrip.categories[dest].push(item);
+  saveTrips(); renderPackingList();
+  toast('Moved to ' + dest, 'success');
+}
+
+// ═══════════════════════════════════════════
+// #31 — TRIP COUNTDOWN
+// ═══════════════════════════════════════════
+function tripCountdown(trip) {
+  if (!trip.startDate) return '';
+  const now = new Date(); now.setHours(0,0,0,0);
+  const start = new Date(trip.startDate); start.setHours(0,0,0,0);
+  const end = trip.endDate ? new Date(trip.endDate) : null;
+  if (end) { end.setHours(0,0,0,0); }
+  const diffDays = Math.round((start - now) / 86400000);
+  if (diffDays > 0) {
+    const urgent = diffDays <= 7;
+    return `<div class="trip-countdown ${urgent?'urgent':''}">${diffDays === 1 ? 'Tomorrow!' : `${diffDays} days away`}</div>`;
+  }
+  if (diffDays === 0) return `<div class="trip-countdown urgent">Today! ✈️</div>`;
+  if (end && new Date() <= end) return `<div class="trip-countdown active">In progress</div>`;
+  return '';
+}
+
+// ═══════════════════════════════════════════
+// #32 — DUPLICATE TRIP
+// ═══════════════════════════════════════════
+function duplicateTrip() {
+  const trip = state.currentTrip;
+  const name = prompt('Name for the duplicate trip:', `${trip.tripName||trip.destination} (Copy)`);
+  if (!name?.trim()) return;
+  const newTrip = JSON.parse(JSON.stringify(trip)); // deep clone
+  newTrip.id = uid();
+  newTrip.tripName = name.trim();
+  newTrip.ownerId = state.currentUser.id;
+  newTrip.sharedWith = [];
+  newTrip.createdAt = new Date().toISOString();
+  newTrip.outfits = {};
+  newTrip.outfitCombos = [];
+  newTrip.weatherCache = null;
+  // Reset all items to unchecked
+  Object.values(newTrip.categories).forEach(items => items.forEach(i => { i.checked = false; i.id = uid(); }));
+  // Clear personal care - user can re-enable
+  delete newTrip.categories['Personal Care'];
+  state.trips.push(newTrip);
+  saveTrips();
+  toast(`"${name.trim()}" created!`,'success');
+  showTripDetail(newTrip.id);
+}
+
+// ═══════════════════════════════════════════
+// CLOSET
+// ═══════════════════════════════════════════
+const CLOSET_CAT_ICONS={'Tops':'👕','Bottoms':'👖','Dresses & Jumpsuits':'👗','Outerwear':'🧥','Shoes':'👟','Accessories':'💍','Bags':'👜','Swimwear':'🩱','Activewear':'🏃','Other':'📦'};
+const CLOSET_CAT_TO_PIECE={'Tops':'top','Bottoms':'bottom','Dresses & Jumpsuits':'top','Outerwear':'outer','Shoes':'shoes','Accessories':'accessories','Bags':'bag'};
+
+function getCloset(){try{return JSON.parse(localStorage.getItem(`pr_closet_${state.currentUser.id}`)||'[]');}catch{return[];}}
+function saveCloset(items){localStorage.setItem(`pr_closet_${state.currentUser.id}`,JSON.stringify(items));}
+
+function showCloset(skipHistory){
+  hideAllViews();
+  document.getElementById('view-closet').style.display='block';
+  document.getElementById('nav-closet').classList.add('active');
+  renderCloset();
+  if (!skipHistory) history.pushState({view:'closet'}, '', '');
+}
+
+// Track collapsed categories in closet
+const closetCollapsed = {};
+
+function renderCloset(searchQuery=''){
+  const allItems = getCloset();
+  document.getElementById('closet-greeting').textContent = `${state.currentUser.name}'s Wardrobe`;
+  const container = document.getElementById('closet-content');
+  const q = (searchQuery||'').toLowerCase().trim();
+  const items = q ? allItems.filter(i =>
+    i.name.toLowerCase().includes(q) ||
+    (i.color||'').toLowerCase().includes(q) ||
+    (i.desc||'').toLowerCase().includes(q) ||
+    i.cat.toLowerCase().includes(q)
+  ) : allItems;
+
+  if (!allItems.length) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">👗</div><p>Your closet is empty.<br>Add items to use them when planning outfits.</p></div>`;
+    return;
+  }
+  if (q && !items.length) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><p>No items match "${q}"</p></div>`;
+    return;
+  }
+
+  const cats = {};
+  items.forEach(item => { if(!cats[item.cat]) cats[item.cat]=[]; cats[item.cat].push(item); });
+
+  container.innerHTML = Object.entries(cats).map(([cat, catItems]) => {
+    const collapsed = closetCollapsed[cat] && !q;
+    return `
+    <div class="closet-cat-section">
+      <div class="closet-cat-title" onclick="toggleClosetCat('${cat}')" style="cursor:pointer;">
+        ${CLOSET_CAT_ICONS[cat]||'👔'} ${cat}
+        <span style="font-size:0.68rem;font-weight:400;color:var(--text-muted);font-family:var(--font-body);margin-left:0.3rem;">${catItems.length} item${catItems.length!==1?'s':''}</span>
+        <span style="margin-left:auto;font-size:0.68rem;color:var(--text-muted);">${collapsed?'▼':'▲'}</span>
+      </div>
+      ${collapsed ? '' : `<div class="closet-list">
+        ${catItems.map(item => `
+          <div class="closet-list-row" onclick="openEditClosetItem('${item.id}')">
+            <span class="closet-list-name">${item.name}</span>
+            ${item.color ? `<span class="closet-list-color">${item.color}</span>` : ''}
+            ${item.desc ? `<span class="closet-list-desc">${item.desc}</span>` : ''}
+            <span class="closet-list-edit">✎</span>
+          </div>`).join('')}
+      </div>`}
+    </div>`;
+  }).join('');
+}
+
+function toggleClosetCat(cat) {
+  closetCollapsed[cat] = !closetCollapsed[cat];
+  const q = document.getElementById('closet-search')?.value || '';
+  renderCloset(q);
+}
+
+function openAddClosetItem(){
+  document.getElementById('closet-modal-title').textContent='Add Closet Item';
+  document.getElementById('closet-edit-id').value='';
+  ['closet-item-name','closet-item-desc','closet-item-color','closet-item-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('closet-item-cat').value='Tops';
+  document.getElementById('closet-delete-btn').style.display='none';
+  openModal('modal-add-closet');
+}
+function openEditClosetItem(itemId){
+  const item=getCloset().find(i=>i.id===itemId);if(!item)return;
+  document.getElementById('closet-modal-title').textContent='Edit Closet Item';
+  document.getElementById('closet-edit-id').value=itemId;
+  document.getElementById('closet-item-name').value=item.name;
+  document.getElementById('closet-item-desc').value=item.desc||'';
+  document.getElementById('closet-item-cat').value=item.cat||'Tops';
+  document.getElementById('closet-item-color').value=item.color||'';
+  document.getElementById('closet-item-notes').value=item.notes||'';
+  document.getElementById('closet-delete-btn').style.display='inline-flex';
+  openModal('modal-add-closet');
+}
+function saveClosetItem(){
+  const name=document.getElementById('closet-item-name').value.trim();
+  if(!name){toast('Please enter an item name','error');return;}
+  const editId=document.getElementById('closet-edit-id').value;
+  const items=getCloset();
+  const item={id:editId||uid(),name,desc:document.getElementById('closet-item-desc').value.trim(),cat:document.getElementById('closet-item-cat').value,color:document.getElementById('closet-item-color').value.trim(),notes:document.getElementById('closet-item-notes').value.trim()};
+  if(editId){const idx=items.findIndex(i=>i.id===editId);if(idx>=0)items[idx]=item;else items.push(item);}
+  else items.push(item);
+  saveCloset(items);closeModal('modal-add-closet');renderCloset();
+  toast(editId?'Item updated!':'Added to closet!','success');
+}
+function deleteClosetItem(){
+  const editId=document.getElementById('closet-edit-id').value;
+  if(!editId||!confirm('Remove this item from your closet?'))return;
+  saveCloset(getCloset().filter(i=>i.id!==editId));closeModal('modal-add-closet');renderCloset();toast('Item removed');
+}
+function toggleClosetPicker(){
+  const panel=document.getElementById('outfit-closet-picker');
+  const btn=document.getElementById('closet-picker-toggle');
+  if(!panel)return;
+  if(panel.style.display==='none'||!panel.style.display){panel.style.display='block';btn.textContent='▲ Hide Closet';renderClosetPicker();}
+  else{panel.style.display='none';btn.textContent='👗 Pick from Closet';}
+}
+function renderClosetPicker(){
+  const items=getCloset();const grid=document.getElementById('outfit-closet-grid');if(!grid)return;
+  if(!items.length){grid.innerHTML='<span style="font-size:0.78rem;color:var(--text-muted);font-style:italic;">No closet items yet.</span>';return;}
+  grid.innerHTML=items.map(item=>`<div class="closet-item-card" style="padding:0.45rem 0.6rem;min-width:110px;cursor:pointer;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-card);" data-id="${item.id}" data-cat="${item.cat}" data-name="${item.name}${item.color?' ('+item.color+')':''}" onclick="this.style.borderColor=this.dataset.sel?'var(--border)':'var(--sage)';this.dataset.sel=this.dataset.sel?'':'1';"><div style="font-size:0.58rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);">${item.cat}</div><div style="font-size:0.78rem;font-weight:600;">${item.name}</div>${item.color?`<div style="font-size:0.68rem;color:var(--text-muted);">${item.color}</div>`:''}</div>`).join('');
+}
+function applyClosetSelectionsToForm(){
+  document.querySelectorAll('#outfit-closet-grid [data-sel="1"]').forEach(el=>{
+    const piece=CLOSET_CAT_TO_PIECE[el.dataset.cat];
+    if(piece){const input=document.getElementById(`piece-${piece}`);if(input)input.value=input.value?(input.value+', '+el.dataset.name):el.dataset.name;}
+    el.style.borderColor='var(--border)';delete el.dataset.sel;
+  });
+  toast('Items applied','success');
+}
+
+// ═══════════════════════════════════════════
+// TRIP DETAIL HEADER
+// ═══════════════════════════════════════════
+function renderTripDetailHeader(){
+  const trip=state.currentTrip;
+  document.getElementById('detail-name').textContent=trip.tripName||trip.destination||'Untitled Trip';
+  const infoRow=document.getElementById('detail-info-row');
+  if(!infoRow)return;
+  const pills=[];
+  if(trip.tripName&&trip.destination) pills.push(`<span class="trip-info-pill">📍 ${trip.destination}</span>`);
+  if(trip.reason) pills.push(`<span class="trip-info-pill">✦ ${trip.reason}</span>`);
+  const dates=formatDateRange(trip.startDate,trip.endDate);
+  if(dates!=='Dates TBD') pills.push(`<span class="trip-info-pill">📅 ${dates}</span>`);
+  if(trip.timezone) pills.push(`<span class="trip-info-tz">🕐 ${trip.timezone}</span>`);
+  if(trip.currency) pills.push(`<span class="trip-info-currency">💱 ${trip.currency}</span>`);
+  infoRow.innerHTML=pills.join('');
+  if(trip.destination&&(!trip.timezone||!trip.currency)) fetchTripGeoInfo(trip);
+}
+
+async function fetchTripGeoInfo(trip){
+  try{
+    const res=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(trip.destination)}&count=1`);
+    const data=await res.json();
+    if(!data.results?.length)return;
+    const {timezone,country_code}=data.results[0];
+    if(timezone&&!trip.timezone) trip.timezone=timezone.split('/').pop().replace(/_/g,' ');
+    const cm={US:'USD $',GB:'GBP £',FR:'EUR €',DE:'EUR €',IT:'EUR €',ES:'EUR €',PT:'EUR €',NL:'EUR €',GR:'EUR €',AT:'EUR €',BE:'EUR €',JP:'JPY ¥',MX:'MXN $',CA:'CAD $',AU:'AUD $',BR:'BRL R$',IN:'INR ₹',TH:'THB ฿',SG:'SGD $',AE:'AED د.إ',TR:'TRY ₺',ZA:'ZAR R',CH:'CHF Fr',NO:'NOK kr',SE:'SEK kr',DK:'DKK kr',PL:'PLN zł',NZ:'NZD $',HK:'HKD $',KR:'KRW ₩',CN:'CNY ¥',MA:'MAD',CR:'CRC ₡',CO:'COP $',AR:'ARS $',CL:'CLP $',PE:'PEN S/',HU:'HUF Ft',CZ:'CZK Kč',RO:'RON lei',IL:'ILS ₪',SA:'SAR ﷼',VN:'VND ₫',ID:'IDR Rp',PH:'PHP ₱',MY:'MYR RM',TW:'TWD $',EG:'EGP £',RU:'RUB ₽',UA:'UAH ₴'};
+    if(country_code&&!trip.currency) trip.currency=cm[country_code]||country_code;
+    saveTrips();renderTripDetailHeader();
+  }catch(e){}
+}
+
+// ═══════════════════════════════════════════
+// WEATHER INTELLIGENCE — on demand only
+// ═══════════════════════════════════════════
+async function runWeatherIntelligence(){
+  if(!state.weather){toast('Weather data not loaded yet','error');return;}
+  const btn=document.querySelector('[onclick="runWeatherIntelligence()"]');
+  if(btn){btn.textContent='Analyzing...';btn.disabled=true;}
+  const allItems=Object.values(state.currentTrip.categories).flat().map(i=>i.name).join(', ');
+  const avgHigh=Math.round(state.weather.daily.reduce((s,d)=>s+d.tempMax,0)/state.weather.daily.length);
+  const avgLow=Math.round(state.weather.daily.reduce((s,d)=>s+d.tempMin,0)/state.weather.daily.length);
+  const hasRain=state.weather.daily.some(d=>[61,63,65,80,81,82].includes(d.code));
+  const hasSnow=state.weather.daily.some(d=>[71,73,75,77].includes(d.code));
+  const wSum=`Avg high: ${avgHigh}F, avg low: ${avgLow}F.${hasRain?' Rain expected.':''}${hasSnow?' Snow possible.':''}`;
+  const prompt=`Packing expert. Given this weather and packing list, give 4-6 specific, actionable recommendations.\n\nDestination: ${state.currentTrip.destination}\nWeather: ${wSum}\nPacking list: ${allItems}\n\nReturn ONLY a JSON array: [{"icon":"emoji","title":"short title","text":"specific recommendation"}]. No preamble.`;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();
+    const text=data.content?.map(c=>c.text||'').join('')||'[]';
+    let recs=[];try{recs=JSON.parse(text.replace(/```json|```/g,'').trim());}catch{}
+    renderWeatherIntelligence(recs);
+  }catch(e){
+    const recs=[];
+    if(avgHigh>80)recs.push({icon:'☀️',title:'Hot weather',text:'Pack extra light, breathable fabrics. At least 1 shirt per day minimum.'});
+    if(hasRain)recs.push({icon:'☔',title:'Rain expected',text:'Add a compact umbrella and waterproof outer layer if not already on your list.'});
+    if(avgLow<50)recs.push({icon:'🥶',title:'Cool evenings',text:'Evenings will be cold — pack a warm layer even if days are comfortable.'});
+    renderWeatherIntelligence(recs);
+  }
+  if(btn){btn.textContent='✦ Analyze My List';btn.disabled=false;}
+}
+function renderWeatherIntelligence(recs){
+  const c=document.getElementById('weather-intel-container');
+  if(!c)return;
+  if(!recs.length){c.innerHTML='';return;}
+  c.innerHTML=`<div class="weather-intel-panel"><div class="weather-intel-header"><strong style="font-family:var(--font-display);font-size:0.9rem;">🌤 Weather-Smart Recommendations</strong></div>${recs.map(r=>`<div class="intel-item"><span class="intel-icon">${r.icon||'•'}</span><div class="intel-text"><strong>${r.title}</strong> — ${r.text}</div></div>`).join('')}</div>`;
+}
+</script>
+</body>
+</html>
