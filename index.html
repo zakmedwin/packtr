@@ -1048,6 +1048,8 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 'u1', name: 'Zak', pin: '1234', role: 'admin', initials: 'Z' },
     { id: 'u2', name: 'Swishy', pin: '5678', role: 'user', initials: 'S', showPersonalCare: true },
   ];
+  // Auto-run worker setup on first load
+  runWorkerSetup();
   // Try to load saved data on top
   try {
     const savedUsers = localStorage.getItem('pr_users');
@@ -2426,6 +2428,35 @@ function formatDateRange(start,end){
 }
 document.querySelectorAll('.modal-overlay').forEach(overlay=>{overlay.addEventListener('click',e=>{if(e.target===overlay) overlay.classList.remove('open');});});
 
+
+
+// ═══════════════════════════════════════════
+// WORKER SETUP (runs once automatically)
+// ═══════════════════════════════════════════
+async function runWorkerSetup() {
+  const workerUrl = CONFIG.workerUrl;
+  if (!workerUrl || workerUrl === 'https://packtr-worker.zakmedwin.workers.dev') return;
+  if (localStorage.getItem('pr_worker_setup_done')) return;
+  try {
+    const res = await fetch(workerUrl + '/api/setup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        secret: 'packtrsetup2025',
+        adminName: 'Zak',
+        adminPin: '1234',
+        swishyPin: '5678'
+      })
+    });
+    const data = await res.json();
+    if (data.ok || data.error === 'Already set up') {
+      localStorage.setItem('pr_worker_setup_done', '1');
+      console.log('Worker setup complete:', data.message || data.error);
+    }
+  } catch(e) {
+    console.log('Worker setup failed, will retry next load:', e.message);
+  }
+}
 
 // ═══════════════════════════════════════════
 // #23 — BROWSER BACK BUTTON
