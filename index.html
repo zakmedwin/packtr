@@ -2403,11 +2403,31 @@ function revokeShare(userId){state.currentTrip.sharedWith=state.currentTrip.shar
 // ═══════════════════════════════════════════════
 function saveSettings(){
   if(!state.currentTrip) return;
+  const newStart = document.getElementById('settings-start').value;
+  const newEnd = document.getElementById('settings-end').value;
+
+  // #41 — Check if date change would hide existing outfits
+  if (newStart || newEnd) {
+    const userOutfits = state.currentTrip.outfits?.[state.currentUser.id] || {};
+    const outfitDates = Object.keys(userOutfits).filter(d => Object.values(userOutfits[d]||{}).length || (Array.isArray(userOutfits[d]) && userOutfits[d].length));
+    const hidden = outfitDates.filter(d => {
+      const afterStart = !newStart || d >= newStart;
+      const beforeEnd = !newEnd || d <= newEnd;
+      return !(afterStart && beforeEnd);
+    });
+    if (hidden.length > 0) {
+      const msg = hidden.length + ' outfit' + (hidden.length>1?'s':'') + ' on ' +
+        hidden.map(d => new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric'})).join(', ') +
+        ' fall outside the new date range and will not show on the calendar. Outfits are not deleted.';
+      if (!confirm(msg + '\n\nSave anyway?')) return;
+    }
+  }
+
   state.currentTrip.tripName=document.getElementById('settings-tripname').value;
   state.currentTrip.destination=document.getElementById('settings-destination').value;
   state.currentTrip.reason=document.getElementById('settings-reason').value;
-  state.currentTrip.startDate=document.getElementById('settings-start').value;
-  state.currentTrip.endDate=document.getElementById('settings-end').value;
+  state.currentTrip.startDate=newStart;
+  state.currentTrip.endDate=newEnd;
   state.currentTrip.type=document.getElementById('settings-type').value;
   document.getElementById('detail-name').textContent=state.currentTrip.tripName||state.currentTrip.destination;
   delete state.currentTrip.timezone; delete state.currentTrip.currency;
