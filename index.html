@@ -35,6 +35,13 @@
   .label-small{font-family:var(--font-body);font-size:0.65rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);}
   .screen{display:none;min-height:100vh;position:relative;z-index:1;}
   .screen.active{display:flex;flex-direction:column;}
+  /* Login transition */
+  #screen-login{transition:opacity 0.35s ease,transform 0.35s ease;}
+  #screen-login.fading-out{opacity:0;transform:scale(1.03);pointer-events:none;}
+  #screen-app{opacity:0;transition:opacity 0.35s ease;}
+  #screen-app.active{opacity:1;}
+  #screen-app.fade-in{animation:appFadeIn 0.35s ease forwards;}
+  @keyframes appFadeIn{from{opacity:0;}to{opacity:1;}}
   .container{max-width:1100px;margin:0 auto;padding:0 1.5rem;}
 
   /* BUTTONS */
@@ -1279,8 +1286,6 @@ function attemptLogin() {
   if (user && state.pinBuffer===user.pin) {
     state.currentUser = user;
     setAuthToken(user.id, state.pinBuffer);
-    document.getElementById('screen-login').classList.remove('active');
-    document.getElementById('screen-app').classList.add('active');
     document.getElementById('nav-username-display').textContent = '/ ' + user.name;
     if (user.role==='admin') document.getElementById('nav-admin').style.display='inline-flex';
     // Load cloud data after login
@@ -1289,6 +1294,19 @@ function attemptLogin() {
     loadClosetFromCloud();
     loadProfileFromCloud();
     showDashboard();
+    // Animate login screen out, app screen in
+    const loginEl = document.getElementById('screen-login');
+    const appEl = document.getElementById('screen-app');
+    appEl.classList.add('active');
+    appEl.style.opacity = '0';
+    loginEl.classList.add('fading-out');
+    setTimeout(() => {
+      loginEl.classList.remove('active');
+      loginEl.classList.remove('fading-out');
+      appEl.style.opacity = '';
+      appEl.classList.add('fade-in');
+      setTimeout(() => appEl.classList.remove('fade-in'), 400);
+    }, 350);
     toast('Welcome back, ' + user.name + '!');
   } else {
     document.getElementById('login-error').textContent='Incorrect PIN. Please try again.';
@@ -1662,12 +1680,9 @@ function renderPackingList() {
         ${items.map(item=>renderPackingItem(catName,item,outfitMap)).join('')}
       </div>
       <div class="add-item-form">
-        <div class="add-item-form .form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem;">
-          <input type="text" placeholder="Item name *" id="add-name-${sanitize(catName)}" onkeydown="if(event.key==='Enter')addItem('${catName}')">
-          <input type="text" placeholder="Description (optional)" id="add-desc-${sanitize(catName)}" onkeydown="if(event.key==='Enter')addItem('${catName}')">
-        </div>
-        <div style="display:flex;justify-content:flex-end;gap:0.4rem;">
-          <button class="btn btn-secondary" style="font-size:0.72rem;padding:0.35rem 0.75rem;" onclick="addItem('${catName}')">+ Add Item</button>
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+          <input type="text" placeholder="Item name" id="add-name-${sanitize(catName)}" onkeydown="if(event.key==='Enter')addItem('${catName}')" style="flex:1;">
+          <button class="btn btn-secondary" style="font-size:0.72rem;padding:0.35rem 0.75rem;flex-shrink:0;" onclick="addItem('${catName}')">+ Add</button>
         </div>
       </div>`;
     container.appendChild(section);
@@ -1689,7 +1704,6 @@ function renderPackingItem(catName, item, outfitMap) {
       <div class="item-check ${item.checked?'checked':''}" onclick="toggleItem('${catName}','${item.id}')"></div>
       <div class="item-info">
         <div class="item-name ${item.checked?'checked':''}">${item.name}${item.essential?' <span class="item-essential">★</span>':''}</div>
-        ${item.description?`<div class="item-description">${item.description}</div>`:''}
         ${item.notes?`<div class="item-description" style="color:var(--text-muted);">📝 ${item.notes}</div>`:''}
         ${outfitBadges?`<div class="item-meta-row">${outfitBadges}</div>`:''}
       </div>
@@ -1744,11 +1758,10 @@ function removeItem(catName, itemId) {
 }
 
 function addItem(catName) {
-  const nameInput = document.getElementById(`add-name-${sanitize(catName)}`);
-  const descInput = document.getElementById(`add-desc-${sanitize(catName)}`);
+  const nameInput = document.getElementById('add-name-' + sanitize(catName));
   const name = nameInput.value.trim();
   if (!name) return;
-  state.currentTrip.categories[catName].push({id:uid(),name,description:descInput.value.trim(),notes:'',qty:1,checked:false,essential:false});
+  state.currentTrip.categories[catName].push({id:uid(),name,description:'',notes:'',qty:1,checked:false,essential:false});
   saveTrips(); renderPackingList();
 }
 
