@@ -1819,17 +1819,49 @@ function addItem(catName) {
   saveTrips(); renderPackingList();
 }
 
+
+// ═══════════════════════════════════════════
+// #50 — DYNAMIC CATEGORY LIST
+// Returns all categories: built-in + any custom ones on current trip
+// ═══════════════════════════════════════════
+function getAllCategories() {
+  const base = ['Clothing','Undergarments','Toiletries','Documents','Tech','Accessories','Gear','Misc'];
+  if (!state.currentTrip) return base;
+  const tripCats = Object.keys(state.currentTrip.categories || {});
+  const merged = [...base];
+  tripCats.forEach(c => { if (!merged.includes(c) && c !== 'Personal Care' && c !== 'Imported') merged.push(c); });
+  return merged;
+}
+
+// Rebuild the library category dropdown with all current categories
+function refreshLibraryCategoryDropdown() {
+  const sel = document.getElementById('library-item-cat');
+  if (!sel) return;
+  const current = sel.value;
+  const cats = getAllCategories();
+  sel.innerHTML = cats.map(c => '<option value="' + c + '">' + c + '</option>').join('');
+  if (current && cats.includes(current)) sel.value = current;
+}
+
 function addCategory() {
   const name=prompt('Category name:'); if(!name||!name.trim()) return;
   const n=name.trim();
   if (state.currentTrip.categories[n]) { toast('Category already exists','error'); return; }
   state.currentTrip.categories[n]=[]; saveTrips(); renderPackingList();
+  refreshLibraryCategoryDropdown();
+  toast(n + ' added','success');
 }
 
 function openEditItem(catName, itemId) {
   const item = state.currentTrip.categories[catName].find(i=>i.id===itemId);
   if (!item) return;
-  document.getElementById('edit-item-cat').value=catName;
+  // Populate category dropdown with all current categories
+  const editCatSel = document.getElementById('edit-item-cat');
+  if (editCatSel) {
+    const currentCats = Object.keys(state.currentTrip.categories || {});
+    editCatSel.innerHTML = currentCats.map(c => '<option value="' + c + '">' + c + '</option>').join('');
+    editCatSel.value = catName;
+  }
   document.getElementById('edit-item-id').value=itemId;
   document.getElementById('edit-item-name').value=item.name;
   document.getElementById('edit-item-description').value=item.description||'';
@@ -2789,6 +2821,7 @@ function openAddLibraryItem() {
   document.getElementById('library-modal-title').textContent = 'Add Item';
   document.getElementById('library-edit-id').value = '';
   ['library-item-name','library-item-desc','library-item-notes'].forEach(id => document.getElementById(id).value = '');
+  refreshLibraryCategoryDropdown();
   document.getElementById('library-item-cat').value = 'Misc';
   document.getElementById('library-delete-btn').style.display = 'none';
   openModal('modal-add-library');
@@ -2799,6 +2832,7 @@ function openEditLibraryItem(itemId) {
   document.getElementById('library-modal-title').textContent = 'Edit Item';
   document.getElementById('library-edit-id').value = itemId;
   document.getElementById('library-item-name').value = item.name;
+  refreshLibraryCategoryDropdown();
   document.getElementById('library-item-cat').value = item.cat || 'Misc';
   document.getElementById('library-item-desc').value = item.desc || '';
   document.getElementById('library-item-notes').value = item.notes || '';
