@@ -1853,30 +1853,56 @@ function importList() {
 // WEATHER
 // ═══════════════════════════════════════════════
 async function fetchWeather(trip) {
-  if(!trip.destination||!trip.startDate) return;
+  if (!trip.destination || !trip.startDate) {
+    document.getElementById('weather-days-full').innerHTML = '<div style="padding:2rem;color:var(--text-muted);font-family:var(--font-accent);font-style:italic;">Set a destination and start date to see the forecast.</div>';
+    return;
+  }
+  document.getElementById('weather-days-full').innerHTML = '<div style="padding:2rem;color:var(--text-muted);font-family:var(--font-accent);font-style:italic;">Loading forecast...</div>';
   try {
-    const geoRes=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(trip.destination)}&count=1`);
-    const geoData=await geoRes.json();
-    if(!geoData.results||!geoData.results.length) return;
-    const {latitude,longitude,name,country}=geoData.results[0];
-    // Use actual trip dates if upcoming, else use today + 7 days for reference
+    // Step 1: Geocode destination
+    const geoRes = await fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(trip.destination) + '&count=1');
+    const geoData = await geoRes.json();
+    if (!geoData.results || !geoData.results.length) {
+      document.getElementById('weather-days-full').innerHTML = '<div style="padding:2rem;color:var(--text-muted);font-family:var(--font-accent);font-style:italic;">Could not find location: ' + trip.destination + '</div>';
+      return;
+    }
+    const {latitude, longitude, name, country} = geoData.results[0];
+
+    // Step 2: Build date range — always start from today at minimum
     const today = new Date().toISOString().split('T')[0];
-    const tripStart = trip.startDate || today;
-    const tripEnd = trip.endDate && trip.endDate >= today ? trip.endDate : null;
-    // Open-Meteo only forecasts up to 16 days ahead — clamp if needed
-    const forecastEnd = new Date();
-    forecastEnd.setDate(forecastEnd.getDate()+15);
-    const forecastEndStr = forecastEnd.toISOString().split('T')[0];
-    const start = tripStart >= today ? tripStart : today;
-    const rawEnd = tripEnd || new Date(new Date(start).getTime()+7*86400000).toISOString().split('T')[0];
-    const end = rawEnd <= forecastEndStr ? rawEnd : forecastEndStr;
-    const wRes=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+latitude+'&longitude='+longitude+'&daily=weathercode,temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&forecast_days=16&start_date='+start+'&end_date='+end+'&timezone=auto');
-    const wData=await wRes.json();
-    const daily=wData.daily.time.map((date,i)=>({date,code:wData.daily.weathercode[i],tempMax:wData.daily.temperature_2m_max[i],tempMin:wData.daily.temperature_2m_min[i]}));
-    state.weather={daily,location:`${name}, ${country}`};
-    trip.weatherCache={daily:daily.slice(0,7),location:`${name}, ${country}`};
-    saveTrips(); renderWeatherTab(state.weather);
-  } catch(e){ console.warn('Weather fetch failed:',e); }
+    const start = trip.startDate >= today ? trip.startDate : today;
+    // End: use trip end date if set and in range, else 7 days from start
+    const maxEnd = new Date(); maxEnd.setDate(maxEnd.getDate() + 15);
+    const maxEndStr = maxEnd.toISOString().split('T')[0];
+    const rawEnd = (trip.endDate && trip.endDate >= today) ? trip.endDate : new Date(new Date(start).getTime() + 7*86400000).toISOString().split('T')[0];
+    const end = rawEnd <= maxEndStr ? rawEnd : maxEndStr;
+
+    // Step 3: Fetch forecast
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + latitude + '&longitude=' + longitude +
+      '&daily=weathercode,temperature_2m_max,temperature_2m_min' +
+      '&temperature_unit=fahrenheit&timezone=auto' +
+      '&start_date=' + start + '&end_date=' + end;
+    const wRes = await fetch(url);
+    const wData = await wRes.json();
+
+    if (!wData.daily || !wData.daily.time || !wData.daily.time.length) {
+      document.getElementById('weather-days-full').innerHTML = '<div style="padding:2rem;color:var(--text-muted);font-family:var(--font-accent);font-style:italic;">No forecast available for these dates.</div>';
+      return;
+    }
+
+    const daily = wData.daily.time.map((date, i) => ({
+      date, code: wData.daily.weathercode[i],
+      tempMax: wData.daily.temperature_2m_max[i],
+      tempMin: wData.daily.temperature_2m_min[i],
+    }));
+    state.weather = {daily, location: name + ', ' + country};
+    trip.weatherCache = {daily: daily.slice(0,7), location: name + ', ' + country};
+    saveTrips();
+    renderWeatherTab(state.weather);
+  } catch(e) {
+    console.warn('Weather fetch failed:', e);
+    document.getElementById('weather-days-full').innerHTML = '<div style="padding:2rem;color:var(--text-muted);font-family:var(--font-accent);font-style:italic;">Could not load forecast. Check your connection and try ↻ Refresh.</div>';
+  }
 }
 function renderWeatherTab(weather) {
   if(!weather) return;
