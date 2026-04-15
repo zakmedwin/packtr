@@ -666,7 +666,8 @@
         <div class="weather-panel" id="weather-panel">
           <div class="weather-header">
             <h4>Weather Forecast</h4>
-            <span id="weather-location-label" style="font-size:0.75rem;opacity:0.7;"></span>
+            <span id="weather-location-label" style="font-size:0.75rem;opacity:0.7;flex:1;margin:0 0.5rem;"></span>
+            <button onclick="if(state.currentTrip)fetchWeather(state.currentTrip)" style="background:rgba(240,232,216,0.1);border:1px solid rgba(240,232,216,0.2);color:rgba(240,232,216,0.75);border-radius:3px;padding:0.18rem 0.5rem;font-size:0.7rem;cursor:pointer;" title="Refresh">↻</button>
           </div>
           <div class="weather-days" id="weather-days-full"><div style="padding:2rem;color:var(--text-muted);font-family:var(--font-accent);font-style:italic;">Loading forecast...</div></div>
         </div>
@@ -1370,6 +1371,8 @@ function showTripDetail(tripId, skipHistory) {
 
   showTab('packing');
   renderPackingList();
+  // Show cached weather immediately, then fetch fresh
+  if (trip.weatherCache) renderWeatherTab(trip.weatherCache);
   fetchWeather(trip);
   generateAISuggestions(trip);
   renderOutfitCalendar();
@@ -1380,8 +1383,14 @@ function showTripDetail(tripId, skipHistory) {
 function showTab(tabName) {
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
-  document.getElementById(`tab-${tabName}`).classList.add('active');
-  document.querySelectorAll('.tab-btn').forEach(b=>{ if(b.getAttribute('onclick')===`showTab('${tabName}')`) b.classList.add('active'); });
+  document.getElementById('tab-'+tabName).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b=>{ if(b.getAttribute('onclick')==='showTab(\'' + tabName + '\')') b.classList.add('active'); });
+  // When switching to weather tab, render cached data immediately then refresh
+  if (tabName === 'weather') {
+    if (state.weather) renderWeatherTab(state.weather);
+    else if (state.currentTrip?.weatherCache) renderWeatherTab(state.currentTrip.weatherCache);
+    if (state.currentTrip) fetchWeather(state.currentTrip);
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -1850,9 +1859,18 @@ async function fetchWeather(trip) {
     const geoData=await geoRes.json();
     if(!geoData.results||!geoData.results.length) return;
     const {latitude,longitude,name,country}=geoData.results[0];
-    const start=trip.startDate;
-    const end=trip.endDate&&trip.endDate>start?trip.endDate:new Date(new Date(start).getTime()+7*86400000).toISOString().split('T')[0];
-    const wRes=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=weathercode,temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&forecast_days=14&start_date=${start}&end_date=${end}&timezone=auto`);
+    // Use actual trip dates if upcoming, else use today + 7 days for reference
+    const today = new Date().toISOString().split('T')[0];
+    const tripStart = trip.startDate || today;
+    const tripEnd = trip.endDate && trip.endDate >= today ? trip.endDate : null;
+    // Open-Meteo only forecasts up to 16 days ahead — clamp if needed
+    const forecastEnd = new Date();
+    forecastEnd.setDate(forecastEnd.getDate()+15);
+    const forecastEndStr = forecastEnd.toISOString().split('T')[0];
+    const start = tripStart >= today ? tripStart : today;
+    const rawEnd = tripEnd || new Date(new Date(start).getTime()+7*86400000).toISOString().split('T')[0];
+    const end = rawEnd <= forecastEndStr ? rawEnd : forecastEndStr;
+    const wRes=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+latitude+'&longitude='+longitude+'&daily=weathercode,temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&forecast_days=16&start_date='+start+'&end_date='+end+'&timezone=auto');
     const wData=await wRes.json();
     const daily=wData.daily.time.map((date,i)=>({date,code:wData.daily.weathercode[i],tempMax:wData.daily.temperature_2m_max[i],tempMin:wData.daily.temperature_2m_min[i]}));
     state.weather={daily,location:`${name}, ${country}`};
