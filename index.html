@@ -182,7 +182,7 @@
   .tab-content.active{display:block;}
 
   /* PACKING LIST */
-  .overall-progress{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1.5rem;}
+  .overall-progress{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
   .progress-ring-wrap{position:relative;flex-shrink:0;}
   .progress-ring{transform:rotate(-90deg);}
   .progress-ring-bg{fill:none;stroke:var(--border);stroke-width:4;}
@@ -384,6 +384,10 @@
   .mobile-nav-item{display:block;width:100%;text-align:left;padding:0.7rem 0.85rem;background:transparent;border:none;border-radius:var(--radius);color:rgba(240,232,216,0.8);font-family:var(--font-body);font-size:0.85rem;cursor:pointer;transition:all var(--transition);}
   .mobile-nav-item:hover{background:rgba(201,168,76,0.12);color:var(--gold);}
   @media(max-width:640px){
+    body::before{display:none;}
+    .container{padding:0 0.85rem;}
+    .tab-content{padding:1rem 0;}
+    .overall-progress{gap:0.75rem;}
     .hamburger-btn{display:block;}
     .topnav-nav{display:none;}
     .nav-user{display:none;}
@@ -641,12 +645,12 @@
           </div>
           <div>
             <div class="label-small">Packing Progress</div>
-            <div style="font-family:var(--font-display);font-size:1.1rem;margin-top:0.2rem;" id="progress-label">0 of 0 items packed</div>
+            <div style="font-size:1rem;font-weight:600;margin-top:0.2rem;white-space:nowrap;" id="progress-label">0 of 0 items packed</div>
             <div class="italic text-muted" style="font-size:0.8rem;margin-top:0.1rem;" id="progress-sublabel"></div>
           </div>
-          <div style="margin-left:auto;display:flex;gap:0.5rem;align-items:center;">
-            <button class="btn btn-secondary" onclick="exportList()">Export</button>
-            <button class="btn btn-secondary" onclick="openImportModal()">Import</button>
+          <div style="margin-left:auto;display:flex;gap:0.4rem;align-items:center;flex-shrink:0;">
+            <button class="btn btn-secondary" style="font-size:0.72rem;padding:0.4rem 0.7rem;" onclick="exportList()">Export</button>
+            <button class="btn btn-secondary" style="font-size:0.72rem;padding:0.4rem 0.7rem;" onclick="openImportModal()">Import</button>
           </div>
         </div>
         <div id="weather-intel-container"></div>
