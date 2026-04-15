@@ -992,6 +992,24 @@
   </div>
 </div>
 
+
+<!-- Edit Template -->
+<div class="modal-overlay" id="modal-edit-template">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-header">
+      <div>
+        <h3 id="edit-template-title">Edit Template</h3>
+        <div style="font-size:0.73rem;color:var(--text-muted);margin-top:0.15rem;" id="edit-template-subtitle"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-edit-template')">×</button>
+    </div>
+    <div class="modal-body" id="edit-template-body" style="max-height:65vh;overflow-y:auto;"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-template')">Done</button>
+    </div>
+  </div>
+</div>
+
 <!-- Add Closet Item -->
 <div class="modal-overlay" id="modal-add-closet">
   <div class="modal" style="max-width:480px;">
@@ -1860,7 +1878,9 @@ async function fetchWeather(trip) {
   document.getElementById('weather-days-full').innerHTML = '<div style="padding:2rem;color:var(--text-muted);font-family:var(--font-accent);font-style:italic;">Loading forecast...</div>';
   try {
     // Step 1: Geocode destination
-    const geoRes = await fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(trip.destination) + '&count=1');
+    // Strip country suffix for better geocoding (e.g. "Rome, Italy" → "Rome")
+    const cleanDest = trip.destination.split(',')[0].trim();
+    const geoRes = await fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(cleanDest) + '&count=1');
     const geoData = await geoRes.json();
     if (!geoData.results || !geoData.results.length) {
       document.getElementById('weather-days-full').innerHTML = '<div style="padding:2rem;color:var(--text-muted);font-family:var(--font-accent);font-style:italic;">Could not find location: ' + trip.destination + '</div>';
@@ -2420,6 +2440,76 @@ function renderTemplates(){
   if(!state.templates.length){grid.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><p>No templates yet. Save a trip as a template from the trip settings.</p></div>';return;}
   grid.innerHTML=state.templates.map(t=>`<div class="template-card"><div class="template-icon">${t.icon}</div><div class="template-name">${t.name}</div><div class="template-count">${Object.values(t.categories).flat().length} items across ${Object.keys(t.categories).length} categories</div><div style="margin-top:1rem;display:flex;gap:0.5rem;"><button class="btn btn-primary" style="font-size:0.72rem;" onclick="useTemplate('${t.id}')">Use Template</button>${!['tpl-business','tpl-leisure'].includes(t.id)?`<button class="btn btn-ghost" style="color:var(--burgundy);font-size:0.72rem;" onclick="deleteTemplate('${t.id}')">Delete</button>`:''}</div></div>`).join('');
 }
+
+// ═══════════════════════════════════════════
+// #40 — TEMPLATE EDITOR
+// ═══════════════════════════════════════════
+function openEditTemplate(templateId) {
+  const template = state.templates.find(t => t.id === templateId);
+  if (!template) return;
+  document.getElementById('edit-template-title').textContent = template.name;
+  document.getElementById('edit-template-subtitle').textContent = Object.values(template.categories).flat().length + ' items';
+  renderTemplateEditor(templateId);
+  openModal('modal-edit-template');
+}
+
+function renderTemplateEditor(templateId) {
+  const template = state.templates.find(t => t.id === templateId);
+  if (!template) return;
+  const body = document.getElementById('edit-template-body');
+  body.innerHTML = Object.entries(template.categories).map(([cat, items]) => `
+    <div style="margin-bottom:1.25rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;padding-bottom:0.35rem;border-bottom:1px solid var(--border);">
+        <span style="font-family:var(--font-display);font-size:0.95rem;font-weight:600;">${CATEGORY_ICONS[cat]||'📦'} ${cat}</span>
+        <button class="btn btn-ghost" style="font-size:0.68rem;" onclick="addTemplateCategory('${templateId}')">+ Category</button>
+      </div>
+      ${items.map((item, idx) => `
+        <div style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;border-bottom:1px solid var(--border);">
+          <span style="flex:1;font-size:0.85rem;">${item}</span>
+          <button class="btn btn-ghost" style="font-size:0.68rem;color:var(--burgundy);padding:0.1rem 0.3rem;" onclick="removeTemplateItem('${templateId}','${cat}',${idx})">×</button>
+        </div>`).join('')}
+      <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+        <input type="text" id="tpl-add-${sanitize(cat)}" placeholder="Add item..." style="flex:1;font-size:0.8rem;padding:0.35rem 0.6rem;" onkeydown="if(event.key==='Enter')addTemplateItem('${templateId}','${cat}')">
+        <button class="btn btn-secondary" style="font-size:0.7rem;padding:0.3rem 0.65rem;" onclick="addTemplateItem('${templateId}','${cat}')">+ Add</button>
+      </div>
+    </div>`).join('');
+}
+
+function addTemplateItem(templateId, cat) {
+  const input = document.getElementById('tpl-add-' + sanitize(cat));
+  const name = input.value.trim();
+  if (!name) return;
+  const template = state.templates.find(t => t.id === templateId);
+  if (!template || !template.categories[cat]) return;
+  template.categories[cat].push(name);
+  input.value = '';
+  saveTemplates();
+  renderTemplateEditor(templateId);
+  document.getElementById('edit-template-subtitle').textContent = Object.values(template.categories).flat().length + ' items';
+  toast('Item added', 'success');
+}
+
+function removeTemplateItem(templateId, cat, idx) {
+  const template = state.templates.find(t => t.id === templateId);
+  if (!template || !template.categories[cat]) return;
+  template.categories[cat].splice(idx, 1);
+  saveTemplates();
+  renderTemplateEditor(templateId);
+  document.getElementById('edit-template-subtitle').textContent = Object.values(template.categories).flat().length + ' items';
+}
+
+function addTemplateCategory(templateId) {
+  const name = prompt('New category name:');
+  if (!name || !name.trim()) return;
+  const template = state.templates.find(t => t.id === templateId);
+  if (!template) return;
+  if (template.categories[name.trim()]) { toast('Category already exists', 'error'); return; }
+  template.categories[name.trim()] = [];
+  saveTemplates();
+  renderTemplateEditor(templateId);
+  toast('Category added', 'success');
+}
+
 function useTemplate(templateId){document.getElementById('new-trip-template').value=templateId;openNewTripModal();}
 function deleteTemplate(templateId){if(!confirm('Delete this template?')) return;state.templates=state.templates.filter(t=>t.id!==templateId);saveTemplates();renderTemplates();toast('Template deleted');}
 
