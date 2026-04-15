@@ -2087,10 +2087,15 @@ function renderOutfitCalendar() {
   const container = document.getElementById('outfit-calendar');
   container.innerHTML = '';
   if (!trip.startDate) { container.innerHTML='<p class="italic text-muted">Set trip dates to plan outfits by day.</p>'; return; }
-  const start = parseLocalDate(trip.startDate);
-  const end = trip.endDate ? parseLocalDate(trip.endDate) : new Date(start.getTime() + 6*86400000);
+  const endStr = trip.endDate || (() => { const s = parseLocalDate(trip.startDate); s.setDate(s.getDate()+6); return s.getFullYear()+'-'+String(s.getMonth()+1).padStart(2,'0')+'-'+String(s.getDate()).padStart(2,'0'); })();
   const days = [];
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) days.push(new Date(d));
+  let dLoop = parseLocalDate(trip.startDate);
+  while (true) {
+    const dKey = dLoop.getFullYear()+'-'+String(dLoop.getMonth()+1).padStart(2,'0')+'-'+String(dLoop.getDate()).padStart(2,'0');
+    days.push(new Date(dLoop));
+    if (dKey >= endStr) break;
+    dLoop.setDate(dLoop.getDate()+1);
+  }
   days.forEach(day => {
     const dateKey = day.getFullYear() + '-' + String(day.getMonth()+1).padStart(2,'0') + '-' + String(day.getDate()).padStart(2,'0');
     const outfits = getUserDayOutfits(dateKey);
