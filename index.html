@@ -33,15 +33,19 @@
   h4,h5{font-family:var(--font-accent);font-weight:600;letter-spacing:0.02em;}
   .display-title{font-family:var(--font-display);font-size:clamp(2rem,5vw,3.5rem);font-weight:700;line-height:1.1;}
   .label-small{font-family:var(--font-body);font-size:0.65rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);}
-  .screen{display:none;min-height:100vh;position:relative;z-index:1;}
-  .screen.active{display:flex;flex-direction:column;}
-  /* Login transition */
-  #screen-login{transition:opacity 0.35s ease,transform 0.35s ease;}
-  #screen-login.fading-out{opacity:0;transform:scale(1.03);pointer-events:none;}
-  #screen-app{opacity:0;transition:opacity 0.35s ease;}
-  #screen-app.active{opacity:1;}
-  #screen-app.fade-in{animation:appFadeIn 0.35s ease forwards;}
-  @keyframes appFadeIn{from{opacity:0;}to{opacity:1;}}
+  /* App is always rendered underneath */
+  #screen-app{display:flex;flex-direction:column;min-height:100vh;}
+  /* Login is a fixed overlay on top */
+  #screen-login{
+    position:fixed;inset:0;z-index:9000;
+    background:var(--espresso);
+    display:flex;align-items:center;justify-content:center;
+    transition:opacity 0.4s ease, transform 0.4s ease;
+  }
+  #screen-login.hidden{
+    opacity:0;transform:scale(1.04);pointer-events:none;
+  }
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
   .container{max-width:1100px;margin:0 auto;padding:0 1.5rem;}
 
   /* BUTTONS */
@@ -82,8 +86,7 @@
   .nav-divider{width:1px;height:20px;background:rgba(240,232,216,0.15);margin:0 0.25rem;}
 
   /* LOGIN */
-  #screen-login{background:var(--espresso);display:flex;align-items:center;justify-content:center;min-height:100vh;position:relative;overflow:hidden;}
-  #screen-login.active{display:flex;}
+  #screen-login{overflow:hidden;}
   .login-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(201,168,76,0.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(139,26,26,0.1) 0%,transparent 50%);}
   .login-card{background:var(--cream);border-radius:var(--radius-lg);padding:3rem 2.5rem;width:100%;max-width:400px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.4);border-top:5px solid var(--gold);animation:fadeUp 0.5s ease;}
   [data-theme="dark"] .login-card{background:#261a0f;}
@@ -467,7 +470,7 @@
 <!-- ══════════════════════════════════════════════
      LOGIN
 ══════════════════════════════════════════════ -->
-<div id="screen-login" class="screen active">
+<div id="screen-login">
   <div class="login-bg"></div>
   <div class="login-card">
     <div class="login-logo">
@@ -512,7 +515,7 @@
 <!-- ══════════════════════════════════════════════
      MAIN APP
 ══════════════════════════════════════════════ -->
-<div id="screen-app" class="screen">
+<div id="screen-app">
   <nav class="topnav">
     <div class="topnav-inner">
       <div class="topnav-brand" onclick="showDashboard()">Packt<em>Rite</em> <span id="nav-username-display"></span></div>
@@ -1294,19 +1297,10 @@ function attemptLogin() {
     loadClosetFromCloud();
     loadProfileFromCloud();
     showDashboard();
-    // Animate login screen out, app screen in
+    // Fade out login overlay — app is already visible underneath
     const loginEl = document.getElementById('screen-login');
-    const appEl = document.getElementById('screen-app');
-    appEl.classList.add('active');
-    appEl.style.opacity = '0';
-    loginEl.classList.add('fading-out');
-    setTimeout(() => {
-      loginEl.classList.remove('active');
-      loginEl.classList.remove('fading-out');
-      appEl.style.opacity = '';
-      appEl.classList.add('fade-in');
-      setTimeout(() => appEl.classList.remove('fade-in'), 400);
-    }, 350);
+    loginEl.classList.add('hidden');
+    setTimeout(() => { loginEl.style.display = 'none'; }, 420);
     toast('Welcome back, ' + user.name + '!');
   } else {
     document.getElementById('login-error').textContent='Incorrect PIN. Please try again.';
@@ -1317,8 +1311,11 @@ function attemptLogin() {
 function logout() {
   clearAuthToken();
   state.currentUser=null; state.currentTrip=null; state.pinBuffer=''; state.selectedUserId=null;
-  document.getElementById('screen-app').classList.remove('active');
-  document.getElementById('screen-login').classList.add('active');
+  const loginEl = document.getElementById('screen-login');
+  loginEl.style.display = '';
+  loginEl.style.opacity = '';
+  loginEl.style.transform = '';
+  loginEl.classList.remove('hidden');
   document.getElementById('nav-admin').style.display='none';
   document.getElementById('login-step-user').style.display='block';
   document.getElementById('login-step-pin').style.display='none';
