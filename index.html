@@ -428,6 +428,20 @@
   .outfit-builder-header{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;border-bottom:1px solid var(--border);background:linear-gradient(135deg,transparent,rgba(201,168,76,0.03));}
   .outfit-slots-grid{display:flex;flex-direction:column;gap:0;}
   .outfit-builder-footer{display:flex;align-items:center;justify-content:flex-end;gap:0.5rem;padding:0.6rem 1rem;border-top:1px solid var(--border);background:var(--bg-input);}
+  /* Redesigned slot rows */
+  .slot-row-v2{display:grid;grid-template-columns:90px 1fr;border-bottom:1px solid var(--border);min-height:52px;}
+  .slot-row-v2:last-child{border-bottom:none;}
+  .slot-label-v2{display:flex;flex-direction:column;justify-content:center;padding:0.5rem 0.75rem;border-right:1px solid var(--border);background:rgba(44,26,14,0.02);}
+  .slot-label-name{font-size:0.62rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);}
+  .slot-selected-v2{font-size:0.78rem;font-weight:600;color:var(--espresso);margin-top:0.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px;}
+  .slot-selected-v2.empty{color:var(--text-muted);font-weight:400;font-style:italic;}
+  .slot-picker-col{padding:0.4rem 0.6rem;display:flex;flex-wrap:wrap;gap:0.35rem;align-items:center;min-height:52px;}
+  .slot-chip-v2{display:inline-flex;align-items:center;gap:0.25rem;padding:0.25rem 0.6rem;border:1px solid var(--border-strong);border-radius:20px;font-size:0.73rem;cursor:pointer;background:var(--bg-input);transition:all 0.15s;white-space:nowrap;}
+  .slot-chip-v2:hover{border-color:var(--gold);background:rgba(201,168,76,0.08);}
+  .slot-chip-v2.active{background:var(--espresso);color:var(--cream);border-color:var(--espresso);}
+  .slot-chip-v2 .chip-color-v2{font-size:0.63rem;opacity:0.7;margin-left:0.15rem;}
+  .slot-empty-v2{font-size:0.73rem;color:var(--text-muted);font-style:italic;padding:0.2rem 0;}
+  .slot-filter-v2{padding:0.2rem 0.5rem;font-size:0.72rem;border-radius:12px;border:1px solid var(--border);background:var(--bg-input);width:70px;margin-right:0.1rem;}
 
   /* SLOT ROW */
   .outfit-slot-row{display:grid;grid-template-columns:80px 1fr;border-bottom:1px solid var(--border);}
@@ -2186,42 +2200,46 @@ function renderClosetPalette() {
   const items = getCloset();
 
   if (!items.length) {
-    grid.innerHTML = `<div style="padding:1.5rem;text-align:center;color:var(--text-muted);font-family:var(--font-accent);font-style:italic;">
-      Your closet is empty. <a href="#" onclick="showCloset();return false;" style="color:var(--gold);">Add items</a> to build outfits from here.
-    </div>`;
+    grid.innerHTML = '<div style="padding:1.5rem;text-align:center;color:var(--text-muted);font-style:italic;">Your closet is empty. <a href="#" onclick="showCloset();return false;" style="color:var(--gold);">Add items</a> to build outfits.</div>';
     return;
   }
 
   grid.innerHTML = OUTFIT_SLOTS.map(slot => {
     const slotItems = items.filter(i => slot.cats.includes(i.cat));
     const sel = builderSelections[slot.key];
-    const selLabel = sel ? `<span class="slot-selected-name">✓ ${sel.name}${sel.color?' · '+sel.color:''}</span>` : '';
-    const chips = slotItems.length
-      ? slotItems.map(item => `
-          <div class="slot-item-chip ${builderSelections[slot.key]?.id===item.id?'selected':''}"
-               data-slot="${slot.key}" data-id="${item.id}"
-               data-name="${item.name}" data-color="${item.color||''}"
-               onclick="selectSlotItem(this)">
-            ${item.name}${item.color?`<span class="chip-color">${item.color}</span>`:''}
-          </div>`).join('')
-      : `<span class="slot-empty">No ${slot.label.toLowerCase()} items in closet</span>`;
 
-    // Per-slot search only if 5+ items
-    const searchBox = slotItems.length >= 5
-      ? `<input class="slot-search" placeholder="Filter..." oninput="filterSlot('${slot.key}',this.value)" style="margin-right:0.35rem;">`
-      : '';
+    // Left col: label + selected item name
+    const selectedDisplay = sel
+      ? '<span class="slot-selected-v2">' + sel.name + (sel.color ? ' · ' + sel.color : '') + '</span>'
+      : '<span class="slot-selected-v2 empty">None</span>';
 
-    return `
-      <div class="outfit-slot-row" id="slot-row-${slot.key}">
-        <div class="slot-label-col">
-          <span class="slot-label">${slot.label}</span>
-          ${selLabel}
-          ${sel ? `<button class="btn btn-ghost" style="font-size:0.6rem;padding:0.08rem 0.25rem;color:var(--burgundy);margin-top:0.15rem;" onclick="clearSlot('${slot.key}')">× clear</button>` : ''}
-        </div>
-        <div class="slot-items-col" id="slot-items-${slot.key}">
-          ${searchBox}${chips}
-        </div>
-      </div>`;
+    // Right col: all items as chips + filter if 5+
+    let rightCol = '';
+    if (!slotItems.length) {
+      rightCol = '<span class="slot-empty-v2">No ' + slot.label.toLowerCase() + ' in closet</span>';
+    } else {
+      const sk = slot.key;
+      const filterBox = slotItems.length >= 5
+        ? '<input class="slot-filter-v2" placeholder="Filter..." oninput="filterSlot(\'' + sk + '\',this.value)">'
+        : '';
+      const chips = slotItems.map(item => {
+        const isActive = sel && sel.id === item.id;
+        return '<div class="slot-chip-v2' + (isActive ? ' active' : '') + '"' +
+          ' data-slot="' + sk + '" data-id="' + item.id + '"' +
+          ' data-name="' + item.name.replace(/"/g,'&quot;') + '" data-color="' + (item.color||'') + '"' +
+          ' onclick="selectSlotItem(this)">' +
+          (isActive ? '\u2713 ' : '') + item.name +
+          (item.color ? '<span class="chip-color-v2">' + item.color + '</span>' : '') +
+          '</div>';
+      }).join('');
+      rightCol = filterBox + chips;
+      if (sel) rightCol += ' <button class="btn btn-ghost" style="font-size:0.62rem;padding:0.15rem 0.35rem;color:var(--burgundy);flex-shrink:0;" onclick="clearSlot(\'' + sk + '\')">\u00d7 Clear</button>';
+    }
+
+    return '<div class="slot-row-v2" id="slot-row-' + slot.key + '">' +
+      '<div class="slot-label-v2"><span class="slot-label-name">' + slot.label + '</span>' + selectedDisplay + '</div>' +
+      '<div class="slot-picker-col" id="slot-items-' + slot.key + '">' + rightCol + '</div>' +
+      '</div>';
   }).join('');
 
   updateBuilderButton();
