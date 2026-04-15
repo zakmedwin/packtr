@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PacktRite — Pack Smart, Travel Well</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --cream:#f5f0e8; --cream-dark:#ede6d6; --parchment:#e8dfc8;
@@ -15,9 +15,9 @@
     --bg:var(--cream); --bg-card:#ffffff; --bg-input:#faf7f2;
     --text-primary:var(--espresso); --text-secondary:var(--espresso-light);
     --text-muted:var(--warm-gray); --border:rgba(44,26,14,0.12); --border-strong:rgba(44,26,14,0.25);
-    --font-display:'Playfair Display',Georgia,serif;
-    --font-body:'Lato',sans-serif;
-    --font-accent:'Cormorant Garamond',Georgia,serif;
+    --font-display:'Outfit',sans-serif;
+    --font-body:'Outfit',sans-serif;
+    --font-accent:'Outfit',sans-serif;
     --radius:4px; --radius-lg:8px; --transition:0.2s ease;
   }
   [data-theme="dark"] {
@@ -31,7 +31,7 @@
   body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.4;}
   h1,h2,h3{font-family:var(--font-display);font-weight:600;}
   h4,h5{font-family:var(--font-accent);font-weight:600;letter-spacing:0.02em;}
-  .display-title{font-family:var(--font-display);font-size:clamp(2rem,5vw,3.5rem);font-weight:700;line-height:1.1;}
+  .display-title{font-family:var(--font-display);font-size:clamp(2rem,5vw,3.5rem);font-weight:600;line-height:1.1;letter-spacing:-0.01em;}
   .label-small{font-family:var(--font-body);font-size:0.65rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);}
   /* App is always rendered underneath */
   #screen-app{display:flex;flex-direction:column;min-height:100vh;}
@@ -78,7 +78,7 @@
   .topnav{background:var(--espresso);color:var(--cream);position:sticky;top:0;z-index:100;box-shadow:0 2px 12px var(--shadow-deep);}
   [data-theme="dark"] .topnav{background:#0f0a05;}
   .topnav-inner{max-width:1100px;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;gap:1rem;height:56px;}
-  .topnav-brand{font-family:var(--font-display);font-size:1.3rem;font-weight:700;color:var(--gold);letter-spacing:0.02em;flex:1;cursor:pointer;}
+  .topnav-brand{font-family:var(--font-display);font-size:1.3rem;font-weight:700;color:var(--gold);letter-spacing:-0.01em;flex:1;cursor:pointer;}
   .topnav-brand span{font-style:italic;font-weight:400;color:rgba(240,232,216,0.5);font-size:0.9rem;margin-left:0.5rem;}
   .topnav-nav{display:flex;align-items:center;gap:0.25rem;}
   .nav-btn{padding:0.4rem 0.75rem;background:transparent;border:none;color:rgba(240,232,216,0.7);font-family:var(--font-body);font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;border-radius:var(--radius);transition:all var(--transition);}
@@ -92,7 +92,7 @@
   [data-theme="dark"] .login-card{background:#261a0f;}
   @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
   .login-logo{text-align:center;margin-bottom:2rem;}
-  .login-logo .wordmark{font-family:var(--font-display);font-size:2.2rem;font-weight:700;color:var(--espresso);}
+  .login-logo .wordmark{font-family:var(--font-display);font-size:2.2rem;font-weight:700;color:var(--espresso);letter-spacing:-0.02em;}
   [data-theme="dark"] .login-logo .wordmark{color:var(--gold);}
   .login-logo .tagline{font-family:var(--font-accent);font-style:italic;font-size:0.95rem;color:var(--warm-gray);margin-top:0.25rem;}
   .pin-display{display:flex;justify-content:center;gap:0.75rem;margin:1.5rem 0;}
@@ -1232,14 +1232,16 @@ async function saveProfileToCloud() {
 function getDefaultTemplates() {
   return [
     { id:'tpl-business', name:'Business Travel', icon:'💼', categories:{
-      'Clothing':['Dress shirts (x3)','Dress pants (x2)','Blazer','Undershirts','Socks','Dress shoes','Belt','Tie','Casual outfit (evenings)'],
+      'Clothing':['Dress shirts (x3)','Dress pants (x2)','Blazer','Socks (x5)','Dress shoes','Belt','Tie','Casual outfit (evenings)'],
+      'Undergarments':['Boxer briefs / underwear (x5)','Undershirts (x3)','Undershirt (sleeveless, x2)'],
       'Toiletries':['Toothbrush & toothpaste','Deodorant','Razor & shaving cream','Cologne/Perfume','Face wash & moisturizer','Hair products'],
       'Documents':['Passport / ID','Business cards','Travel itinerary','Hotel confirmation','Flight tickets'],
       'Tech':['Laptop & charger','Phone charger','Headphones','Power bank','Universal adapter'],
       'Misc':['Notebook & pen','Pain relievers','Snacks','Reusable water bottle'],
     }},
     { id:'tpl-leisure', name:'Leisure Vacation', icon:'🌴', categories:{
-      'Clothing':['T-shirts (x4)','Shorts/Casual pants (x3)','Swimsuit (x2)','Sundress/Casual dress','Light jacket/Cardigan','Comfortable shoes','Sandals','Underwear & socks'],
+      'Clothing':['T-shirts (x4)','Shorts/Casual pants (x3)','Swimsuit (x2)','Sundress/Casual dress','Light jacket/Cardigan','Comfortable shoes','Sandals'],
+      'Undergarments':['Underwear (x5)','Socks (x5)','Sports bra / bralette (x2)'],
       'Toiletries':['Toothbrush & toothpaste','Deodorant','Sunscreen SPF 50+','After-sun lotion','Shampoo & conditioner','Face care routine'],
       'Documents':['Passport / ID','Travel insurance docs','Hotel confirmation','Flight tickets','Emergency contacts'],
       'Tech':['Phone & charger','Camera','Power bank','Universal adapter','Headphones'],
@@ -1595,7 +1597,7 @@ function createTrip() {
       categories[cat]=items.map(name=>({id:uid(),name,description:'',notes:'',qty:1,checked:false,essential:false}));
     });
   } else {
-    ['Clothing','Toiletries','Documents','Tech','Misc'].forEach(c=>{categories[c]=[];});
+    ['Clothing','Undergarments','Toiletries','Documents','Tech','Misc'].forEach(c=>{categories[c]=[];});
   }
   const includePC = state.currentUser.showPersonalCare && document.getElementById('new-trip-personal-care').checked;
   const trip = {
@@ -1620,7 +1622,7 @@ function createTrip() {
 // ═══════════════════════════════════════════════
 // PACKING LIST — with qty, descriptions, outfit badges
 // ═══════════════════════════════════════════════
-const CATEGORY_ICONS={'Clothing':'👕','Toiletries':'🧴','Documents':'📄','Tech':'💻','Gear':'🎒','Misc':'📦','Personal Care':'🌸','Imported':'📥'};
+const CATEGORY_ICONS={'Clothing':'👕','Undergarments':'🩲','Toiletries':'🧴','Documents':'📄','Tech':'💻','Gear':'🎒','Misc':'📦','Personal Care':'🌸','Imported':'📥'};
 
 // Build a map of itemName → outfit days that use it
 function buildOutfitItemMap() {
@@ -2059,6 +2061,21 @@ function addAISuggestion(chip, itemName) {
   saveTrips(); chip.classList.add('added'); chip.innerHTML='✓ Added'; updateProgressRing();
   toast(`Added: ${itemName}`,'success');
 }
+
+// ═══════════════════════════════════════════
+// #44 — MINIMIZE AI PANEL
+// ═══════════════════════════════════════════
+let aiPanelCollapsed = false;
+function toggleAIPanel() {
+  aiPanelCollapsed = !aiPanelCollapsed;
+  const content = document.getElementById('ai-content');
+  const btn = document.getElementById('ai-toggle-btn');
+  const regenBtn = document.getElementById('ai-regen-btn');
+  if (content) content.style.display = aiPanelCollapsed ? 'none' : 'block';
+  if (btn) btn.textContent = aiPanelCollapsed ? '▼ Show' : '▲ Hide';
+  if (regenBtn) regenBtn.style.display = aiPanelCollapsed ? 'none' : 'inline-flex';
+}
+
 function regenerateAI(){if(state.currentTrip) generateAISuggestions(state.currentTrip);}
 
 // ═══════════════════════════════════════════════
