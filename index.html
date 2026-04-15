@@ -2429,10 +2429,12 @@ function saveSettings(){
   state.currentTrip.startDate=newStart;
   state.currentTrip.endDate=newEnd;
   state.currentTrip.type=document.getElementById('settings-type').value;
-  document.getElementById('detail-name').textContent=state.currentTrip.tripName||state.currentTrip.destination;
-  delete state.currentTrip.timezone; delete state.currentTrip.currency;
+  // Clear cached geo so it re-fetches with new destination
+  delete state.currentTrip.timezone;
+  delete state.currentTrip.currency;
+  saveTrips();
   renderTripDetailHeader();
-  saveTrips(); toast('Settings saved');
+  toast('Settings saved');
 }
 function saveAsTemplate(){
   const name=prompt('Template name:',`${state.currentTrip.tripName||state.currentTrip.destination} Template`); if(!name) return;
@@ -3056,13 +3058,14 @@ function renderTripDetailHeader(){
 
 async function fetchTripGeoInfo(trip){
   try{
-    const res=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(trip.destination)}&count=1`);
+    const cleanName = trip.destination.split(',')[0].trim();
+    const res=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(cleanName)+'&count=1');
     const data=await res.json();
     if(!data.results?.length)return;
     const {timezone,country_code}=data.results[0];
-    if(timezone&&!trip.timezone) trip.timezone=timezone.split('/').pop().replace(/_/g,' ');
+    if(timezone) trip.timezone=timezone.split('/').pop().replace(/_/g,' ');
     const cm={US:'USD $',GB:'GBP £',FR:'EUR €',DE:'EUR €',IT:'EUR €',ES:'EUR €',PT:'EUR €',NL:'EUR €',GR:'EUR €',AT:'EUR €',BE:'EUR €',JP:'JPY ¥',MX:'MXN $',CA:'CAD $',AU:'AUD $',BR:'BRL R$',IN:'INR ₹',TH:'THB ฿',SG:'SGD $',AE:'AED د.إ',TR:'TRY ₺',ZA:'ZAR R',CH:'CHF Fr',NO:'NOK kr',SE:'SEK kr',DK:'DKK kr',PL:'PLN zł',NZ:'NZD $',HK:'HKD $',KR:'KRW ₩',CN:'CNY ¥',MA:'MAD',CR:'CRC ₡',CO:'COP $',AR:'ARS $',CL:'CLP $',PE:'PEN S/',HU:'HUF Ft',CZ:'CZK Kč',RO:'RON lei',IL:'ILS ₪',SA:'SAR ﷼',VN:'VND ₫',ID:'IDR Rp',PH:'PHP ₱',MY:'MYR RM',TW:'TWD $',EG:'EGP £',RU:'RUB ₽',UA:'UAH ₴'};
-    if(country_code&&!trip.currency) trip.currency=cm[country_code]||country_code;
+    if(country_code) trip.currency=cm[country_code]||country_code;
     saveTrips();renderTripDetailHeader();
   }catch(e){}
 }
