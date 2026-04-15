@@ -1043,67 +1043,165 @@ let state = {
 // ═══════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
   applyTheme();
-  // Always start with hardcoded defaults, then layer in saved data
+  // Always start with hardcoded defaults
   state.users = [
     { id: 'u1', name: 'Zak', pin: '1234', role: 'admin', initials: 'Z' },
     { id: 'u2', name: 'Swishy', pin: '5678', role: 'user', initials: 'S', showPersonalCare: true },
   ];
-  // Auto-run worker setup on first load
-  runWorkerSetup();
-  // Try to load saved data on top
-  try {
-    const savedUsers = localStorage.getItem('pr_users');
-    if (savedUsers) { const u = JSON.parse(savedUsers); if (Array.isArray(u) && u.length > 0) state.users = u; }
-  } catch(e) {}
-  try {
-    const savedTrips = localStorage.getItem('pr_trips');
-    if (savedTrips) { const t = JSON.parse(savedTrips); if (Array.isArray(t)) state.trips = t; }
-  } catch(e) {}
-  try {
-    const savedTpls = localStorage.getItem('pr_templates');
-    if (savedTpls) { const t = JSON.parse(savedTpls); if (Array.isArray(t)) state.templates = t; }
-  } catch(e) {}
-  // Seed templates if none
-  if (!state.templates.length) { loadDefaultTemplates(); }
+  // Layer in localStorage immediately so login screen shows fast
+  try { const u = JSON.parse(localStorage.getItem('pr_users')||'[]'); if(Array.isArray(u)&&u.length) state.users=u; } catch(e) {}
+  try { const t = JSON.parse(localStorage.getItem('pr_trips')||'[]'); if(Array.isArray(t)) state.trips=t; } catch(e) {}
+  try { const t = JSON.parse(localStorage.getItem('pr_templates')||'[]'); if(Array.isArray(t)&&t.length) state.templates=t; } catch(e) {}
+  if (!state.templates.length) loadDefaultTemplates();
   renderLoginUsers();
+  runWorkerSetup();
 });
 
 // ═══════════════════════════════════════════════
-// STORAGE
+// API LAYER — cloud-first, localStorage fallback
 // ═══════════════════════════════════════════════
 
-function hardResetApp() {
-  if (!confirm('This will clear all app data and restore default users. Continue?')) return;
-  localStorage.removeItem('pr_users');
-  localStorage.removeItem('pr_trips');
-  localStorage.removeItem('pr_templates');
-  localStorage.removeItem('pr_theme');
-  loadFromStorage();
-  renderLoginUsers();
-  document.getElementById('login-step-user').style.display = 'block';
-  document.getElementById('login-step-pin').style.display = 'none';
-  toast('App reset. PIN: Zak=1234, Swishy=5678');
-}
-function seedDefaultUsers() {
-  state.users = [
-    { id: 'u1', name: 'Zak', pin: '1234', role: 'admin', initials: 'Z' },
-    { id: 'u2', name: 'Swishy', pin: '5678', role: 'user', initials: 'S', showPersonalCare: true },
-  ];
-  saveUsers();
-}
+const WORKER = CONFIG.workerUrl;
 
-function loadFromStorage() {
-  try { state.users = JSON.parse(localStorage.getItem('pr_users') || '[]'); } catch(e) { state.users = []; }
-  try { state.trips = JSON.parse(localStorage.getItem('pr_trips') || '[]'); } catch(e) { state.trips = []; }
-  try { state.templates = JSON.parse(localStorage.getItem('pr_templates') || '[]'); } catch(e) { state.templates = []; }
-  // Ensure valid non-empty array of users
-  if (!Array.isArray(state.users) || state.users.length === 0) {
-    seedDefaultUsers();
+// Auth token: userId:pin stored after login
+function getAuthToken() { return localStorage.getItem('pr_auth_token') || ''; }
+function setAuthToken(userId, pin) { localStorage.setItem('pr_auth_token', userId + ':' + pin); }
+function clearAuthToken() { localStorage.removeItem('pr_auth_token'); }
+
+async function api(method, path, body) {
+  try {
+    const opts = {
+      method,
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(WORKER + path, opts);
+    if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error || res.status); }
+    return await res.json();
+  } catch(e) {
+    console.warn('API call failed:', path, e.message);
+    return null;
   }
 }
 
-function loadDefaultTemplates() {
-  state.templates = [
+// ── USERS ──
+async function loadUsers() {
+  const cloud = await api('GET', '/api/users');
+  if (cloud && Array.isArray(cloud) && cloud.length > 0) {
+    // Worker returns users without PINs — merge with local pins for login
+    const localRaw = localStorage.getItem('pr_users');
+    const local = localRaw ? JSON.parse(localRaw) : [];
+    // Use cloud users but preserve local pins (worker strips them for security)
+    state.users = cloud.map(cu => {
+      const lu = local.find(u => u.id === cu.id);
+      return { ...cu, pin: lu?.pin || '' };
+    });
+    // If cloud users have no pins locally, keep hardcoded defaults for Zak/Swishy
+    if (!state.users.find(u => u.pin)) {
+      state.users = [
+        { id: 'u1', name: 'Zak', pin: '1234', role: 'admin', initials: 'Z' },
+        { id: 'u2', name: 'Swishy', pin: '5678', role: 'user', initials: 'S', showPersonalCare: true },
+      ];
+    }
+    localStorage.setItem('pr_users', JSON.stringify(state.users));
+    return;
+  }
+  // Fallback to localStorage
+  try { const u = JSON.parse(localStorage.getItem('pr_users') || '[]'); if (Array.isArray(u) && u.length) state.users = u; } catch(e) {}
+}
+
+function saveUsers() {
+  try { localStorage.setItem('pr_users', JSON.stringify(state.users)); } catch(e) {}
+  // Users are managed via admin panel — no direct push needed
+}
+
+// ── TRIPS ──
+async function loadTrips() {
+  const cloud = await api('GET', '/api/trips');
+  if (cloud && Array.isArray(cloud)) {
+    state.trips = cloud;
+    try { localStorage.setItem('pr_trips', JSON.stringify(cloud)); } catch(e) {}
+    return;
+  }
+  // Fallback to localStorage
+  try { const t = JSON.parse(localStorage.getItem('pr_trips') || '[]'); if (Array.isArray(t)) state.trips = t; } catch(e) {}
+}
+
+async function saveTrips() {
+  try { localStorage.setItem('pr_trips', JSON.stringify(state.trips)); } catch(e) {}
+  if (!state.currentUser || !getAuthToken()) return;
+  // Push current trip to cloud if we have one
+  if (state.currentTrip) {
+    await api('PUT', '/api/trips/' + state.currentTrip.id, state.currentTrip);
+  }
+}
+
+async function createTripInCloud(trip) {
+  const cloud = await api('POST', '/api/trips', trip);
+  if (cloud && cloud.id) {
+    // Update local trip id if cloud assigned one
+    const idx = state.trips.findIndex(t => t.id === trip.id);
+    if (idx >= 0) state.trips[idx] = { ...state.trips[idx], ...cloud };
+    try { localStorage.setItem('pr_trips', JSON.stringify(state.trips)); } catch(e) {}
+  }
+}
+
+async function deleteTripInCloud(tripId) {
+  await api('DELETE', '/api/trips/' + tripId);
+}
+
+// ── TEMPLATES ──
+async function loadTemplates() {
+  const cloud = await api('GET', '/api/templates');
+  if (cloud && Array.isArray(cloud) && cloud.length > 0) {
+    // Merge cloud templates with defaults
+    const defaults = getDefaultTemplates();
+    const cloudIds = cloud.map(t => t.id);
+    const merged = [...defaults.filter(d => !cloudIds.includes(d.id)), ...cloud];
+    state.templates = merged;
+    try { localStorage.setItem('pr_templates', JSON.stringify(merged)); } catch(e) {}
+    return;
+  }
+  try { const t = JSON.parse(localStorage.getItem('pr_templates') || '[]'); if (Array.isArray(t) && t.length) { state.templates = t; return; } } catch(e) {}
+  loadDefaultTemplates();
+}
+
+function saveTemplates() {
+  try { localStorage.setItem('pr_templates', JSON.stringify(state.templates)); } catch(e) {}
+}
+
+// ── CLOSET ──
+async function loadClosetFromCloud() {
+  if (!state.currentUser) return;
+  const cloud = await api('GET', '/api/closet/' + state.currentUser.id);
+  if (cloud && Array.isArray(cloud)) {
+    localStorage.setItem('pr_closet_' + state.currentUser.id, JSON.stringify(cloud));
+  }
+}
+
+async function saveClosetToCloud() {
+  if (!state.currentUser) return;
+  const items = getCloset();
+  await api('PUT', '/api/closet/' + state.currentUser.id, items);
+}
+
+// ── PROFILE ──
+async function loadProfileFromCloud() {
+  if (!state.currentUser) return;
+  const cloud = await api('GET', '/api/profile');
+  if (cloud && typeof cloud === 'object' && Object.keys(cloud).length > 0) {
+    localStorage.setItem('pr_profile_' + state.currentUser.id, JSON.stringify(cloud));
+  }
+}
+
+async function saveProfileToCloud() {
+  if (!state.currentUser) return;
+  const profile = getUserProfile();
+  await api('PUT', '/api/profile', profile);
+}
+
+function getDefaultTemplates() {
+  return [
     { id:'tpl-business', name:'Business Travel', icon:'💼', categories:{
       'Clothing':['Dress shirts (x3)','Dress pants (x2)','Blazer','Undershirts','Socks','Dress shoes','Belt','Tie','Casual outfit (evenings)'],
       'Toiletries':['Toothbrush & toothpaste','Deodorant','Razor & shaving cream','Cologne/Perfume','Face wash & moisturizer','Hair products'],
@@ -1119,12 +1217,28 @@ function loadDefaultTemplates() {
       'Misc':['Sunglasses','Beach bag','Snacks','Reusable water bottle','Guidebook / Maps','First aid kit'],
     }},
   ];
+}
+
+function loadDefaultTemplates() {
+  state.templates = getDefaultTemplates();
   try { saveTemplates(); } catch(e) {}
 }
 
-function saveUsers() { try { localStorage.setItem('pr_users', JSON.stringify(state.users)); } catch(e) {} }
-function saveTrips() { try { localStorage.setItem('pr_trips', JSON.stringify(state.trips)); } catch(e) {} }
-function saveTemplates() { try { localStorage.setItem('pr_templates', JSON.stringify(state.templates)); } catch(e) {} }
+function hardResetApp() {
+  if (!confirm('This will clear all local data and restore defaults. Continue?')) return;
+  ['pr_users','pr_trips','pr_templates','pr_theme','pr_auth_token','pr_worker_setup_done'].forEach(k => { try { localStorage.removeItem(k); } catch(e) {} });
+  clearAuthToken();
+  state.users = [
+    { id: 'u1', name: 'Zak', pin: '1234', role: 'admin', initials: 'Z' },
+    { id: 'u2', name: 'Swishy', pin: '5678', role: 'user', initials: 'S', showPersonalCare: true },
+  ];
+  state.trips = []; state.templates = [];
+  loadDefaultTemplates();
+  renderLoginUsers();
+  document.getElementById('login-step-user').style.display = 'block';
+  document.getElementById('login-step-pin').style.display = 'none';
+  toast('App reset. PIN: Zak=1234, Swishy=5678');
+}
 
 // ═══════════════════════════════════════════════
 // THEME
@@ -1164,12 +1278,18 @@ function attemptLogin() {
   const user = state.users.find(u => u.id===state.selectedUserId);
   if (user && state.pinBuffer===user.pin) {
     state.currentUser = user;
+    setAuthToken(user.id, state.pinBuffer);
     document.getElementById('screen-login').classList.remove('active');
     document.getElementById('screen-app').classList.add('active');
-    document.getElementById('nav-username-display').textContent = `/ ${user.name}`;
+    document.getElementById('nav-username-display').textContent = '/ ' + user.name;
     if (user.role==='admin') document.getElementById('nav-admin').style.display='inline-flex';
+    // Load cloud data after login
+    loadTrips().then(() => { if(document.getElementById('trips-grid')) renderDashboard(); });
+    loadTemplates();
+    loadClosetFromCloud();
+    loadProfileFromCloud();
     showDashboard();
-    toast(`Welcome back, ${user.name}!`);
+    toast('Welcome back, ' + user.name + '!');
   } else {
     document.getElementById('login-error').textContent='Incorrect PIN. Please try again.';
     state.pinBuffer=''; updatePinDisplay();
@@ -1177,6 +1297,7 @@ function attemptLogin() {
   }
 }
 function logout() {
+  clearAuthToken();
   state.currentUser=null; state.currentTrip=null; state.pinBuffer=''; state.selectedUserId=null;
   document.getElementById('screen-app').classList.remove('active');
   document.getElementById('screen-login').classList.add('active');
@@ -1446,9 +1567,11 @@ function createTrip() {
   if (shouldIncludePersonalCare(trip) || includePC) {
     categories['Personal Care'] = PERSONAL_CARE_ITEMS.map(name=>({id:uid(),name,description:'',notes:'',qty:1,checked:false,essential:false}));
   }
-  state.trips.push(trip); saveTrips();
+  state.trips.push(trip);
+  saveTrips();
+  createTripInCloud(trip);
   closeModal('modal-new-trip');
-  toast(`Trip${tripName?' "'+tripName+'"':''} created!`,'success');
+  toast((tripName ? '"'+tripName+'"' : 'Trip') + ' created!','success');
   showTripDetail(trip.id);
 }
 
@@ -2147,8 +2270,11 @@ function saveAsTemplate(){
   state.templates.push(template); saveTemplates(); toast(`Template "${name}" saved!`,'success');
 }
 function deleteTrip(){
-  if(!confirm(`Delete "${state.currentTrip.tripName||state.currentTrip.destination}"? This cannot be undone.`)) return;
-  state.trips=state.trips.filter(t=>t.id!==state.currentTrip.id); saveTrips();
+  if(!confirm('Delete "' + (state.currentTrip.tripName||state.currentTrip.destination) + '"? This cannot be undone.')) return;
+  const id = state.currentTrip.id;
+  state.trips=state.trips.filter(t=>t.id!==id);
+  saveTrips();
+  deleteTripInCloud(id);
   state.currentTrip=null; showDashboard(); toast('Trip deleted');
 }
 
@@ -2429,35 +2555,6 @@ function formatDateRange(start,end){
 document.querySelectorAll('.modal-overlay').forEach(overlay=>{overlay.addEventListener('click',e=>{if(e.target===overlay) overlay.classList.remove('open');});});
 
 
-
-// ═══════════════════════════════════════════
-// WORKER SETUP (runs once automatically)
-// ═══════════════════════════════════════════
-async function runWorkerSetup() {
-  const workerUrl = CONFIG.workerUrl;
-  if (!workerUrl || workerUrl === 'https://packtr-worker.zakmedwin.workers.dev') return;
-  if (localStorage.getItem('pr_worker_setup_done')) return;
-  try {
-    const res = await fetch(workerUrl + '/api/setup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        secret: 'packtrsetup2025',
-        adminName: 'Zak',
-        adminPin: '1234',
-        swishyPin: '5678'
-      })
-    });
-    const data = await res.json();
-    if (data.ok || data.error === 'Already set up') {
-      localStorage.setItem('pr_worker_setup_done', '1');
-      console.log('Worker setup complete:', data.message || data.error);
-    }
-  } catch(e) {
-    console.log('Worker setup failed, will retry next load:', e.message);
-  }
-}
-
 // ═══════════════════════════════════════════
 // #23 — BROWSER BACK BUTTON
 // ═══════════════════════════════════════════
@@ -2663,7 +2760,9 @@ function saveClosetItem(){
   const item={id:editId||uid(),name,desc:document.getElementById('closet-item-desc').value.trim(),cat:document.getElementById('closet-item-cat').value,color:document.getElementById('closet-item-color').value.trim(),notes:document.getElementById('closet-item-notes').value.trim()};
   if(editId){const idx=items.findIndex(i=>i.id===editId);if(idx>=0)items[idx]=item;else items.push(item);}
   else items.push(item);
-  saveCloset(items);closeModal('modal-add-closet');renderCloset();
+  saveCloset(items);
+  saveClosetToCloud();
+  closeModal('modal-add-closet');renderCloset();
   toast(editId?'Item updated!':'Added to closet!','success');
 }
 function deleteClosetItem(){
