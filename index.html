@@ -538,7 +538,7 @@
       <div class="dashboard-greeting" id="dashboard-greeting"></div>
       <div class="dashboard-title-row">
         <h1 class="display-title">Your Trips</h1>
-        <button class="btn btn-primary" onclick="openNewTripModal()">+ New Trip</button>
+        <button class="btn btn-primary" onclick="openNewTripModal()" style="font-size:0.85rem;padding:0.75rem 1.5rem;box-shadow:0 4px 14px var(--shadow-deep);letter-spacing:0.12em;">✈ New Trip</button>
       </div>
     </div>
     <div class="trips-grid" id="trips-grid"></div>
@@ -1889,19 +1889,99 @@ function weatherDesc(code){if(code===0)return'Sunny';if([1,2].includes(code))ret
 // AI SUGGESTIONS
 // ═══════════════════════════════════════════════
 async function generateAISuggestions(trip) {
-  document.getElementById('ai-content').innerHTML=`<div class="ai-loading"><span>Generating suggestions for ${trip.destination}</span><div class="ai-dots"><span></span><span></span><span></span></div></div>`;
-  const weatherSummary=state.weather?`Weather: avg high ${Math.round(state.weather.daily.reduce((s,d)=>s+d.tempMax,0)/state.weather.daily.length)}°F, ${state.weather.daily.some(d=>[61,63,65,80,81,82].includes(d.code))?'rain expected':'no significant rain'}.`:'';
-  const prompt=`You are a smart travel packing assistant. Generate 12-15 specific packing suggestions for this trip. Be practical and specific, not generic.\n\nTrip: ${trip.destination}\nDates: ${formatDateRange(trip.startDate,trip.endDate)}\nType: ${trip.type}\n${weatherSummary}\n\nReturn ONLY a JSON array of strings. No preamble, no markdown.`;
+  document.getElementById('ai-content').innerHTML = '<div class="ai-loading"><span>Generating smart suggestions for ' + (trip.destination||'your trip') + '</span><div class="ai-dots"><span></span><span></span><span></span></div></div>';
+
+  // Build rich weather context from actual forecast
+  let weatherSummary = '';
+  let weatherDetail = '';
+  if (state.weather && state.weather.daily.length) {
+    const days = state.weather.daily;
+    const avgHigh = Math.round(days.reduce((s,d)=>s+d.tempMax,0)/days.length);
+    const avgLow = Math.round(days.reduce((s,d)=>s+d.tempMin,0)/days.length);
+    const hasRain = days.some(d=>[51,53,55,61,63,65,80,81,82].includes(d.code));
+    const hasThunder = days.some(d=>[95,96,99].includes(d.code));
+    const hasSnow = days.some(d=>[71,73,75,77,85,86].includes(d.code));
+    const hasFog = days.some(d=>[45,48].includes(d.code));
+    const rainDays = days.filter(d=>[51,53,55,61,63,65,80,81,82,95,96,99].includes(d.code)).length;
+    const hotDays = days.filter(d=>d.tempMax>85).length;
+    const coldDays = days.filter(d=>d.tempMin<45).length;
+    const tripDays = days.length;
+    weatherSummary = 'Avg high: ' + avgHigh + 'F, avg low: ' + avgLow + 'F over ' + tripDays + ' days.';
+    weatherDetail = [
+      rainDays > 0 ? rainDays + ' rainy day' + (rainDays>1?'s':'') : '',
+      hasThunder ? 'thunderstorms possible' : '',
+      hasSnow ? 'snow possible' : '',
+      hasFog ? 'fog expected' : '',
+      hotDays > 0 ? hotDays + ' day' + (hotDays>1?'s':'')+' above 85F' : '',
+      coldDays > 0 ? coldDays + ' night' + (coldDays>1?'s':'')+' below 45F' : '',
+    ].filter(Boolean).join(', ');
+  }
+
+  const tripDuration = (trip.startDate && trip.endDate)
+    ? Math.round((new Date(trip.endDate)-new Date(trip.startDate))/86400000)+1
+    : null;
+
+  const typeDescriptions = {
+    business: 'professional business travel — meetings, presentations, corporate dinners',
+    leisure: 'leisure vacation — sightseeing, dining, relaxation',
+    adventure: 'outdoor/adventure travel — hiking, active exploration, nature',
+    international: 'international travel — crossing borders, cultural experiences, longer flights',
+  };
+
+  const prompt = 'You are a precise travel packing expert. Generate exactly 14 packing suggestions tailored specifically to this trip.' +
+    '\n\nDESTINATION: ' + (trip.destination||'Unknown') +
+    '\nTRIP TYPE: ' + (typeDescriptions[trip.type]||trip.type||'leisure') +
+    (trip.reason ? '\nREASON: ' + trip.reason : '') +
+    (tripDuration ? '\nDURATION: ' + tripDuration + ' days' : '') +
+    (trip.startDate ? '\nDATES: ' + formatDateRange(trip.startDate, trip.endDate) : '') +
+    (weatherSummary ? '\n\nWEATHER: ' + weatherSummary : '') +
+    (weatherDetail ? '\nWEATHER DETAILS: ' + weatherDetail : '') +
+    '\n\nRULES:' +
+    '\n- Be SPECIFIC (e.g. "Waterproof hiking boots" not just "shoes")' +
+    '\n- Include quantities where relevant (e.g. "3 dress shirts", "sunscreen SPF 50+")' +
+    '\n- Prioritize items driven by the WEATHER and TRIP TYPE' +
+    '\n- If rain expected, include rain gear' +
+    '\n- If hot, focus on breathable/lightweight items' +
+    '\n- If cold nights, include layers' +
+    '\n- Match trip type: business trips need formal wear, adventure needs gear, leisure is casual' +
+    '\n\nReturn ONLY a JSON array of 14 strings. No preamble, no markdown, no explanation.';
+
   try {
-    const response=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
-    const data=await response.json();
-    const text=data.content?.map(c=>c.text||'').join('')||'[]';
-    let suggestions=[];
-    try{suggestions=JSON.parse(text.replace(/```json|```/g,'').trim());}catch{}
+    // Route through worker proxy (API key stays server-side)
+    const result = await api('POST', '/api/ai/suggest', {
+      destination: trip.destination,
+      startDate: trip.startDate,
+      endDate: trip.endDate,
+      type: trip.type,
+      reason: trip.reason || '',
+      weatherSummary: weatherSummary + (weatherDetail ? ' ' + weatherDetail : ''),
+      prompt, // pass full prompt so worker uses it
+    });
+    let suggestions = [];
+    if (result && result.result) {
+      try { suggestions = JSON.parse(result.result.replace(/```json|```/g,'').trim()); } catch{}
+    }
+    if (!suggestions.length) throw new Error('empty');
     renderAISuggestions(suggestions);
   } catch(e) {
-    const fallback=trip.type==='business'?['Business cards (200+)','Power strip with USB','Wrinkle-release spray','Laptop stand','Noise-canceling headphones','Travel iron','Collar stays','Portable wifi hotspot']:['Reef-safe sunscreen SPF 50','Packable day bag','Universal adapter','Dry bag','Portable speaker','Travel-size laundry detergent','Packing cubes','Download offline maps'];
-    renderAISuggestions(fallback);
+    // Smart fallback based on trip type and weather
+    const hasRainFallback = state.weather?.daily.some(d=>[61,63,65,80,81,82].includes(d.code));
+    const isHot = state.weather?.daily.some(d=>d.tempMax>82);
+    const isCold = state.weather?.daily.some(d=>d.tempMin<50);
+    let fallback = [];
+    if (trip.type === 'business') {
+      fallback = ['Dress shirts (x3)','Dress pants (x2)','Blazer','Black dress shoes','Business cards','Laptop & charger','Noise-canceling headphones','Portable phone charger','Wrinkle-release spray','Travel umbrella','Dress socks (x4)','Belt','Cologne/Perfume','Universal power adapter'];
+    } else if (trip.type === 'adventure') {
+      fallback = ['Waterproof hiking boots','Moisture-wicking shirts (x3)','Hiking pants (x2)','Rain jacket','Sunscreen SPF 50+','Insect repellent','First aid kit','Headlamp + batteries','Trekking poles','Reusable water bottle','Snacks/trail mix','Blister prevention socks','Dry bag','Portable battery pack'];
+    } else {
+      fallback = ['Comfortable walking shoes','T-shirts (x4)','Casual pants/shorts (x3)','Light jacket','Sunscreen SPF 50+','Sunglasses','Day backpack','Reusable water bottle','Universal adapter','Phone charger','Travel-size toiletries','Packing cubes','Portable umbrella','Offline maps downloaded'];
+    }
+    if (hasRainFallback && !fallback.includes('Portable umbrella') && !fallback.includes('Rain jacket')) {
+      fallback.splice(3, 0, 'Compact waterproof rain jacket');
+    }
+    if (isCold) fallback.splice(2, 0, 'Warm base layer / thermal shirt');
+    if (isHot) fallback = fallback.map(i => i === 'Light jacket' ? 'Breathable linen shirt' : i);
+    renderAISuggestions(fallback.slice(0, 14));
   }
 }
 function renderAISuggestions(suggestions) {
@@ -2848,10 +2928,16 @@ async function runWeatherIntelligence(){
   const wSum=`Avg high: ${avgHigh}F, avg low: ${avgLow}F.${hasRain?' Rain expected.':''}${hasSnow?' Snow possible.':''}`;
   const prompt=`Packing expert. Given this weather and packing list, give 4-6 specific, actionable recommendations.\n\nDestination: ${state.currentTrip.destination}\nWeather: ${wSum}\nPacking list: ${allItems}\n\nReturn ONLY a JSON array: [{"icon":"emoji","title":"short title","text":"specific recommendation"}]. No preamble.`;
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content:prompt}]})});
-    const data=await res.json();
-    const text=data.content?.map(c=>c.text||'').join('')||'[]';
-    let recs=[];try{recs=JSON.parse(text.replace(/```json|```/g,'').trim());}catch{}
+    const result = await api('POST', '/api/ai/weather', {
+      destination: state.currentTrip.destination,
+      weatherSummary: wSum,
+      packingList: allItems,
+    });
+    let recs = [];
+    if (result && result.result) {
+      try { recs = JSON.parse(result.result.replace(/```json|```/g,'').trim()); } catch{}
+    }
+    if (!recs.length) throw new Error('empty');
     renderWeatherIntelligence(recs);
   }catch(e){
     const recs=[];
