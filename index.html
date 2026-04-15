@@ -1003,8 +1003,8 @@
       <div class="form-group"><label>Item Name</label><input type="text" id="library-item-name" placeholder="e.g. Reef-safe sunscreen"></div>
       <div class="form-group"><label>Category</label>
         <select id="library-item-cat">
-          <option>Clothing</option><option>Toiletries</option><option>Documents</option>
-          <option>Tech</option><option>Health</option><option>Misc</option><option>Other</option>
+          <option>Clothing</option><option>Undergarments</option><option>Toiletries</option><option>Documents</option>
+          <option>Tech</option><option>Accessories</option><option>Gear</option><option>Health</option><option>Misc</option><option>Other</option>
         </select>
       </div>
       <div class="form-group"><label>Description (optional)</label><input type="text" id="library-item-desc" placeholder="e.g. SPF 50, 3oz travel size"></div>
@@ -1263,6 +1263,7 @@ function getDefaultTemplates() {
       'Toiletries':['Toothbrush & toothpaste','Deodorant','Razor & shaving cream','Cologne/Perfume','Face wash & moisturizer','Hair products'],
       'Documents':['Passport / ID','Business cards','Travel itinerary','Hotel confirmation','Flight tickets'],
       'Tech':['Laptop & charger','Phone charger','Headphones','Power bank','Universal adapter'],
+      'Accessories':['Watch','Sunglasses','Belt','Tie clip','Cufflinks'],
       'Misc':['Notebook & pen','Pain relievers','Snacks','Reusable water bottle'],
     }},
     { id:'tpl-leisure', name:'Leisure Vacation', icon:'🌴', categories:{
@@ -1271,7 +1272,8 @@ function getDefaultTemplates() {
       'Toiletries':['Toothbrush & toothpaste','Deodorant','Sunscreen SPF 50+','After-sun lotion','Shampoo & conditioner','Face care routine'],
       'Documents':['Passport / ID','Travel insurance docs','Hotel confirmation','Flight tickets','Emergency contacts'],
       'Tech':['Phone & charger','Camera','Power bank','Universal adapter','Headphones'],
-      'Misc':['Sunglasses','Beach bag','Snacks','Reusable water bottle','Guidebook / Maps','First aid kit'],
+      'Accessories':['Sunglasses','Watch','Hat / Sun hat','Jewelry','Beach bag'],
+      'Misc':['Snacks','Reusable water bottle','Guidebook / Maps','First aid kit','Portable umbrella'],
     }},
   ];
 }
@@ -1623,7 +1625,7 @@ function createTrip() {
       categories[cat]=items.map(name=>({id:uid(),name,description:'',notes:'',qty:1,checked:false,essential:false}));
     });
   } else {
-    ['Clothing','Undergarments','Toiletries','Documents','Tech','Misc'].forEach(c=>{categories[c]=[];});
+    ['Clothing','Undergarments','Toiletries','Documents','Tech','Accessories','Misc'].forEach(c=>{categories[c]=[];});
   }
   const includePC = state.currentUser.showPersonalCare && document.getElementById('new-trip-personal-care').checked;
   const trip = {
@@ -1648,7 +1650,7 @@ function createTrip() {
 // ═══════════════════════════════════════════════
 // PACKING LIST — with qty, descriptions, outfit badges
 // ═══════════════════════════════════════════════
-const CATEGORY_ICONS={'Clothing':'👕','Undergarments':'🩲','Toiletries':'🧴','Documents':'📄','Tech':'💻','Gear':'🎒','Misc':'📦','Personal Care':'🌸','Imported':'📥'};
+const CATEGORY_ICONS={'Clothing':'👕','Undergarments':'🩲','Toiletries':'🧴','Documents':'📄','Tech':'💻','Gear':'🎒','Accessories':'💍','Misc':'📦','Personal Care':'🌸','Imported':'📥'};
 
 // Build a map of itemName → outfit days that use it
 function buildOutfitItemMap() {
