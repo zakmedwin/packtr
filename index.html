@@ -1552,7 +1552,7 @@ function renderDashboard() {
 }
 function renderWeatherStrip(weather) {
   if(!weather||!weather.daily) return '';
-  return weather.daily.slice(0,7).map(d=>`<div class="weather-day-mini"><div class="wd-day">${new Date(d.date).toLocaleDateString('en-US',{weekday:'short'})}</div><div class="wd-icon">${weatherIcon(d.code)}</div><div class="wd-temp">${Math.round(d.tempMax)}°</div></div>`).join('');
+  return weather.daily.slice(0,7).map(d=>`<div class="weather-day-mini"><div class="wd-day">${parseLocalDate(d.date).toLocaleDateString('en-US',{weekday:'short'})}</div><div class="wd-icon">${weatherIcon(d.code)}</div><div class="wd-temp">${Math.round(d.tempMax)}°</div></div>`).join('');
 }
 function renderSharedAvatars(trip) {
   if(!trip.sharedWith||trip.sharedWith.length===0) return '';
@@ -1929,7 +1929,7 @@ function renderWeatherTab(weather) {
   document.getElementById('weather-location-label').textContent=weather.location;
   document.getElementById('weather-days-full').innerHTML=weather.daily.map(d=>`
     <div class="weather-day">
-      <div class="wd-date">${new Date(d.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</div>
+      <div class="wd-date">${parseLocalDate(d.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</div>
       <div class="wd-icon">${weatherIcon(d.code)}</div>
       <div class="wd-temps"><span class="high">${Math.round(d.tempMax)}°</span><span class="low"> / ${Math.round(d.tempMin)}°</span></div>
       <div class="wd-desc">${weatherDesc(d.code)}</div>
@@ -2087,12 +2087,12 @@ function renderOutfitCalendar() {
   const container = document.getElementById('outfit-calendar');
   container.innerHTML = '';
   if (!trip.startDate) { container.innerHTML='<p class="italic text-muted">Set trip dates to plan outfits by day.</p>'; return; }
-  const start = new Date(trip.startDate);
-  const end = trip.endDate ? new Date(trip.endDate) : new Date(start.getTime() + 6*86400000);
+  const start = parseLocalDate(trip.startDate);
+  const end = trip.endDate ? parseLocalDate(trip.endDate) : new Date(start.getTime() + 6*86400000);
   const days = [];
   for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) days.push(new Date(d));
   days.forEach(day => {
-    const dateKey = day.toISOString().split('T')[0];
+    const dateKey = day.getFullYear() + '-' + String(day.getMonth()+1).padStart(2,'0') + '-' + String(day.getDate()).padStart(2,'0');
     const outfits = getUserDayOutfits(dateKey);
     const weatherDay = state.weather?.daily.find(d => d.date === dateKey);
     const card = document.createElement('div');
@@ -2417,7 +2417,7 @@ function saveSettings(){
     });
     if (hidden.length > 0) {
       const msg = hidden.length + ' outfit' + (hidden.length>1?'s':'') + ' on ' +
-        hidden.map(d => new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric'})).join(', ') +
+        hidden.map(d => parseLocalDate(d).toLocaleDateString('en-US',{month:'short',day:'numeric'})).join(', ') +
         ' fall outside the new date range and will not show on the calendar. Outfits are not deleted.';
       if (!confirm(msg + '\n\nSave anyway?')) return;
     }
@@ -2459,8 +2459,18 @@ function deleteTrip(){
 // ═══════════════════════════════════════════════
 function renderTemplates(){
   const grid=document.getElementById('template-grid');
-  if(!state.templates.length){grid.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><p>No templates yet. Save a trip as a template from the trip settings.</p></div>';return;}
-  grid.innerHTML=state.templates.map(t=>`<div class="template-card"><div class="template-icon">${t.icon}</div><div class="template-name">${t.name}</div><div class="template-count">${Object.values(t.categories).flat().length} items across ${Object.keys(t.categories).length} categories</div><div style="margin-top:1rem;display:flex;gap:0.5rem;"><button class="btn btn-primary" style="font-size:0.72rem;" onclick="useTemplate('${t.id}')">Use Template</button>${!['tpl-business','tpl-leisure'].includes(t.id)?`<button class="btn btn-ghost" style="color:var(--burgundy);font-size:0.72rem;" onclick="deleteTemplate('${t.id}')">Delete</button>`:''}</div></div>`).join('');
+  if(!state.templates.length){grid.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><p>No templates yet.</p></div>';return;}
+  grid.innerHTML=state.templates.map(t=>`
+    <div class="template-card">
+      <div class="template-icon">${t.icon}</div>
+      <div class="template-name">${t.name}</div>
+      <div class="template-count">${Object.values(t.categories).flat().length} items · ${Object.keys(t.categories).length} categories</div>
+      <div style="margin-top:1rem;display:flex;gap:0.4rem;flex-wrap:wrap;">
+        <button class="btn btn-primary" style="font-size:0.72rem;" onclick="useTemplate('${t.id}')">Use</button>
+        <button class="btn btn-secondary" style="font-size:0.72rem;" onclick="openEditTemplate('${t.id}')">Edit</button>
+        ${!['tpl-business','tpl-leisure'].includes(t.id)?`<button class="btn btn-ghost" style="color:var(--burgundy);font-size:0.72rem;" onclick="deleteTemplate('${t.id}')">Delete</button>`:''}
+      </div>
+    </div>`).join('');
 }
 
 // ═══════════════════════════════════════════
@@ -2655,7 +2665,7 @@ function renderOutfitSummary() {
   all.sort((a,b) => a.dateKey.localeCompare(b.dateKey) || (slotOrder[a.timeslot]||0)-(slotOrder[b.timeslot]||0));
   container.innerHTML = '<div class="outfit-summary-list">' + all.map(o => {
     const pieces = [['Top',o.top],['Bottom',o.bottom],['Shoes',o.shoes],['Outer',o.outer],['Acc.',o.accessories],['Bag',o.bag]].filter(([,v])=>v);
-    const date = new Date(o.dateKey).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+    const date = parseLocalDate(o.dateKey).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
     return `<div class="outfit-summary-row">
       <div class="outfit-summary-date">${date}</div>
       <div class="outfit-summary-slot ${o.timeslot}">${TIME_LABELS[o.timeslot]||o.timeslot}</div>
@@ -2779,6 +2789,14 @@ function addLibraryItemToTrip(itemId) {
   toast(item.name + ' added to ' + state.currentTrip.tripName, 'success');
 }
 
+
+// Parse YYYY-MM-DD date string as LOCAL date (avoids UTC timezone shift)
+function parseLocalDate(str) {
+  if (!str) return null;
+  const [y,m,d] = str.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+
 // ═══════════════════════════════════════════════
 // UTILITIES
 // ═══════════════════════════════════════════════
@@ -2793,10 +2811,10 @@ function uid(){return Math.random().toString(36).slice(2,9)+Date.now().toString(
 function sanitize(str){return str.replace(/[^a-z0-9]/gi,'_').toLowerCase();}
 function formatDateRange(start,end){
   if(!start) return 'Dates TBD';
-  const s=new Date(start).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  const s=parseLocalDate(start).toLocaleDateString('en-US',{month:'short',day:'numeric'});
   if(!end) return s;
-  const e=new Date(end).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-  return `${s} – ${e}`;
+  const e=parseLocalDate(end).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  return s + ' \u2013 ' + e;
 }
 document.querySelectorAll('.modal-overlay').forEach(overlay=>{overlay.addEventListener('click',e=>{if(e.target===overlay) overlay.classList.remove('open');});});
 
