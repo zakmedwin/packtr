@@ -1076,6 +1076,18 @@
   </div>
 </div>
 
+
+<!-- Move Item to Category -->
+<div class="modal-overlay" id="modal-move-item">
+  <div class="modal" style="max-width:340px;">
+    <div class="modal-header">
+      <h3>Move to Category</h3>
+      <button class="modal-close" onclick="closeModal('modal-move-item')">×</button>
+    </div>
+    <div class="modal-body" id="move-item-cat-list" style="padding:0.5rem 0;"></div>
+  </div>
+</div>
+
 <!-- Add Closet Item -->
 <div class="modal-overlay" id="modal-add-closet">
   <div class="modal" style="max-width:480px;">
@@ -3075,19 +3087,25 @@ function checkAllInCategory(catName, checked) {
 // #28 — MOVE ITEM BETWEEN CATEGORIES
 // ═══════════════════════════════════════════
 function openMoveItem(catName, itemId) {
-  const cats = Object.keys(state.currentTrip.categories).filter(c => c !== catName);
-  if (!cats.length) { toast('No other categories to move to','error'); return; }
-  const catList = cats.map((c,i) => (i+1) + '. ' + c).join('\n');
-  const target = prompt('Move to which category?\n\n' + catList + '\n\nType a category name:');
-  if (!target || !target.trim()) return;
-  const dest = cats.find(c => c.toLowerCase() === target.trim().toLowerCase());
-  if (!dest) { toast('Category "' + target + '" not found', 'error'); return; }
-  const item = state.currentTrip.categories[catName].find(i => i.id === itemId);
+  const cats = Object.keys(state.currentTrip.categories).filter(c => c !== catName && c !== 'Personal Care');
+  if (!cats.length) { toast('No other categories to move to', 'error'); return; }
+  const list = document.getElementById('move-item-cat-list');
+  list.innerHTML = cats.map(cat => {
+    return '<div onclick="moveItemToCategory(\"' + catName + '\",\"' + itemId + '\",\"' + cat.replace(/"/g,'&quot;') + '\")" style="display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.25rem;border-bottom:1px solid var(--border);font-size:0.88rem;cursor:pointer;color:var(--text-primary);">' + (CATEGORY_ICONS[cat] || '📦') + ' ' + cat + '</div>';
+  }).join('');
+  openModal('modal-move-item');
+}
+
+function moveItemToCategory(fromCat, itemId, toCat) { fromCat=fromCat.replace(/&quot;/g,'"'); toCat=toCat.replace(/&quot;/g,'"');
+  const item = state.currentTrip.categories[fromCat]?.find(i => i.id === itemId);
   if (!item) return;
-  state.currentTrip.categories[catName] = state.currentTrip.categories[catName].filter(i => i.id !== itemId);
-  state.currentTrip.categories[dest].push(item);
-  saveTrips(); renderPackingList();
-  toast('Moved to ' + dest, 'success');
+  state.currentTrip.categories[fromCat] = state.currentTrip.categories[fromCat].filter(i => i.id !== itemId);
+  if (!state.currentTrip.categories[toCat]) state.currentTrip.categories[toCat] = [];
+  state.currentTrip.categories[toCat].push(item);
+  saveTrips();
+  closeModal('modal-move-item');
+  renderPackingList();
+  toast('Moved to ' + toCat, 'success');
 }
 
 // ═══════════════════════════════════════════
