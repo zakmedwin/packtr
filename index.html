@@ -2431,6 +2431,8 @@ function saveOutfitDay() {
   }
   state.currentTrip.outfits[state.currentUser.id][dateKey] = dayOutfits;
   syncOutfitToPackingList(outfit);
+  // Sync builder selections to closet (no duplicates)
+  if (Object.keys(builderSelections).length) syncBuilderSelectionsToCloset();
   saveTrips(); closeModal('modal-outfit-day');
   renderOutfitCalendar(); renderPackingList();
   clearPaletteSelection();
@@ -2450,8 +2452,40 @@ function syncOutfitToPackingList(outfit) {
   ['top','bottom','shoes','outer','accessories','bag'].forEach(piece => {
     const val = outfit[piece]; if (!val?.trim()) return;
     const exists = Object.values(trip.categories).flat().some(item => item.name.toLowerCase() === val.toLowerCase().trim());
-    if (!exists) trip.categories['Clothing'].push({id:uid(),name:val.trim(),description:`From outfit: ${outfit.event||outfit.occasion||''}`,notes:'',qty:1,checked:false,essential:false});
+    if (!exists) trip.categories['Clothing'].push({id:uid(),name:val.trim(),description:'From outfit: '+(outfit.event||outfit.occasion||''),notes:'',qty:1,checked:false,essential:false});
   });
+}
+
+// Sync builder selections to closet (no duplicates)
+function syncBuilderSelectionsToCloset() {
+  if (!Object.keys(builderSelections).length) return;
+  const closetItems = getCloset();
+  const slotToCat = {
+    top: 'Tops', bottom: 'Bottoms', shoes: 'Shoes',
+    outer: 'Outerwear', accessories: 'Accessories', bag: 'Bags'
+  };
+  let added = 0;
+  Object.entries(builderSelections).forEach(([slotKey, sel]) => {
+    if (!sel || !sel.name) return;
+    // Check if already in closet by id or name
+    const exists = closetItems.some(i => i.id === sel.id || i.name.toLowerCase() === sel.name.toLowerCase());
+    if (!exists) {
+      closetItems.push({
+        id: sel.id || uid(),
+        name: sel.name,
+        color: sel.color || '',
+        cat: slotToCat[slotKey] || 'Other',
+        brand: '',
+        notes: '',
+      });
+      added++;
+    }
+  });
+  if (added > 0) {
+    saveCloset(closetItems);
+    saveClosetToCloud();
+    toast(added + ' item' + (added > 1 ? 's' : '') + ' added to closet', 'success');
+  }
 }
 
 // Stubs to prevent errors from removed modal
