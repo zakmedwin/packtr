@@ -442,6 +442,12 @@
   .slot-chip-v2.active{background:var(--espresso);color:var(--cream);border-color:var(--espresso);}
   .slot-chip-v2 .chip-color-v2{font-size:0.63rem;opacity:0.7;margin-left:0.15rem;}
   .slot-empty-v2{font-size:0.73rem;color:var(--text-muted);font-style:italic;padding:0.2rem 0;}
+  .season-btn{padding:0.3rem 0.75rem;border:1px solid var(--border-strong);border-radius:20px;font-size:0.75rem;background:var(--bg-input);cursor:pointer;transition:all 0.15s;color:var(--text-primary);}
+  .season-btn.active{background:var(--espresso);color:var(--cream);border-color:var(--espresso);}
+  .season-badge{display:inline-flex;align-items:center;padding:0.1rem 0.4rem;border-radius:10px;font-size:0.62rem;font-weight:600;letter-spacing:0.05em;background:rgba(201,168,76,0.15);color:#8a6b1e;margin-right:0.2rem;}
+  .season-filter-bar{display:flex;gap:0.35rem;flex-wrap:wrap;margin-bottom:0.6rem;}
+  .season-filter-btn{padding:0.2rem 0.6rem;border:1px solid var(--border);border-radius:14px;font-size:0.7rem;background:var(--bg-input);cursor:pointer;color:var(--text-secondary);}
+  .season-filter-btn.active{background:var(--espresso);color:var(--cream);border-color:var(--espresso);}
   .slot-filter-v2{padding:0.2rem 0.5rem;font-size:0.72rem;border-radius:12px;border:1px solid var(--border);background:var(--bg-input);width:70px;margin-right:0.1rem;}
 
   /* SLOT ROW */
@@ -1035,6 +1041,36 @@
     <div class="modal-body" id="edit-template-body" style="max-height:65vh;overflow-y:auto;"></div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modal-edit-template')">Done</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Season Picker for Saving Looks -->
+<div class="modal-overlay" id="modal-save-look">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <h3>Save Look to Closet</h3>
+      <button class="modal-close" onclick="closeModal('modal-save-look')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Look Name</label>
+        <input type="text" id="save-look-name" placeholder='e.g. "Business Formal", "Casual Summer"'>
+      </div>
+      <div class="form-group">
+        <label>Season <span style="font-weight:400;color:var(--text-muted);">(select all that apply)</span></label>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.4rem;" id="season-picker">
+          <button class="season-btn" data-season="Spring" onclick="toggleSeason(this)">🌦️ Spring</button>
+          <button class="season-btn" data-season="Summer" onclick="toggleSeason(this)">☀️ Summer</button>
+          <button class="season-btn" data-season="Fall" onclick="toggleSeason(this)">🍂 Fall</button>
+          <button class="season-btn" data-season="Winter" onclick="toggleSeason(this)">❄️ Winter</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-save-look')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmSaveLook()">Save Look</button>
     </div>
   </div>
 </div>
@@ -3077,15 +3113,72 @@ function saveLooks(looks) {
 function saveOutfitSlotAsLook(outfitId, dateKey) {
   const dayOutfits = getUserDayOutfits(dateKey);
   const outfit = dayOutfits.find(o => o.id === outfitId);
+  if (!outfit) { toast('Outfit not found', 'error'); return; }
+  openSaveLookModal({ type: 'slot', outfitId, dateKey });
+}
+
+
+// ═══════════════════════════════════════════
+// #55 — SEASON CLASSIFICATION
+// ═══════════════════════════════════════════
+let saveLookContext = null; // { type: 'builder' | 'slot', outfitId, dateKey }
+let activeLookSeasonFilter = 'All';
+
+const SEASON_ICONS = { Spring:'🌦️', Summer:'☀️', Fall:'🍂', Winter:'❄️' };
+
+function toggleSeason(btn) {
+  btn.classList.toggle('active');
+}
+
+function getSelectedSeasons() {
+  return Array.from(document.querySelectorAll('#season-picker .season-btn.active'))
+    .map(b => b.dataset.season);
+}
+
+function openSaveLookModal(context) {
+  saveLookContext = context;
+  document.getElementById('save-look-name').value = '';
+  document.querySelectorAll('#season-picker .season-btn').forEach(b => b.classList.remove('active'));
+  openModal('modal-save-look');
+  setTimeout(() => document.getElementById('save-look-name').focus(), 100);
+}
+
+function confirmSaveLook() {
+  const name = document.getElementById('save-look-name').value.trim();
+  if (!name) { toast('Please enter a name', 'error'); return; }
+  const seasons = getSelectedSeasons();
+  
+  if (saveLookContext && saveLookContext.type === 'slot') {
+    _saveLookFromSlot(name, seasons, saveLookContext.outfitId, saveLookContext.dateKey);
+  } else {
+    _saveLookFromBuilder(name, seasons);
+  }
+  closeModal('modal-save-look');
+}
+
+function _saveLookFromBuilder(name, seasons) {
+  const pieces = {};
+  OUTFIT_SLOTS.forEach(slot => {
+    const sel = builderSelections[slot.key];
+    if (sel) pieces[slot.key] = { name: sel.name, color: sel.color || '', label: slot.label };
+  });
+  const look = { id: uid(), name, seasons, pieces, createdAt: new Date().toISOString() };
+  const looks = getSavedLooks();
+  looks.push(look);
+  saveLooks(looks);
+  toast('"' + name + '" saved to closet', 'success');
+  if (document.getElementById('view-closet').style.display !== 'none') renderCloset();
+}
+
+function _saveLookFromSlot(name, seasons, outfitId, dateKey) {
+  const dayOutfits = getUserDayOutfits(dateKey);
+  const outfit = dayOutfits.find(o => o.id === outfitId);
   if (!outfit) return;
-  const name = prompt('Name this look (e.g. "Casual Friday", "Business Formal"):');
-  if (!name || !name.trim()) return;
   const PIECE_KEYS = ['top','bottom','undergarment','shoes','outer','accessories','bag'];
   const SLOT_LABELS = {top:'Top',bottom:'Bottom',undergarment:'Undgmt.',shoes:'Shoes',outer:'Outerwear',accessories:'Accessories',bag:'Bag'};
   const pieces = {};
   PIECE_KEYS.forEach(k => {
     if (outfit[k] && outfit[k].trim()) {
-      // Parse "Name (Color)" format stored in outfit
       const val = outfit[k].trim();
       const match = val.match(/^(.+?)\s*\((.+)\)$/);
       pieces[k] = match
@@ -3094,28 +3187,22 @@ function saveOutfitSlotAsLook(outfitId, dateKey) {
     }
   });
   if (!Object.keys(pieces).length) { toast('No pieces in this outfit', 'error'); return; }
-  const look = { id: uid(), name: name.trim(), pieces, createdAt: new Date().toISOString() };
+  const look = { id: uid(), name, seasons, pieces, createdAt: new Date().toISOString() };
   const looks = getSavedLooks();
   looks.push(look);
   saveLooks(looks);
-  toast('"' + look.name + '" saved to closet', 'success');
+  toast('"' + name + '" saved to closet', 'success');
+}
+
+function setLookSeasonFilter(season) {
+  activeLookSeasonFilter = season;
+  const q = document.getElementById('closet-search')?.value || '';
+  renderCloset(q);
 }
 
 function saveOutfitAsLook() {
   if (!Object.keys(builderSelections).length) { toast('Select items first', 'error'); return; }
-  const name = prompt('Name this look (e.g. "Casual Friday", "Business Formal"):');
-  if (!name || !name.trim()) return;
-  const pieces = {};
-  OUTFIT_SLOTS.forEach(slot => {
-    const sel = builderSelections[slot.key];
-    if (sel) pieces[slot.key] = { name: sel.name, color: sel.color || '', label: slot.label };
-  });
-  const look = { id: uid(), name: name.trim(), pieces, createdAt: new Date().toISOString() };
-  const looks = getSavedLooks();
-  looks.push(look);
-  saveLooks(looks);
-  toast('"' + look.name + '" saved to closet', 'success');
-  if (document.getElementById('view-closet').style.display !== 'none') renderCloset();
+  openSaveLookModal({ type: 'builder' });
 }
 
 function deleteSavedLook(lookId) {
