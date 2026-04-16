@@ -2197,7 +2197,7 @@ function renderOutfitCalendar() {
 }
 
 function renderOutfitSlot(outfit, dateKey) {
-  const pieces = [['Top',outfit.top],['Bottom',outfit.bottom],['Shoes',outfit.shoes],['Outer',outfit.outer],['Acc.',outfit.accessories],['Bag',outfit.bag]]
+  const pieces = [['Top',outfit.top],['Bottom',outfit.bottom],['Undgmt.',outfit.undergarment],['Shoes',outfit.shoes],['Outer',outfit.outer],['Acc.',outfit.accessories],['Bag',outfit.bag]]
     .filter(([,v]) => v);
   return `
     <div class="outfit-slot">
@@ -2220,12 +2220,13 @@ function renderOutfitSlot(outfit, dateKey) {
 
 // ── SLOT-BY-SLOT OUTFIT BUILDER ──────────────────────────────────────────────
 const OUTFIT_SLOTS = [
-  { key:'top',         label:'Top',        cats:['Tops','Dresses & Jumpsuits'] },
-  { key:'bottom',      label:'Bottom',     cats:['Bottoms','Dresses & Jumpsuits'] },
-  { key:'shoes',       label:'Shoes',      cats:['Shoes'] },
-  { key:'outer',       label:'Outerwear',  cats:['Outerwear'] },
-  { key:'accessories', label:'Accessories',cats:['Accessories'] },
-  { key:'bag',         label:'Bag',        cats:['Bags'] },
+  { key:'top',          label:'Top',          cats:['Tops','Dresses & Jumpsuits'] },
+  { key:'bottom',       label:'Bottom',       cats:['Bottoms','Dresses & Jumpsuits'] },
+  { key:'undergarment', label:'Undergarment', cats:['Undergarments'] },
+  { key:'shoes',        label:'Shoes',        cats:['Shoes'] },
+  { key:'outer',        label:'Outerwear',    cats:['Outerwear'] },
+  { key:'accessories',  label:'Accessories',  cats:['Accessories'] },
+  { key:'bag',          label:'Bag',          cats:['Bags'] },
 ];
 
 // Builder state: selected item per slot
@@ -2334,8 +2335,8 @@ function openOutfitFromBuilder() {
   document.getElementById('outfit-event').value = '';
   document.getElementById('outfit-notes').value = '';
   // Pre-fill piece fields from builder selections, blank the rest
-  ['top','bottom','shoes','outer','accessories','bag'].forEach(p => {
-    const el = document.getElementById(`piece-${p}`);
+  ['top','bottom','undergarment','shoes','outer','accessories','bag'].forEach(p => {
+    const el = document.getElementById('piece-'+p);
     if (!el) return;
     const sel = builderSelections[p];
     el.value = sel ? (sel.name + (sel.color ? ' (' + sel.color + ')' : '')) : '';
@@ -2363,7 +2364,7 @@ function outfitGoToStep(step) {
 }
 
 function outfitStepNext() {
-  const hasPiece = ['top','bottom','shoes','outer','accessories','bag'].some(p => document.getElementById(`piece-${p}`).value.trim());
+  const hasPiece = ['top','bottom','undergarment','shoes','outer','accessories','bag'].some(p => { const el = document.getElementById('piece-'+p); return el && el.value.trim(); });
   if (!hasPiece) { toast('Add at least one outfit piece','error'); return; }
   outfitGoToStep(2);
 }
@@ -2417,6 +2418,7 @@ function saveOutfitDay() {
     event: document.getElementById('outfit-event').value.trim(),
     top: document.getElementById('piece-top').value.trim(),
     bottom: document.getElementById('piece-bottom').value.trim(),
+    undergarment: document.getElementById('piece-undergarment') ? document.getElementById('piece-undergarment').value.trim() : '',
     shoes: document.getElementById('piece-shoes').value.trim(),
     outer: document.getElementById('piece-outer').value.trim(),
     accessories: document.getElementById('piece-accessories').value.trim(),
@@ -3075,8 +3077,8 @@ function saveOutfitSlotAsLook(outfitId, dateKey) {
   if (!outfit) return;
   const name = prompt('Name this look (e.g. "Casual Friday", "Business Formal"):');
   if (!name || !name.trim()) return;
-  const PIECE_KEYS = ['top','bottom','shoes','outer','accessories','bag'];
-  const SLOT_LABELS = {top:'Top',bottom:'Bottom',shoes:'Shoes',outer:'Outerwear',accessories:'Accessories',bag:'Bag'};
+  const PIECE_KEYS = ['top','bottom','undergarment','shoes','outer','accessories','bag'];
+  const SLOT_LABELS = {top:'Top',bottom:'Bottom',undergarment:'Undgmt.',shoes:'Shoes',outer:'Outerwear',accessories:'Accessories',bag:'Bag'};
   const pieces = {};
   PIECE_KEYS.forEach(k => {
     if (outfit[k] && outfit[k].trim()) {
@@ -3142,7 +3144,7 @@ function applyLookToBuilder(lookId) {
 
 function renderSavedLooks() {
   const looks = getSavedLooks();
-  const SLOT_LABELS = {top:'Top',bottom:'Bottom',shoes:'Shoes',outer:'Outerwear',accessories:'Accessories',bag:'Bag'};
+  const SLOT_LABELS = {top:'Top',bottom:'Bottom',undergarment:'Undgmt.',shoes:'Shoes',outer:'Outerwear',accessories:'Accessories',bag:'Bag'};
   const isCollapsed = closetCollapsed['Outfits'];
   const lookRows = looks.length ? looks.map(look => {
     const pieces = Object.entries(look.pieces).map(([k,p]) =>
