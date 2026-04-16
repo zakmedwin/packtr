@@ -1171,6 +1171,18 @@ async function api(method, path, body) {
     };
     if (body) opts.body = JSON.stringify(body);
     const res = await fetch(WORKER + path, opts);
+    if (res.status === 401) {
+      // Invalid credentials — rebuild token from current user and PIN if available
+      if (state.currentUser && state.pinBuffer) {
+        setAuthToken(state.currentUser.id, state.pinBuffer);
+      } else if (state.currentUser) {
+        // Try to find the correct PIN from stored users
+        const stored = state.users.find(u => u.id === state.currentUser.id);
+        if (stored && stored.pin) setAuthToken(state.currentUser.id, stored.pin);
+      }
+      console.warn('Auth token refreshed due to invalid credentials');
+      return null;
+    }
     if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error || res.status); }
     return await res.json();
   } catch(e) {
@@ -1377,7 +1389,11 @@ function attemptLogin() {
   const user = state.users.find(u => u.id===state.selectedUserId);
   if (user && state.pinBuffer===user.pin) {
     state.currentUser = user;
+    // Always set auth token from the PIN the user just typed — never from stored/cached values
     setAuthToken(user.id, state.pinBuffer);
+    // Also persist the correct PIN in state.users so we can recover if token gets corrupted
+    const userIdx = state.users.findIndex(u => u.id === user.id);
+    if (userIdx >= 0) state.users[userIdx].pin = state.pinBuffer;
     document.getElementById('nav-username-display').textContent = '/ ' + user.name;
     if (user.role==='admin') document.getElementById('nav-admin').style.display='inline-flex';
     // Load cloud data after login
@@ -2751,7 +2767,7 @@ function openEditUserModal(userId){
   document.getElementById('edit-user-role').value=user.role;
   openModal('modal-edit-user');
 }
-function saveUserEdit(){
+async function saveUserEdit(){
   const userId=document.getElementById('edit-user-id').value;
   const user=state.users.find(u=>u.id===userId); if(!user) return;
   const newPin=document.getElementById('edit-user-pin').value.trim();
@@ -2760,6 +2776,18 @@ function saveUserEdit(){
   user.role=document.getElementById('edit-user-role').value;
   user.initials=user.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
   if(newPin) user.pin=newPin;
+  // If changing current user's own PIN, update auth token immediately
+  if(newPin && userId === state.currentUser?.id) {
+    setAuthToken(userId, newPin);
+    state.currentUser.pin = newPin;
+  }
+  // Push PIN change to worker KV
+  await api('PUT', '/api/users/' + userId, {
+    name: user.name,
+    pin: user.pin,
+    role: user.role,
+    showPersonalCare: user.showPersonalCare || false
+  });
   saveUsers(); closeModal('modal-edit-user'); renderAdmin(); toast('User updated!','success');
 }
 function deleteUserFromModal(){
