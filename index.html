@@ -1651,7 +1651,7 @@ function createTrip() {
 // ═══════════════════════════════════════════════
 // PACKING LIST — with qty, descriptions, outfit badges
 // ═══════════════════════════════════════════════
-const CATEGORY_ICONS={'Clothing':'👕','Undergarments':'🩲','Toiletries':'🧴','Documents':'📄','Tech':'💻','Gear':'🎒','Accessories':'💍','Misc':'📦','Personal Care':'🌸','Imported':'📥'};
+const CATEGORY_ICONS={'Clothing':'👕','Undergarments':'🩲','Toiletries':'🧴','Documents':'📄','Tech':'💻','Gear':'🎒','Accessories':'💍','Misc':'📦','Personal Care':'🌸','Imported':'📥','Outfits':'👔'};
 
 // Build a map of itemName → outfit days that use it
 function buildOutfitItemMap() {
@@ -3110,26 +3110,31 @@ function applyLookToBuilder(lookId) {
 
 function renderSavedLooks() {
   const looks = getSavedLooks();
-  if (!looks.length) return '';
   const SLOT_LABELS = {top:'Top',bottom:'Bottom',shoes:'Shoes',outer:'Outerwear',accessories:'Accessories',bag:'Bag'};
-  return '<div style="margin-bottom:1.5rem;">' +
-    '<div class="closet-cat-title">👔 Saved Looks <span style="font-size:0.68rem;font-weight:400;color:var(--text-muted);">' + looks.length + ' look' + (looks.length!==1?'s':'') + '</span></div>' +
-    '<div style="display:flex;flex-direction:column;gap:0.6rem;">' +
-    looks.map(look => {
-      const pieces = Object.entries(look.pieces).map(([k,p]) =>
-        '<span style="font-size:0.75rem;color:var(--text-secondary);"><span style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-right:0.25rem;">' + (SLOT_LABELS[k]||k) + '</span>' + p.name + (p.color ? ' · ' + p.color : '') + '</span>'
-      ).join('<span style="color:var(--border-strong);margin:0 0.3rem;">·</span>');
-      return '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;padding:0.6rem 0;border-bottom:1px solid var(--border);">' +
-        '<div style="flex:1;min-width:0;">' +
-        '<div style="font-weight:600;font-size:0.88rem;margin-bottom:0.25rem;">' + look.name + '</div>' +
-        '<div style="display:flex;flex-wrap:wrap;gap:0.25rem 0.1rem;line-height:1.8;">' + pieces + '</div>' +
-        '</div>' +
-        '<div style="display:flex;gap:0.3rem;flex-shrink:0;">' +
-        '<button class="btn btn-secondary" style="font-size:0.65rem;padding:0.2rem 0.5rem;" onclick="applyLookToBuilder(\'' + look.id + '\')">Use</button>' +
-        '<button class="btn btn-ghost" style="font-size:0.65rem;padding:0.2rem 0.4rem;color:var(--burgundy);" onclick="deleteSavedLook(\'' + look.id + '\')">×</button>' +
-        '</div></div>';
-    }).join('') +
-    '</div></div>';
+  const isCollapsed = closetCollapsed['Outfits'];
+  const lookRows = looks.length ? looks.map(look => {
+    const pieces = Object.entries(look.pieces).map(([k,p]) =>
+      '<span style="font-size:0.73rem;color:var(--text-secondary);"><span style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-right:0.25rem;">' + (SLOT_LABELS[k]||k) + '</span>' + p.name + (p.color ? ' · ' + p.color : '') + '</span>'
+    ).join('<span style="color:var(--border-strong);margin:0 0.35rem;">·</span>');
+    return '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;padding:0.55rem 0;border-bottom:1px solid var(--border);">' +
+      '<div style="flex:1;min-width:0;">' +
+      '<div style="font-weight:600;font-size:0.85rem;margin-bottom:0.2rem;">' + look.name + '</div>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:0.2rem 0;">' + pieces + '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:0.3rem;flex-shrink:0;">' +
+      '<button class="btn btn-secondary" style="font-size:0.65rem;padding:0.2rem 0.5rem;" onclick="applyLookToBuilder(\'' + look.id + '\')">Use</button>' +
+      '<button class="btn btn-ghost" style="font-size:0.65rem;padding:0.2rem 0.4rem;color:var(--burgundy);" onclick="deleteSavedLook(\'' + look.id + '\')">×</button>' +
+      '</div></div>';
+  }).join('') : '<div style="padding:0.5rem 0;font-size:0.82rem;color:var(--text-muted);font-style:italic;">No saved looks yet. Build an outfit and tap 💾 Save Look.</div>';
+
+  return '<div style="margin-bottom:1.25rem;">' +
+    '<div class="closet-cat-title" onclick="toggleClosetCat(\'Outfits\')" style="cursor:pointer;">' +
+    '<span>👔 Outfits</span>' +
+    '<span style="font-size:0.68rem;font-weight:400;color:var(--text-muted);margin-left:0.4rem;">' + looks.length + ' look' + (looks.length!==1?'s':'') + '</span>' +
+    '<span style="margin-left:auto;font-size:0.7rem;opacity:0.5;">' + (isCollapsed ? '▶' : '▼') + '</span>' +
+    '</div>' +
+    (isCollapsed ? '' : '<div>' + lookRows + '</div>') +
+    '</div>';
 }
 
 function getCloset(){try{return JSON.parse(localStorage.getItem(`pr_closet_${state.currentUser.id}`)||'[]');}catch{return[];}}
