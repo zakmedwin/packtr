@@ -430,10 +430,10 @@
   .outfit-slots-grid{display:flex;flex-direction:column;gap:0;}
   .outfit-builder-footer{display:flex;align-items:center;justify-content:flex-end;gap:0.5rem;padding:0.6rem 1rem;border-top:1px solid var(--border);background:var(--bg-input);}
   /* Redesigned slot rows */
-  .slot-row-v2{display:grid;grid-template-columns:90px 1fr;border-bottom:1px solid var(--border);min-height:52px;}
+  .slot-row-v2{display:grid;grid-template-columns:100px 1fr;border-bottom:1px solid var(--border);min-height:48px;}
   .slot-row-v2:last-child{border-bottom:none;}
-  .slot-label-v2{display:flex;flex-direction:column;justify-content:center;padding:0.5rem 0.75rem;border-right:1px solid var(--border);background:rgba(44,26,14,0.02);}
-  .slot-label-name{font-size:0.62rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);}
+  .slot-label-v2{display:flex;flex-direction:column;justify-content:center;padding:0.4rem 0.6rem;border-right:1px solid var(--border);background:rgba(44,26,14,0.02);min-width:0;overflow:hidden;}
+  .slot-label-name{font-size:0.58rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);word-break:break-word;line-height:1.3;}
   .slot-selected-v2{font-size:0.78rem;font-weight:600;color:var(--espresso);margin-top:0.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px;}
   .slot-selected-v2.empty{color:var(--text-muted);font-weight:400;font-style:italic;}
   .slot-picker-col{padding:0.4rem 0.6rem;display:flex;flex-wrap:wrap;gap:0.35rem;align-items:center;min-height:52px;}
@@ -2274,6 +2274,8 @@ function renderClosetPalette() {
       if (sel) rightCol += ' <button class="btn btn-ghost" style="font-size:0.62rem;padding:0.15rem 0.35rem;color:var(--burgundy);flex-shrink:0;" onclick="clearSlot(\'' + sk + '\')">\u00d7 Clear</button>';
     }
 
+    // Hide slots with no closet items and no selection
+    if (!slotItems.length && !sel) return '';
     return '<div class="slot-row-v2" id="slot-row-' + slot.key + '">' +
       '<div class="slot-label-v2"><span class="slot-label-name">' + slot.label + '</span>' + selectedDisplay + '</div>' +
       '<div class="slot-picker-col" id="slot-items-' + slot.key + '">' + rightCol + '</div>' +
