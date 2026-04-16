@@ -949,6 +949,7 @@
         <div class="piece-grid">
           <div class="piece-row"><span class="piece-label">Top</span><input type="text" id="piece-top" placeholder="e.g. white linen blouse"></div>
           <div class="piece-row"><span class="piece-label">Bottom</span><input type="text" id="piece-bottom" placeholder="e.g. high-waist trousers"></div>
+          <div class="piece-row"><span class="piece-label">Undergarment</span><input type="text" id="piece-undergarment" placeholder="e.g. boxer briefs, sports bra"></div>
           <div class="piece-row"><span class="piece-label">Shoes</span><input type="text" id="piece-shoes" placeholder="e.g. tan leather sandals"></div>
           <div class="piece-row"><span class="piece-label">Outerwear</span><input type="text" id="piece-outer" placeholder="e.g. light trench coat"></div>
           <div class="piece-row"><span class="piece-label">Accessories</span><input type="text" id="piece-accessories" placeholder="e.g. gold hoops, silk scarf"></div>
@@ -2374,7 +2375,7 @@ function outfitStepNext() {
 function outfitStepBack() { outfitGoToStep(1); }
 
 function renderOutfitStep2Preview() {
-  const pieces = [['Top','piece-top'],['Bottom','piece-bottom'],['Shoes','piece-shoes'],['Outerwear','piece-outer'],['Accessories','piece-accessories'],['Bag','piece-bag']]
+  const pieces = [['Top','piece-top'],['Bottom','piece-bottom'],['Undergarment','piece-undergarment'],['Shoes','piece-shoes'],['Outerwear','piece-outer'],['Accessories','piece-accessories'],['Bag','piece-bag']]
     .map(([label,id]) => [label, document.getElementById(id)?.value.trim()])
     .filter(([,v]) => v);
   const preview = document.getElementById('outfit-step2-preview');
