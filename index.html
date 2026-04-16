@@ -277,8 +277,9 @@
   .outfit-slot-time.afternoon{background:rgba(107,140,107,0.15);color:var(--sage);}
   .outfit-slot-time.evening{background:rgba(44,26,14,0.12);color:var(--espresso-light);}
   .outfit-slot-time.night{background:rgba(60,40,80,0.12);color:#6a4a8a;}
-  .outfit-slot-actions{display:flex;gap:0.2rem;opacity:0;transition:opacity var(--transition);}
+  .outfit-slot-actions{display:flex;gap:0.2rem;opacity:0.4;transition:opacity var(--transition);}
   .outfit-slot:hover .outfit-slot-actions{opacity:1;}
+  @media(max-width:640px){.outfit-slot-actions{opacity:1;}}
   .outfit-event{font-family:var(--font-accent);font-style:italic;font-size:0.78rem;color:var(--text-secondary);margin-bottom:0.3rem;}
   .outfit-occasion-label{font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.25rem;}
   .outfit-pieces{display:flex;flex-direction:column;gap:0.25rem;}
@@ -720,7 +721,7 @@
           <div class="outfit-slots-grid" id="outfit-slots-grid"></div>
           <div class="outfit-builder-footer">
             <button class="btn btn-ghost" style="font-size:0.72rem;" onclick="clearBuilderSelections()">Clear All</button>
-            <button class="btn btn-secondary" style="font-size:0.72rem;" onclick="saveOutfitAsLook()">💾 Save Look</button>
+            <button class="btn btn-secondary" id="save-look-btn" style="font-size:0.72rem;display:none;" onclick="saveOutfitAsLook()">💾 Save to Closet</button>
             <button class="btn btn-gold" id="builder-plan-btn" onclick="openOutfitFromBuilder()">Assign to a Day →</button>
           </div>
         </div>
@@ -2203,6 +2204,7 @@ function renderOutfitSlot(outfit, dateKey) {
       <div class="outfit-slot-header">
         <span class="outfit-slot-time ${outfit.timeslot}">${TIME_LABELS[outfit.timeslot]||outfit.timeslot}</span>
         <div class="outfit-slot-actions">
+          <button class="btn btn-ghost" style="font-size:0.68rem;padding:0.15rem 0.35rem;" title="Save as Look" onclick="saveOutfitSlotAsLook('${outfit.id}','${dateKey}')">💾</button>
           <button class="btn btn-ghost" style="font-size:0.68rem;padding:0.15rem 0.35rem;" onclick="openOutfitDayModal('${dateKey}','${outfit.id}')">✎</button>
           <button class="btn btn-ghost" style="font-size:0.68rem;padding:0.15rem 0.35rem;color:var(--burgundy);" onclick="deleteOutfitSlot('${dateKey}','${outfit.id}')">×</button>
         </div>
@@ -2315,10 +2317,12 @@ function filterSlot(slotKey, query) {
 
 function updateBuilderButton() {
   const btn = document.getElementById('builder-plan-btn');
+  const saveBtn = document.getElementById('save-look-btn');
   if (!btn) return;
   const count = Object.keys(builderSelections).length;
   btn.disabled = count === 0;
-  btn.textContent = count > 0 ? `Assign to a Day → (${count} piece${count!==1?'s':''})` : 'Assign to a Day →';
+  btn.textContent = count > 0 ? 'Assign to a Day → (' + count + ' piece' + (count!==1?'s':'') + ')' : 'Assign to a Day →';
+  if (saveBtn) saveBtn.style.display = count > 0 ? 'inline-flex' : 'none';
 }
 
 function openOutfitFromBuilder() {
@@ -3062,6 +3066,34 @@ function getSavedLooks() {
 }
 function saveLooks(looks) {
   localStorage.setItem('pr_looks_' + state.currentUser.id, JSON.stringify(looks));
+}
+
+
+function saveOutfitSlotAsLook(outfitId, dateKey) {
+  const dayOutfits = getUserDayOutfits(dateKey);
+  const outfit = dayOutfits.find(o => o.id === outfitId);
+  if (!outfit) return;
+  const name = prompt('Name this look (e.g. "Casual Friday", "Business Formal"):');
+  if (!name || !name.trim()) return;
+  const PIECE_KEYS = ['top','bottom','shoes','outer','accessories','bag'];
+  const SLOT_LABELS = {top:'Top',bottom:'Bottom',shoes:'Shoes',outer:'Outerwear',accessories:'Accessories',bag:'Bag'};
+  const pieces = {};
+  PIECE_KEYS.forEach(k => {
+    if (outfit[k] && outfit[k].trim()) {
+      // Parse "Name (Color)" format stored in outfit
+      const val = outfit[k].trim();
+      const match = val.match(/^(.+?)\s*\((.+)\)$/);
+      pieces[k] = match
+        ? { name: match[1].trim(), color: match[2].trim(), label: SLOT_LABELS[k] }
+        : { name: val, color: '', label: SLOT_LABELS[k] };
+    }
+  });
+  if (!Object.keys(pieces).length) { toast('No pieces in this outfit', 'error'); return; }
+  const look = { id: uid(), name: name.trim(), pieces, createdAt: new Date().toISOString() };
+  const looks = getSavedLooks();
+  looks.push(look);
+  saveLooks(looks);
+  toast('"' + look.name + '" saved to closet', 'success');
 }
 
 function saveOutfitAsLook() {
