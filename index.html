@@ -3175,7 +3175,7 @@ function renderCloset(searchQuery=''){
   const cats = {};
   items.forEach(item => { if(!cats[item.cat]) cats[item.cat]=[]; cats[item.cat].push(item); });
 
-  container.innerHTML = Object.entries(cats).map(([cat, catItems]) => {
+  const catHtml = Object.entries(cats).map(([cat, catItems]) => {
     const collapsed = closetCollapsed[cat] && !q;
     return `
     <div class="closet-cat-section">
@@ -3195,6 +3195,9 @@ function renderCloset(searchQuery=''){
       </div>`}
     </div>`;
   }).join('');
+
+  // Append Outfits as the last category, same style, only when not searching
+  container.innerHTML = catHtml + (!q ? renderSavedLooks() : '');
 }
 
 function toggleClosetCat(cat) {
