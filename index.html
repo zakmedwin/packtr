@@ -221,8 +221,9 @@
   .qty-value{width:28px;height:22px;text-align:center;font-size:0.75rem;font-weight:700;font-family:var(--font-body);color:var(--text-primary);background:var(--bg-card);border:none;border-left:1px solid var(--border-strong);border-right:1px solid var(--border-strong);outline:none;padding:0;}
   .qty-value:focus{background:rgba(201,168,76,0.08);}
 
-  .item-actions{display:none;gap:0.25rem;flex-shrink:0;}
-  .packing-item:hover .item-actions{display:flex;}
+  .item-actions{display:flex;gap:0.15rem;flex-shrink:0;opacity:0;transition:opacity 0.15s;}
+  .packing-item:hover .item-actions{opacity:1;}
+  @media(max-width:640px){.item-actions{opacity:0.6;}}
   .add-item-form{margin-top:0.75rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-lg);padding:0.75rem;}
   .add-item-form .form-row{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem;}
   .add-item-form input{font-size:0.82rem;padding:0.5rem 0.7rem;}
@@ -1800,15 +1801,15 @@ function renderPackingItem(catName, item, outfitMap) {
         ${item.notes?`<div class="item-description" style="color:var(--text-muted);">📝 ${item.notes}</div>`:''}
         ${outfitBadges?`<div class="item-meta-row">${outfitBadges}</div>`:''}
       </div>
+      <div class="item-actions">
+        <button class="btn btn-ghost" style="font-size:0.7rem;padding:0.15rem 0.35rem;" onclick="openEditItem('${catName}','${item.id}')" title="Edit">✎</button>
+        <button class="btn btn-ghost" style="font-size:0.7rem;padding:0.15rem 0.35rem;" onclick="openMoveItem('${catName}','${item.id}')" title="Move">⇄</button>
+        <button class="btn btn-ghost" style="font-size:0.7rem;padding:0.15rem 0.35rem;color:var(--burgundy);" onclick="removeItem('${catName}','${item.id}')">×</button>
+      </div>
       <div class="qty-control">
         <button class="qty-btn" onclick="changeQty('${catName}','${item.id}',-1)">−</button>
         <input class="qty-value" type="number" min="1" value="${item.qty||1}" onchange="setQty('${catName}','${item.id}',this.value)" onblur="setQty('${catName}','${item.id}',this.value)">
         <button class="qty-btn" onclick="changeQty('${catName}','${item.id}',1)">+</button>
-      </div>
-      <div class="item-actions">
-        <button class="btn btn-ghost" style="font-size:0.72rem;padding:0.2rem 0.4rem;" onclick="openEditItem('${catName}','${item.id}')" title="Edit">✎</button>
-        <button class="btn btn-ghost" style="font-size:0.72rem;padding:0.2rem 0.4rem;" onclick="openMoveItem('${catName}','${item.id}')" title="Move to category">⇄</button>
-        <button class="btn btn-ghost" style="font-size:0.72rem;padding:0.2rem 0.4rem;color:var(--burgundy);" onclick="removeItem('${catName}','${item.id}')">×</button>
       </div>
     </div>`;
 }
@@ -1826,12 +1827,26 @@ function findOutfitUses(item, outfitMap) {
 
 function toggleItem(catName, itemId) {
   const item = state.currentTrip.categories[catName].find(i=>i.id===itemId);
-  if (item) { item.checked=!item.checked; saveTrips(); renderPackingList(); }
+  if (!item) return;
+  item.checked = !item.checked;
+  saveTrips();
+  // Update DOM directly — no full re-render to avoid flash
+  const checkEl = document.querySelector('#item-' + itemId + ' .item-check');
+  const nameEl = document.querySelector('#item-' + itemId + ' .item-name');
+  if (checkEl) checkEl.className = 'item-check' + (item.checked ? ' checked' : '');
+  if (nameEl) nameEl.className = 'item-name' + (item.checked ? ' checked' : '');
+  // Update progress ring without full re-render
+  updateProgressRing();
 }
 
 function changeQty(catName, itemId, delta) {
   const item = state.currentTrip.categories[catName].find(i=>i.id===itemId);
-  if (item) { item.qty = Math.max(1, (item.qty||1)+delta); saveTrips(); renderPackingList(); }
+  if (!item) return;
+  item.qty = Math.max(1, (item.qty||1)+delta);
+  saveTrips();
+  // Update qty input directly — no re-render
+  const qtyInput = document.querySelector('#item-' + itemId + ' .qty-value');
+  if (qtyInput) qtyInput.value = item.qty;
 }
 
 function setQty(catName, itemId, val) {
