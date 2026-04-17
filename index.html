@@ -1594,7 +1594,11 @@ function isTripArchived(trip) {
 function buildTripCard(trip, archived) {
   const card = document.createElement('div');
   card.className = 'card trip-card' + (archived ? ' archived' : '');
-  card.onclick = () => showTripDetail(trip.id, isArchived);
+  if (isArchived) {
+    card.onclick = () => { state.tripReadOnly = true; showTripDetail(trip.id); };
+  } else {
+    card.onclick = () => { state.tripReadOnly = false; showTripDetail(trip.id); };
+  }
   const isShared = trip.ownerId !== state.currentUser.id || (trip.sharedWith && trip.sharedWith.length > 0);
   const badgeClass = trip.type==='business' ? 'badge-business' : isShared ? 'badge-shared' : 'badge-leisure';
   const {packed, total} = getTripProgress(trip);
