@@ -1184,15 +1184,14 @@ async function api(method, path, body) {
     if (body) opts.body = JSON.stringify(body);
     const res = await fetch(WORKER + path, opts);
     if (res.status === 401) {
-      // Invalid credentials — rebuild token from current user and PIN if available
-      if (state.currentUser && state.pinBuffer) {
-        setAuthToken(state.currentUser.id, state.pinBuffer);
-      } else if (state.currentUser) {
-        // Try to find the correct PIN from stored users
+      // Token mismatch — try to recover from stored users
+      if (state.currentUser) {
         const stored = state.users.find(u => u.id === state.currentUser.id);
-        if (stored && stored.pin) setAuthToken(state.currentUser.id, stored.pin);
+        if (stored && stored.pin) {
+          setAuthToken(state.currentUser.id, stored.pin);
+          console.warn('Auth token refreshed from stored PIN');
+        }
       }
-      console.warn('Auth token refreshed due to invalid credentials');
       return null;
     }
     if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error || res.status); }
@@ -1409,29 +1408,42 @@ document.addEventListener('keydown', function(e) {
   else if (e.key === 'Escape') { pinClear(); e.preventDefault(); }
 });
 function updatePinDisplay() { for(let i=0;i<4;i++) document.getElementById(`dot-${i}`).classList.toggle('filled',i<state.pinBuffer.length); }
-function attemptLogin() {
+async function attemptLogin() {
   const user = state.users.find(u => u.id===state.selectedUserId);
   if (user && state.pinBuffer===user.pin) {
     state.currentUser = user;
-    // Always set auth token from the PIN the user just typed — never from stored/cached values
+    // Always set auth token from the PIN the user just typed
     setAuthToken(user.id, state.pinBuffer);
-    // Also persist the correct PIN in state.users so we can recover if token gets corrupted
+    // Persist correct PIN in state.users
     const userIdx = state.users.findIndex(u => u.id === user.id);
     if (userIdx >= 0) state.users[userIdx].pin = state.pinBuffer;
+    saveUsers();
+    // Push PIN to KV so all devices stay in sync
+    api('PUT', '/api/users/' + user.id, {
+      name: user.name, pin: state.pinBuffer,
+      role: user.role, showPersonalCare: user.showPersonalCare || false
+    }).catch(() => {}); // fire and forget — don't block login
     document.getElementById('nav-username-display').textContent = '/ ' + user.name;
     if (user.role==='admin') document.getElementById('nav-admin').style.display='inline-flex';
-    // Load cloud data after login
     loadTrips().then(() => { if(document.getElementById('trips-grid')) renderDashboard(); });
     loadTemplates();
     loadClosetFromCloud();
     loadProfileFromCloud();
     showDashboard();
-    // Fade out login overlay — app is already visible underneath
     const loginEl = document.getElementById('screen-login');
     loginEl.classList.add('hidden');
     setTimeout(() => { loginEl.style.display = 'none'; }, 420);
     toast('Welcome back, ' + user.name + '!');
   } else {
+    // Try fetching from cloud in case local users are stale
+    const cloudResult = await api('GET', '/api/users').catch(() => null);
+    if (cloudResult && Array.isArray(cloudResult)) {
+      // Cloud returned users — update local and retry
+      const cloudUser = cloudResult.find(u => u.id === state.selectedUserId);
+      if (cloudUser) {
+        // We can't verify PIN from cloud (PINs aren't returned) — just show error
+      }
+    }
     document.getElementById('login-error').textContent='Incorrect PIN. Please try again.';
     state.pinBuffer=''; updatePinDisplay();
     setTimeout(()=>{ document.getElementById('login-error').textContent=''; },2000);
