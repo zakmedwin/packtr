@@ -1396,6 +1396,15 @@ function backToUserSelect() {
 function pinKey(digit) { if(state.pinBuffer.length>=4) return; state.pinBuffer+=digit; updatePinDisplay(); if(state.pinBuffer.length===4) attemptLogin(); }
 function pinDelete() { state.pinBuffer=state.pinBuffer.slice(0,-1); updatePinDisplay(); }
 function pinClear() { state.pinBuffer=''; updatePinDisplay(); }
+
+// Keyboard support for PIN entry on laptop/desktop
+document.addEventListener('keydown', function(e) {
+  const pinStep = document.getElementById('login-step-pin');
+  if (!pinStep || pinStep.style.display === 'none') return;
+  if (e.key >= '0' && e.key <= '9') { pinKey(e.key); e.preventDefault(); }
+  else if (e.key === 'Backspace') { pinDelete(); e.preventDefault(); }
+  else if (e.key === 'Escape') { pinClear(); e.preventDefault(); }
+});
 function updatePinDisplay() { for(let i=0;i<4;i++) document.getElementById(`dot-${i}`).classList.toggle('filled',i<state.pinBuffer.length); }
 function attemptLogin() {
   const user = state.users.find(u => u.id===state.selectedUserId);
