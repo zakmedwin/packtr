@@ -571,11 +571,17 @@
     <!-- ARCHIVE -->
     <div id="archive-section" style="display:none;">
       <div class="archive-header" onclick="toggleArchive()">
-        <span class="label-small">Past Trips</span>
-        <span id="archive-count" class="label-small"></span>
+        <span class="label-small">📦 Past Trips</span>
+        <span id="archive-count" class="label-small" style="color:var(--text-muted);"></span>
         <span id="archive-chevron" style="margin-left:auto;font-size:0.75rem;color:var(--text-muted);">▼</span>
       </div>
-      <div class="trips-grid" id="archive-grid" style="display:none;"></div>
+      <div id="archive-body" style="display:none;">
+        <div style="padding:0.75rem 0 0.5rem;">
+          <input type="text" id="archive-search" placeholder="Search past trips by name, destination, or reason..." style="font-size:0.82rem;" oninput="filterArchive(this.value)">
+        </div>
+        <div class="trips-grid" id="archive-grid"></div>
+        <div id="archive-empty" style="display:none;padding:1.5rem;text-align:center;color:var(--text-muted);font-style:italic;font-size:0.85rem;">No past trips match your search.</div>
+      </div>
     </div>
   </div>
 
@@ -647,6 +653,7 @@
         <button class="trip-detail-back" onclick="showDashboard()">← All Trips</button>
         <div class="trip-detail-name" id="detail-name"></div>
         <div class="trip-detail-info-row" id="detail-info-row" style="display:flex;flex-wrap:wrap;gap:0.5rem 1.25rem;margin-top:0.5rem;"></div>
+      <div id="readonly-banner" style="display:none;margin-top:0.75rem;padding:0.4rem 0.85rem;background:rgba(46,125,209,0.1);border:1px solid rgba(46,125,209,0.25);border-radius:var(--radius);font-size:0.75rem;color:var(--espresso-light);">📦 Past trip — viewing in read-only mode. <button onclick="duplicateTrip()" class="btn btn-ghost" style="font-size:0.72rem;padding:0.1rem 0.4rem;margin-left:0.4rem;">Duplicate to reuse →</button></div>
       </div>
     </div>
     <div class="trip-detail-tabs">
@@ -1141,7 +1148,7 @@ const CONFIG = { workerUrl: 'https://packtr-worker.zakmedwin.workers.dev', local
 // ═══════════════════════════════════════════════
 let state = {
   currentUser: null, users: [], trips: [], templates: [],
-  currentTrip: null, weather: null, pinBuffer: '', selectedUserId: null,
+  currentTrip: null, weather: null, pinBuffer: '', selectedUserId: null, tripReadOnly: false,
   theme: localStorage.getItem('pr_theme') || 'light',
 };
 
@@ -1587,7 +1594,7 @@ function isTripArchived(trip) {
 function buildTripCard(trip, archived) {
   const card = document.createElement('div');
   card.className = 'card trip-card' + (archived ? ' archived' : '');
-  card.onclick = () => showTripDetail(trip.id);
+  card.onclick = () => showTripDetail(trip.id, isArchived);
   const isShared = trip.ownerId !== state.currentUser.id || (trip.sharedWith && trip.sharedWith.length > 0);
   const badgeClass = trip.type==='business' ? 'badge-business' : isShared ? 'badge-shared' : 'badge-leisure';
   const {packed, total} = getTripProgress(trip);
@@ -1619,8 +1626,25 @@ function buildTripCard(trip, archived) {
 let archiveOpen = false;
 function toggleArchive() {
   archiveOpen = !archiveOpen;
-  document.getElementById('archive-grid').style.display = archiveOpen ? 'grid' : 'none';
+  document.getElementById('archive-body').style.display = archiveOpen ? 'block' : 'none';
   document.getElementById('archive-chevron').textContent = archiveOpen ? '▲' : '▼';
+  if (archiveOpen) {
+    setTimeout(() => document.getElementById('archive-search')?.focus(), 100);
+  }
+}
+
+function filterArchive(query) {
+  const q = query.toLowerCase().trim();
+  const cards = document.querySelectorAll('#archive-grid .trip-card');
+  let visible = 0;
+  cards.forEach(card => {
+    const text = card.dataset.searchText || '';
+    const show = !q || text.includes(q);
+    card.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+  document.getElementById('archive-empty').style.display = visible === 0 ? 'block' : 'none';
+  document.getElementById('archive-grid').style.display = visible === 0 ? 'none' : 'grid';
 }
 
 function renderDashboard() {
@@ -1667,7 +1691,17 @@ function renderDashboard() {
     archiveSection.style.display = 'block';
     archiveCount.textContent = `${archived.length} trip${archived.length!==1?'s':''}`;
     archiveGrid.innerHTML = '';
-    archived.forEach(trip => archiveGrid.appendChild(buildTripCard(trip, true)));
+    archived.forEach(trip => {
+      const card = buildTripCard(trip, true);
+      // Add search metadata to card for keyword filtering
+      card.dataset.searchText = [
+        trip.tripName || '',
+        trip.destination || '',
+        trip.reason || '',
+        trip.type || '',
+      ].join(' ').toLowerCase();
+      archiveGrid.appendChild(card);
+    });
   } else {
     archiveSection.style.display = 'none';
   }
