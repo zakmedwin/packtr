@@ -1401,6 +1401,9 @@ function pinClear() { state.pinBuffer=''; updatePinDisplay(); }
 document.addEventListener('keydown', function(e) {
   const pinStep = document.getElementById('login-step-pin');
   if (!pinStep || pinStep.style.display === 'none') return;
+  // Don't intercept if user is typing in an input, textarea, or select
+  const tag = document.activeElement && document.activeElement.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
   if (e.key >= '0' && e.key <= '9') { pinKey(e.key); e.preventDefault(); }
   else if (e.key === 'Backspace') { pinDelete(); e.preventDefault(); }
   else if (e.key === 'Escape') { pinClear(); e.preventDefault(); }
