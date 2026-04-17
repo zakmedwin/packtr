@@ -3032,6 +3032,17 @@ function toast(message,type=''){
 }
 function uid(){return Math.random().toString(36).slice(2,9)+Date.now().toString(36);}
 function sanitize(str){return str.replace(/[^a-z0-9]/gi,'_').toLowerCase();}
+
+function getTripDuration(start, end) {
+  if (!start || !end) return null;
+  const s = parseLocalDate(start);
+  const e = parseLocalDate(end);
+  const days = Math.round((e - s) / 86400000) + 1;
+  const nights = days - 1;
+  if (days <= 0) return null;
+  return days + ' day' + (days !== 1 ? 's' : '') + (nights > 0 ? ' / ' + nights + ' night' + (nights !== 1 ? 's' : '') : '');
+}
+
 function formatDateRange(start,end){
   if(!start) return 'Dates TBD';
   const s=parseLocalDate(start).toLocaleDateString('en-US',{month:'short',day:'numeric'});
@@ -3462,7 +3473,8 @@ function renderTripDetailHeader(){
   if(trip.tripName&&trip.destination) pills.push(`<span class="trip-info-pill">📍 ${trip.destination}</span>`);
   if(trip.reason) pills.push(`<span class="trip-info-pill">✦ ${trip.reason}</span>`);
   const dates=formatDateRange(trip.startDate,trip.endDate);
-  if(dates!=='Dates TBD') pills.push(`<span class="trip-info-pill">📅 ${dates}</span>`);
+  const duration=getTripDuration(trip.startDate,trip.endDate);
+  if(dates!=='Dates TBD') pills.push('<span class="trip-info-pill">📅 ' + dates + (duration ? ' · ' + duration : '') + '</span>');
   if(trip.timezone) pills.push(`<span class="trip-info-tz">🕐 ${trip.timezone}</span>`);
   if(trip.currency) pills.push(`<span class="trip-info-currency">💱 ${trip.currency}</span>`);
   infoRow.innerHTML=pills.join('');
