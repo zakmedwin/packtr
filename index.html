@@ -1168,7 +1168,7 @@ document.addEventListener('DOMContentLoaded', () => {
   try { const t = JSON.parse(localStorage.getItem('pr_templates')||'[]'); if(Array.isArray(t)&&t.length) state.templates=t; } catch(e) {}
   if (!state.templates.length) loadDefaultTemplates();
   renderLoginUsers();
-  runWorkerSetup();
+ 
 });
 
 // ═══════════════════════════════════════════════
