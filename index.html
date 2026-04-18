@@ -1168,7 +1168,6 @@ document.addEventListener('DOMContentLoaded', () => {
   try { const t = JSON.parse(localStorage.getItem('pr_templates')||'[]'); if(Array.isArray(t)&&t.length) state.templates=t; } catch(e) {}
   if (!state.templates.length) loadDefaultTemplates();
   renderLoginUsers();
- 
 });
 
 // ═══════════════════════════════════════════════
@@ -1594,7 +1593,7 @@ function isTripArchived(trip) {
 function buildTripCard(trip, archived) {
   const card = document.createElement('div');
   card.className = 'card trip-card' + (archived ? ' archived' : '');
-  if (isArchived) {
+  if (archived) {
     card.onclick = () => { state.tripReadOnly = true; showTripDetail(trip.id); };
   } else {
     card.onclick = () => { state.tripReadOnly = false; showTripDetail(trip.id); };
