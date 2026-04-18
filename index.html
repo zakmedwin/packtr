@@ -2841,7 +2841,7 @@ function openEditUserModal(userId){
   document.getElementById('edit-user-role').value=user.role;
   openModal('modal-edit-user');
 }
-async function saveUserEdit(){
+function saveUserEdit(){
   const userId=document.getElementById('edit-user-id').value;
   const user=state.users.find(u=>u.id===userId); if(!user) return;
   const newPin=document.getElementById('edit-user-pin').value.trim();
@@ -2849,20 +2849,18 @@ async function saveUserEdit(){
   user.name=document.getElementById('edit-user-name').value.trim()||user.name;
   user.role=document.getElementById('edit-user-role').value;
   user.initials=user.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-  if(newPin) user.pin=newPin;
-  // If changing current user's own PIN, update auth token immediately
-  if(newPin && userId === state.currentUser?.id) {
-    setAuthToken(userId, newPin);
-    state.currentUser.pin = newPin;
+  if(newPin) {
+    user.pin=newPin;
+    // Update auth token and current user immediately if changing own PIN
+    if(userId === state.currentUser?.id) {
+      setAuthToken(userId, newPin);
+      state.currentUser.pin = newPin;
+      toast('PIN updated. Your next login will sync it across all devices.','success');
+    }
   }
-  // Push PIN change to worker KV
-  await api('PUT', '/api/users/' + userId, {
-    name: user.name,
-    pin: user.pin,
-    role: user.role,
-    showPersonalCare: user.showPersonalCare || false
-  });
-  saveUsers(); closeModal('modal-edit-user'); renderAdmin(); toast('User updated!','success');
+  // Save locally — KV will be updated automatically on next login
+  saveUsers(); closeModal('modal-edit-user'); renderAdmin();
+  if(!newPin) toast('User updated!','success');
 }
 function deleteUserFromModal(){
   const userId=document.getElementById('edit-user-id').value;
