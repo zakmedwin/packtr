@@ -1220,13 +1220,10 @@ async function loadUsers() {
       const lu = local.find(u => u.id === cu.id);
       return { ...cu, pin: lu?.pin || '' };
     });
-    // If cloud users have no pins locally, keep hardcoded defaults for Zak/Swishy
-    if (!state.users.find(u => u.pin)) {
-      state.users = [
-        { id: 'u1', name: 'Zak', pin: '1234', role: 'admin', initials: 'Z' },
-        { id: 'u2', name: 'Swishy', pin: '5678', role: 'user', initials: 'S', showPersonalCare: true },
-      ];
-    }
+    // NOTE: We do NOT auto-reset to default PINs here even if local pins are missing.
+    // Silently overwriting a user's real PIN with '1234' is a data-loss bug.
+    // If local pins are missing (e.g. fresh browser), the login screen will reject PINs
+    // until the user enters the correct one, which then gets stored locally.
     localStorage.setItem('pr_users', JSON.stringify(state.users));
     return;
   }
@@ -1256,8 +1253,80 @@ async function saveTrips() {
   if (!state.currentUser || !getAuthToken()) return;
   // Push current trip to cloud if we have one
   if (state.currentTrip) {
-    await api('PUT', '/api/trips/' + state.currentTrip.id, state.currentTrip);
+    await saveTripWithConflictCheck(state.currentTrip);
   }
+}
+
+// ── CONFLICT DETECTION ──
+// When we save a trip, first check if the cloud copy is newer than our baseline.
+// If yes, show the user a choice: reload to get the remote changes, or force-overwrite.
+// Every save stamps `lastModified` (ms since epoch) on the trip so the next device can compare.
+async function saveTripWithConflictCheck(trip) {
+  if (!trip || !trip.id) return;
+  // Fetch the current cloud version to compare timestamps
+  const cloud = await api('GET', '/api/trips/' + trip.id);
+  if (cloud && cloud.lastModified && trip.lastModified && cloud.lastModified > trip.lastModified) {
+    // Cloud has a newer version than our local baseline → another device edited in the meantime
+    const choice = await showConflictDialog(cloud, trip);
+    if (choice === 'reload') {
+      // Replace current trip with cloud version
+      const idx = state.trips.findIndex(t => t.id === trip.id);
+      if (idx >= 0) state.trips[idx] = cloud;
+      state.currentTrip = cloud;
+      try { localStorage.setItem('pr_trips', JSON.stringify(state.trips)); } catch(e) {}
+      // Re-render whatever tab is active
+      if (typeof renderPackingList === 'function') renderPackingList();
+      toast('Loaded the latest version from the cloud.');
+      return;
+    }
+    if (choice === 'cancel') {
+      // Abort save — local changes stay in state but aren't pushed
+      toast('Save cancelled. Your local changes are kept on this device only.', 'warn');
+      return;
+    }
+    // choice === 'overwrite' falls through to the PUT below
+  }
+  // Stamp new lastModified and save
+  trip.lastModified = Date.now();
+  await api('PUT', '/api/trips/' + trip.id, trip);
+  try { localStorage.setItem('pr_trips', JSON.stringify(state.trips)); } catch(e) {}
+}
+
+function showConflictDialog(cloudTrip, localTrip) {
+  return new Promise((resolve) => {
+    const cloudTime = cloudTrip.lastModified ? new Date(cloudTrip.lastModified).toLocaleString() : 'unknown time';
+    const localTime = localTrip.lastModified ? new Date(localTrip.lastModified).toLocaleString() : 'unknown time';
+    // Build a simple modal
+    const backdrop = document.createElement('div');
+    backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:1rem;';
+    backdrop.innerHTML = `
+      <div style="background:var(--bg-card);color:var(--text-primary);padding:1.5rem;border-radius:var(--radius-lg);max-width:460px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+        <h3 style="margin:0 0 0.5rem;font-family:var(--font-display);font-size:1.15rem;">⚠️ This trip was edited on another device</h3>
+        <p style="color:var(--text-secondary);font-size:0.88rem;line-height:1.5;margin:0.75rem 0;">
+          Someone (probably you, on another device) saved changes to this trip.
+        </p>
+        <div style="font-size:0.8rem;color:var(--text-muted);margin:0.75rem 0;line-height:1.6;">
+          <div><strong>This device last saved:</strong> ${localTime}</div>
+          <div><strong>The cloud was updated:</strong> ${cloudTime}</div>
+        </div>
+        <p style="color:var(--text-secondary);font-size:0.85rem;line-height:1.5;margin:0.75rem 0;">
+          Choose how to handle this:
+        </p>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;margin-top:1rem;">
+          <button class="btn btn-primary" data-choice="reload" style="width:100%;justify-content:center;">Use the cloud version (discard my local changes)</button>
+          <button class="btn btn-danger" data-choice="overwrite" style="width:100%;justify-content:center;">Overwrite with my local changes</button>
+          <button class="btn btn-secondary" data-choice="cancel" style="width:100%;justify-content:center;">Cancel — don't save right now</button>
+        </div>
+      </div>`;
+    backdrop.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-choice]');
+      if (btn) {
+        document.body.removeChild(backdrop);
+        resolve(btn.dataset.choice);
+      }
+    });
+    document.body.appendChild(backdrop);
+  });
 }
 
 async function createTripInCloud(trip) {
@@ -1762,7 +1831,7 @@ function createTrip() {
     startDate:document.getElementById('new-trip-start').value,
     endDate:document.getElementById('new-trip-end').value, type:document.getElementById('new-trip-type').value,
     ownerId:state.currentUser.id, sharedWith:[], categories, outfits:{}, outfitCombos:[],
-    includePersonalCare:includePC, createdAt:new Date().toISOString(),
+    includePersonalCare:includePC, createdAt:new Date().toISOString(), lastModified:Date.now(),
   };
   // Auto-detect personal care
   if (shouldIncludePersonalCare(trip) || includePC) {
