@@ -1155,20 +1155,51 @@ let state = {
 // ═══════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   applyTheme();
-  // Always start with hardcoded defaults
-  state.users = [
-    { id: 'u1', name: 'Zak', pin: '1234', role: 'admin', initials: 'Z' },
-    { id: 'u2', name: 'Swishy', pin: '5678', role: 'user', initials: 'S', showPersonalCare: true },
-  ];
-  // Layer in localStorage immediately so login screen shows fast
-  try { const u = JSON.parse(localStorage.getItem('pr_users')||'[]'); if(Array.isArray(u)&&u.length) state.users=u; } catch(e) {}
+  // Show a brief loading state on the login screen while we fetch real users from KV
+  const userList = document.getElementById('user-select-list');
+  if (userList) userList.innerHTML = '<div style="color:rgba(255,255,255,0.6);text-align:center;padding:2rem;font-size:0.9rem;">Loading…</div>';
+
+  // Load trips/templates from localStorage immediately (just for offline cache — will refresh from cloud post-login)
   try { const t = JSON.parse(localStorage.getItem('pr_trips')||'[]'); if(Array.isArray(t)) state.trips=t; } catch(e) {}
   try { const t = JSON.parse(localStorage.getItem('pr_templates')||'[]'); if(Array.isArray(t)&&t.length) state.templates=t; } catch(e) {}
   if (!state.templates.length) loadDefaultTemplates();
+
+  // Fetch the real user list from the Worker (PIN-less). This is the source of truth.
+  await loadUsersForLogin();
   renderLoginUsers();
 });
+
+// Fetch users from the Worker for the login screen.
+// No auth required — we just need the list of user IDs, names, and initials.
+// PINs are never returned by the Worker; they live only in KV and are verified on /api/auth/login.
+async function loadUsersForLogin() {
+  try {
+    const res = await fetch(CONFIG.workerUrl + '/api/users');
+    if (!res.ok) throw new Error('worker unreachable');
+    const users = await res.json();
+    if (Array.isArray(users) && users.length) {
+      state.users = users.map(u => ({ ...u, pin: '' })); // pin field kept empty — never stored client-side
+      return;
+    }
+  } catch (e) {
+    console.warn('Could not load users from cloud, trying localStorage cache:', e.message);
+  }
+  // Fallback — try a locally cached user list (names/ids only, no PINs)
+  try {
+    const cached = JSON.parse(localStorage.getItem('pr_users_cache') || '[]');
+    if (Array.isArray(cached) && cached.length) {
+      state.users = cached.map(u => ({ ...u, pin: '' }));
+      return;
+    }
+  } catch(e) {}
+  // Last-resort fallback — hardcoded defaults so the app is never completely broken offline
+  state.users = [
+    { id: 'u1', name: 'Zak', pin: '', role: 'admin', initials: 'Z' },
+    { id: 'u2', name: 'Swishy', pin: '', role: 'user', initials: 'S', showPersonalCare: true },
+  ];
+}
 
 // ═══════════════════════════════════════════════
 // API LAYER — cloud-first, localStorage fallback
@@ -1209,31 +1240,25 @@ async function api(method, path, body) {
 }
 
 // ── USERS ──
+// The login screen populates state.users via loadUsersForLogin (no auth required).
+// After login, loadUsers refreshes state.users from the authenticated endpoint so
+// the admin panel sees the latest names/roles. PINs are never stored client-side.
 async function loadUsers() {
   const cloud = await api('GET', '/api/users');
   if (cloud && Array.isArray(cloud) && cloud.length > 0) {
-    // Worker returns users without PINs — merge with local pins for login
-    const localRaw = localStorage.getItem('pr_users');
-    const local = localRaw ? JSON.parse(localRaw) : [];
-    // Use cloud users but preserve local pins (worker strips them for security)
-    state.users = cloud.map(cu => {
-      const lu = local.find(u => u.id === cu.id);
-      return { ...cu, pin: lu?.pin || '' };
-    });
-    // NOTE: We do NOT auto-reset to default PINs here even if local pins are missing.
-    // Silently overwriting a user's real PIN with '1234' is a data-loss bug.
-    // If local pins are missing (e.g. fresh browser), the login screen will reject PINs
-    // until the user enters the correct one, which then gets stored locally.
-    localStorage.setItem('pr_users', JSON.stringify(state.users));
-    return;
+    state.users = cloud.map(cu => ({ ...cu, pin: '' }));
+    saveUsers(); // refresh the offline cache
   }
-  // Fallback to localStorage
-  try { const u = JSON.parse(localStorage.getItem('pr_users') || '[]'); if (Array.isArray(u) && u.length) state.users = u; } catch(e) {}
 }
 
 function saveUsers() {
-  try { localStorage.setItem('pr_users', JSON.stringify(state.users)); } catch(e) {}
-  // Users are managed via admin panel — no direct push needed
+  // Cache PIN-less user list for the offline login fallback only.
+  try {
+    const safe = state.users.map(u => ({ id: u.id, name: u.name, role: u.role, initials: u.initials, showPersonalCare: u.showPersonalCare }));
+    localStorage.setItem('pr_users_cache', JSON.stringify(safe));
+  } catch(e) {}
+  // The old pr_users key is no longer used — clear it if present.
+  try { localStorage.removeItem('pr_users'); } catch(e) {}
 }
 
 // ── TRIPS ──
@@ -1421,20 +1446,18 @@ function loadDefaultTemplates() {
   try { saveTemplates(); } catch(e) {}
 }
 
-function hardResetApp() {
-  if (!confirm('This will clear all local data and restore defaults. Continue?')) return;
-  ['pr_users','pr_trips','pr_templates','pr_theme','pr_auth_token','pr_worker_setup_done'].forEach(k => { try { localStorage.removeItem(k); } catch(e) {} });
+async function hardResetApp() {
+  if (!confirm('This will clear all local data on this device. Continue?')) return;
+  ['pr_users','pr_users_cache','pr_trips','pr_templates','pr_theme','pr_auth_token','pr_worker_setup_done'].forEach(k => { try { localStorage.removeItem(k); } catch(e) {} });
   clearAuthToken();
-  state.users = [
-    { id: 'u1', name: 'Zak', pin: '1234', role: 'admin', initials: 'Z' },
-    { id: 'u2', name: 'Swishy', pin: '5678', role: 'user', initials: 'S', showPersonalCare: true },
-  ];
+  state.users = [];
   state.trips = []; state.templates = [];
   loadDefaultTemplates();
+  await loadUsersForLogin();
   renderLoginUsers();
   document.getElementById('login-step-user').style.display = 'block';
   document.getElementById('login-step-pin').style.display = 'none';
-  toast('App reset. PIN: Zak=1234, Swishy=5678');
+  toast('Local data cleared. Log in with your current PIN.');
 }
 
 // ═══════════════════════════════════════════════
@@ -1484,45 +1507,64 @@ document.addEventListener('keydown', function(e) {
 });
 function updatePinDisplay() { for(let i=0;i<4;i++) document.getElementById(`dot-${i}`).classList.toggle('filled',i<state.pinBuffer.length); }
 async function attemptLogin() {
-  const user = state.users.find(u => u.id===state.selectedUserId);
-  if (user && state.pinBuffer===user.pin) {
-    state.currentUser = user;
-    // Always set auth token from the PIN the user just typed
-    setAuthToken(user.id, state.pinBuffer);
-    // Persist correct PIN in state.users locally only
-    const userIdx = state.users.findIndex(u => u.id === user.id);
-    if (userIdx >= 0) state.users[userIdx].pin = state.pinBuffer;
-    saveUsers();
-    // NOTE: We intentionally do NOT push the PIN to KV on login anymore.
-    // Previous versions did that "to keep devices in sync", but it had a bad
-    // side-effect: if two devices had different cached PINs, they would fight
-    // in KV and whichever logged in most recently would win. PIN changes
-    // should only flow from the admin panel (a deliberate action) to KV.
-    document.getElementById('nav-username-display').textContent = '/ ' + user.name;
-    if (user.role==='admin') document.getElementById('nav-admin').style.display='inline-flex';
-    loadTrips().then(() => { if(document.getElementById('trips-grid')) renderDashboard(); });
-    loadTemplates();
-    loadClosetFromCloud();
-    loadProfileFromCloud();
-    showDashboard();
-    const loginEl = document.getElementById('screen-login');
-    loginEl.classList.add('hidden');
-    setTimeout(() => { loginEl.style.display = 'none'; }, 420);
-    toast('Welcome back, ' + user.name + '!');
-  } else {
-    // Try fetching from cloud in case local users are stale
-    const cloudResult = await api('GET', '/api/users').catch(() => null);
-    if (cloudResult && Array.isArray(cloudResult)) {
-      // Cloud returned users — update local and retry
-      const cloudUser = cloudResult.find(u => u.id === state.selectedUserId);
-      if (cloudUser) {
-        // We can't verify PIN from cloud (PINs aren't returned) — just show error
-      }
-    }
-    document.getElementById('login-error').textContent='Incorrect PIN. Please try again.';
-    state.pinBuffer=''; updatePinDisplay();
-    setTimeout(()=>{ document.getElementById('login-error').textContent=''; },2000);
+  const selected = state.users.find(u => u.id === state.selectedUserId);
+  if (!selected) {
+    document.getElementById('login-error').textContent = 'Please select a user first.';
+    return;
   }
+  const pin = state.pinBuffer;
+  if (!/^\d{4}$/.test(pin)) {
+    document.getElementById('login-error').textContent = 'PIN must be 4 digits.';
+    return;
+  }
+
+  // Ask the Worker to verify. KV is the source of truth — no local PIN check.
+  let res, data;
+  try {
+    res = await fetch(CONFIG.workerUrl + '/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: state.selectedUserId, pin }),
+    });
+    data = await res.json().catch(() => ({}));
+  } catch (e) {
+    document.getElementById('login-error').textContent = 'Cannot reach server. Check your connection.';
+    state.pinBuffer = ''; updatePinDisplay();
+    setTimeout(() => { document.getElementById('login-error').textContent = ''; }, 3000);
+    return;
+  }
+
+  if (!res.ok || !data.ok) {
+    document.getElementById('login-error').textContent = 'Incorrect PIN. Please try again.';
+    state.pinBuffer = ''; updatePinDisplay();
+    setTimeout(() => { document.getElementById('login-error').textContent = ''; }, 2000);
+    return;
+  }
+
+  // Success — Worker confirmed the PIN matches KV.
+  // The auth token is userId:pin, which the Worker validates on every subsequent API call.
+  // We do NOT persist the PIN anywhere in localStorage — it only lives in memory for this session.
+  const user = data.user;
+  state.currentUser = user;
+  setAuthToken(user.id, pin);
+  // Cache the PIN-less user list for offline fallback on the login screen only
+  try {
+    const safeUsers = state.users.map(u => ({ id: u.id, name: u.name, role: u.role, initials: u.initials, showPersonalCare: u.showPersonalCare }));
+    localStorage.setItem('pr_users_cache', JSON.stringify(safeUsers));
+  } catch(e) {}
+
+  document.getElementById('nav-username-display').textContent = '/ ' + user.name;
+  if (user.role === 'admin') document.getElementById('nav-admin').style.display = 'inline-flex';
+  loadUsers(); // refresh authenticated user list (PIN-less, for admin panel)
+  loadTrips().then(() => { if (document.getElementById('trips-grid')) renderDashboard(); });
+  loadTemplates();
+  loadClosetFromCloud();
+  loadProfileFromCloud();
+  showDashboard();
+  const loginEl = document.getElementById('screen-login');
+  loginEl.classList.add('hidden');
+  setTimeout(() => { loginEl.style.display = 'none'; }, 420);
+  toast('Welcome back, ' + user.name + '!');
 }
 function logout() {
   clearAuthToken();
@@ -2888,17 +2930,20 @@ function deleteTemplate(templateId){if(!confirm('Delete this template?')) return
 // ADMIN
 // ═══════════════════════════════════════════════
 function renderAdmin(){
-  document.getElementById('admin-user-list').innerHTML=state.users.map(u=>`<div class="admin-user-row"><div class="admin-avatar">${u.initials||u.name[0].toUpperCase()}</div><div class="admin-user-info"><div class="admin-user-name">${u.name} ${u.id===state.currentUser.id?'<span style="color:var(--gold);font-size:0.7rem;">(you)</span>':''}</div><div class="admin-user-role">${u.role} · PIN: ${'•'.repeat(u.pin.length)} ${u.showPersonalCare?'· 🌸':''}</div></div><button class="btn btn-secondary" style="font-size:0.72rem;" onclick="openEditUserModal('${u.id}')">Edit</button></div>`).join('');
+  document.getElementById('admin-user-list').innerHTML=state.users.map(u=>`<div class="admin-user-row"><div class="admin-avatar">${u.initials||u.name[0].toUpperCase()}</div><div class="admin-user-info"><div class="admin-user-name">${u.name} ${u.id===state.currentUser.id?'<span style="color:var(--gold);font-size:0.7rem;">(you)</span>':''}</div><div class="admin-user-role">${u.role} · PIN: •••• ${u.showPersonalCare?'· 🌸':''}</div></div><button class="btn btn-secondary" style="font-size:0.72rem;" onclick="openEditUserModal('${u.id}')">Edit</button></div>`).join('');
 }
 function openNewUserModal(){document.getElementById('new-user-name').value='';document.getElementById('new-user-pin').value='';document.getElementById('new-user-role').value='user';openModal('modal-new-user');}
-function createUser(){
+async function createUser(){
   const name=document.getElementById('new-user-name').value.trim();
   const pin=document.getElementById('new-user-pin').value.trim();
   const role=document.getElementById('new-user-role').value;
   if(!name){toast('Enter a name','error');return;}
   if(!/^\d{4}$/.test(pin)){toast('PIN must be exactly 4 digits','error');return;}
-  const user={id:uid(),name,pin,role,initials:name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2)};
-  state.users.push(user); saveUsers(); closeModal('modal-new-user'); renderAdmin();
+  // Push to Worker first — if this fails, we don't want local state to get ahead of KV.
+  const created = await api('POST', '/api/users', { name, pin, role, showPersonalCare: false });
+  if (!created || !created.id) { toast('Could not create user. Check your connection.', 'error'); return; }
+  state.users.push({ ...created, pin: '' });
+  closeModal('modal-new-user'); renderAdmin();
   toast(`User "${name}" created!`,'success');
 }
 function openEditUserModal(userId){
@@ -2909,32 +2954,40 @@ function openEditUserModal(userId){
   document.getElementById('edit-user-role').value=user.role;
   openModal('modal-edit-user');
 }
-function saveUserEdit(){
+async function saveUserEdit(){
   const userId=document.getElementById('edit-user-id').value;
   const user=state.users.find(u=>u.id===userId); if(!user) return;
   const newPin=document.getElementById('edit-user-pin').value.trim();
   if(newPin&&!/^\d{4}$/.test(newPin)){toast('PIN must be 4 digits','error');return;}
-  user.name=document.getElementById('edit-user-name').value.trim()||user.name;
-  user.role=document.getElementById('edit-user-role').value;
-  user.initials=user.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-  if(newPin) {
-    user.pin=newPin;
-    // Update auth token and current user immediately if changing own PIN
-    if(userId === state.currentUser?.id) {
-      setAuthToken(userId, newPin);
-      state.currentUser.pin = newPin;
-      toast('PIN updated. Your next login will sync it across all devices.','success');
-    }
+  const newName = document.getElementById('edit-user-name').value.trim() || user.name;
+  const newRole = document.getElementById('edit-user-role').value;
+  // Push changes to Worker — KV is the source of truth for PINs.
+  const payload = { name: newName, role: newRole };
+  if (newPin) payload.pin = newPin;
+  const updated = await api('PUT', '/api/users/' + userId, payload);
+  if (!updated) { toast('Could not save changes. Check your connection.', 'error'); return; }
+  user.name = newName;
+  user.role = newRole;
+  user.initials = newName.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  if (newPin && userId === state.currentUser?.id) {
+    // If we changed our own PIN, update the auth token so subsequent API calls keep working
+    setAuthToken(userId, newPin);
+    toast('PIN updated. Use your new PIN on every device.','success');
+  } else if (newPin) {
+    toast('PIN updated for ' + newName + '.','success');
+  } else {
+    toast('User updated!','success');
   }
-  // Save locally — KV will be updated automatically on next login
-  saveUsers(); closeModal('modal-edit-user'); renderAdmin();
-  if(!newPin) toast('User updated!','success');
+  closeModal('modal-edit-user'); renderAdmin();
 }
-function deleteUserFromModal(){
+async function deleteUserFromModal(){
   const userId=document.getElementById('edit-user-id').value;
   if(userId===state.currentUser.id){toast("Can't delete yourself",'error');return;}
   if(!confirm('Delete this user?')) return;
-  state.users=state.users.filter(u=>u.id!==userId); saveUsers(); closeModal('modal-edit-user'); renderAdmin(); toast('User deleted');
+  const res = await api('DELETE', '/api/users/' + userId);
+  if (!res) { toast('Could not delete user. Check your connection.', 'error'); return; }
+  state.users=state.users.filter(u=>u.id!==userId);
+  closeModal('modal-edit-user'); renderAdmin(); toast('User deleted');
 }
 
 
