@@ -1489,15 +1489,15 @@ async function attemptLogin() {
     state.currentUser = user;
     // Always set auth token from the PIN the user just typed
     setAuthToken(user.id, state.pinBuffer);
-    // Persist correct PIN in state.users
+    // Persist correct PIN in state.users locally only
     const userIdx = state.users.findIndex(u => u.id === user.id);
     if (userIdx >= 0) state.users[userIdx].pin = state.pinBuffer;
     saveUsers();
-    // Push PIN to KV so all devices stay in sync
-    api('PUT', '/api/users/' + user.id, {
-      name: user.name, pin: state.pinBuffer,
-      role: user.role, showPersonalCare: user.showPersonalCare || false
-    }).catch(() => {}); // fire and forget — don't block login
+    // NOTE: We intentionally do NOT push the PIN to KV on login anymore.
+    // Previous versions did that "to keep devices in sync", but it had a bad
+    // side-effect: if two devices had different cached PINs, they would fight
+    // in KV and whichever logged in most recently would win. PIN changes
+    // should only flow from the admin panel (a deliberate action) to KV.
     document.getElementById('nav-username-display').textContent = '/ ' + user.name;
     if (user.role==='admin') document.getElementById('nav-admin').style.display='inline-flex';
     loadTrips().then(() => { if(document.getElementById('trips-grid')) renderDashboard(); });
