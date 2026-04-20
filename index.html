@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>PacktRite — Pack Smart, Travel Well</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -400,6 +400,9 @@
     .outfit-calendar{grid-template-columns:1fr;}
     #mobile-nav-drawer.open{display:flex !important;}
     #mobile-nav-overlay.open{display:block !important;}
+    /* Prevent iOS Safari from zooming in when an input is focused.
+       Safari zooms any input with font-size < 16px. Force 16px on mobile. */
+    input, select, textarea { font-size: 16px !important; }
   }
 
 
