@@ -1,0 +1,19 @@
+{
+  "name": "PacktRite",
+  "short_name": "PacktRite",
+  "description": "Pack smart, travel well.",
+  "display": "standalone",
+  "orientation": "portrait",
+  "start_url": "/packtr/",
+  "scope": "/packtr/",
+  "background_color": "#2C1810",
+  "theme_color": "#2C1810",
+  "icons": [
+    {
+      "src": "packtr-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
