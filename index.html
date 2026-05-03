@@ -265,6 +265,10 @@
   .outfit-day-card:hover{box-shadow:0 4px 16px var(--shadow);}
   .outfit-day-header{padding:0.75rem 1rem;background:var(--espresso);color:var(--cream);display:flex;justify-content:space-between;align-items:center;}
   [data-theme="dark"] .outfit-day-header{background:#0f0a05;}
+  .outfit-wx-pill{display:flex;align-items:center;gap:0.4rem;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:0.2rem 0.5rem;}
+  .outfit-wx-temps{font-size:0.65rem;line-height:1.4;}
+  .outfit-wx-day{color:#f5c06a;font-weight:600;}
+  .outfit-wx-night{color:#8eaadb;font-weight:600;}
   .outfit-day-date{font-family:var(--font-display);font-size:0.9rem;}
   .outfit-day-weather{font-size:0.85rem;}
   .outfit-day-body{padding:0;}
@@ -2554,7 +2558,8 @@ function renderOutfitCalendar() {
   days.forEach(day => {
     const dateKey = day.getFullYear() + '-' + String(day.getMonth()+1).padStart(2,'0') + '-' + String(day.getDate()).padStart(2,'0');
     const outfits = getUserDayOutfits(dateKey);
-    const weatherDay = state.weather?.daily.find(d => d.date === dateKey);
+    const weatherData = state.weather || trip.weatherCache;
+    const weatherDay = weatherData?.daily?.find(d => d.date === dateKey);
     const card = document.createElement('div');
     card.className = 'outfit-day-card';
     const slotsHtml = outfits.length === 0
@@ -2565,7 +2570,14 @@ function renderOutfitCalendar() {
     card.innerHTML = `
       <div class="outfit-day-header">
         <span class="outfit-day-date">${day.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</span>
-        <span class="outfit-day-weather">${weatherDay?`${weatherIcon(weatherDay.code)} ${Math.round(weatherDay.tempMax)}°`:''}</span>
+        ${weatherDay ? `
+        <div class="outfit-wx-pill">
+          <span style="font-size:1rem;line-height:1;">${weatherIcon(weatherDay.code)}</span>
+          <div class="outfit-wx-temps">
+            <div class="outfit-wx-day">Day ${Math.round(weatherDay.tempMax)}°F</div>
+            <div class="outfit-wx-night">Night ${Math.round(weatherDay.tempMin)}°F</div>
+          </div>
+        </div>` : ''}
       </div>
       <div class="outfit-day-body">${slotsHtml}</div>`;
     container.appendChild(card);
