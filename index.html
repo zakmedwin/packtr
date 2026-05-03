@@ -506,34 +506,9 @@
     <div id="login-step-user">
       <div class="label-small mb-1">Who's packing?</div>
       <div class="user-select" id="user-select-list"></div>
-    </div>
-    <div id="login-step-pin" style="display:none;">
-      <div class="flex-between mb-1">
-        <div class="label-small">Enter PIN for <span id="pin-username-label"></span></div>
-        <button class="btn-ghost btn" onclick="backToUserSelect()" style="font-size:0.7rem;padding:0.2rem 0.4rem;">← Back</button>
+      <div style="text-align:center;margin-top:1rem;">
+        <button class="btn btn-ghost" style="font-size:0.65rem;color:var(--warm-gray);" onclick="hardResetApp()">Reset app data</button>
       </div>
-      <div class="pin-display">
-        <div class="pin-dot" id="dot-0"></div><div class="pin-dot" id="dot-1"></div>
-        <div class="pin-dot" id="dot-2"></div><div class="pin-dot" id="dot-3"></div>
-      </div>
-      <div class="pin-keypad">
-        <button class="pin-key" onclick="pinKey('1')">1</button>
-        <button class="pin-key" onclick="pinKey('2')">2</button>
-        <button class="pin-key" onclick="pinKey('3')">3</button>
-        <button class="pin-key" onclick="pinKey('4')">4</button>
-        <button class="pin-key" onclick="pinKey('5')">5</button>
-        <button class="pin-key" onclick="pinKey('6')">6</button>
-        <button class="pin-key" onclick="pinKey('7')">7</button>
-        <button class="pin-key" onclick="pinKey('8')">8</button>
-        <button class="pin-key" onclick="pinKey('9')">9</button>
-        <button class="pin-key wide" onclick="pinClear()">Clear</button>
-        <button class="pin-key" onclick="pinKey('0')">0</button>
-        <button class="pin-key wide" onclick="pinDelete()">⌫</button>
-      </div>
-      <div class="login-error" id="login-error"></div>
-    <div style="text-align:center;margin-top:0.5rem;">
-      <button class="btn btn-ghost" style="font-size:0.65rem;color:var(--warm-gray);" onclick="hardResetApp()">Reset app data</button>
-    </div>
     </div>
   </div>
 </div>
@@ -1358,20 +1333,15 @@ function loadDefaultTemplates() {
   try { saveTemplates(); } catch(e) {}
 }
 
-function hardResetApp() {
-  if (!confirm('This will clear all local data and restore defaults. Continue?')) return;
-  ['pr_users','pr_trips','pr_templates','pr_theme','pr_auth_token','pr_worker_setup_done'].forEach(k => { try { localStorage.removeItem(k); } catch(e) {} });
+async function hardResetApp() {
+  if (!confirm('This will clear all local data on this device. Continue?')) return;
+  ['pr_users','pr_users_cache','pr_trips','pr_templates','pr_theme','pr_auth_token','pr_worker_setup_done'].forEach(k => { try { localStorage.removeItem(k); } catch(e) {} });
   clearAuthToken();
-  state.users = [
-    { id: 'u1', name: 'Zak', pin: '1234', role: 'admin', initials: 'Z' },
-    { id: 'u2', name: 'Swishy', pin: '5678', role: 'user', initials: 'S', showPersonalCare: true },
-  ];
-  state.trips = []; state.templates = [];
+  state.users = []; state.trips = []; state.templates = [];
   loadDefaultTemplates();
+  await loadUsersForLogin();
   renderLoginUsers();
-  document.getElementById('login-step-user').style.display = 'block';
-  document.getElementById('login-step-pin').style.display = 'none';
-  toast('App reset. PIN: Zak=1234, Swishy=5678');
+  toast('App data cleared. Tap your name to log in.');
 }
 
 // ═══════════════════════════════════════════════
@@ -1390,88 +1360,49 @@ function renderLoginUsers() {
       <div><div style="font-weight:600;">${u.name}</div><div style="font-size:0.7rem;color:var(--text-muted);letter-spacing:0.1em;text-transform:uppercase;">${u.role}</div></div>
     </button>`).join('');
 }
-function selectUser(userId) {
-  state.selectedUserId = userId;
-  const user = state.users.find(u => u.id === userId);
-  document.getElementById('pin-username-label').textContent = user.name;
-  document.getElementById('login-step-user').style.display = 'none';
-  document.getElementById('login-step-pin').style.display = 'block';
-  state.pinBuffer = ''; updatePinDisplay();
-}
-function backToUserSelect() {
-  state.selectedUserId = null; state.pinBuffer = '';
-  document.getElementById('login-step-user').style.display = 'block';
-  document.getElementById('login-step-pin').style.display = 'none';
-  document.getElementById('login-error').textContent = '';
-}
-function pinKey(digit) { if(state.pinBuffer.length>=4) return; state.pinBuffer+=digit; updatePinDisplay(); if(state.pinBuffer.length===4) attemptLogin(); }
-function pinDelete() { state.pinBuffer=state.pinBuffer.slice(0,-1); updatePinDisplay(); }
-function pinClear() { state.pinBuffer=''; updatePinDisplay(); }
 
-// Keyboard support for PIN entry on laptop/desktop
-document.addEventListener('keydown', function(e) {
-  const pinStep = document.getElementById('login-step-pin');
-  if (!pinStep || pinStep.style.display === 'none') return;
-  // Don't intercept if user is typing in an input, textarea, or select
-  const tag = document.activeElement && document.activeElement.tagName;
-  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-  if (e.key >= '0' && e.key <= '9') { pinKey(e.key); e.preventDefault(); }
-  else if (e.key === 'Backspace') { pinDelete(); e.preventDefault(); }
-  else if (e.key === 'Escape') { pinClear(); e.preventDefault(); }
-});
-function updatePinDisplay() { for(let i=0;i<4;i++) document.getElementById(`dot-${i}`).classList.toggle('filled',i<state.pinBuffer.length); }
-async function attemptLogin() {
-  const user = state.users.find(u => u.id===state.selectedUserId);
-  if (user && state.pinBuffer===user.pin) {
-    state.currentUser = user;
-    // Always set auth token from the PIN the user just typed
-    setAuthToken(user.id, state.pinBuffer);
-    // Persist correct PIN in state.users
-    const userIdx = state.users.findIndex(u => u.id === user.id);
-    if (userIdx >= 0) state.users[userIdx].pin = state.pinBuffer;
-    saveUsers();
-    // Push PIN to KV so all devices stay in sync
-    api('PUT', '/api/users/' + user.id, {
-      name: user.name, pin: state.pinBuffer,
-      role: user.role, showPersonalCare: user.showPersonalCare || false
-    }).catch(() => {}); // fire and forget — don't block login
-    document.getElementById('nav-username-display').textContent = '/ ' + user.name;
-    if (user.role==='admin') document.getElementById('nav-admin').style.display='inline-flex';
-    loadTrips().then(() => { if(document.getElementById('trips-grid')) renderDashboard(); });
-    loadTemplates();
-    loadClosetFromCloud();
-    loadProfileFromCloud();
-    showDashboard();
-    const loginEl = document.getElementById('screen-login');
-    loginEl.classList.add('hidden');
-    setTimeout(() => { loginEl.style.display = 'none'; }, 420);
-    toast('Welcome back, ' + user.name + '!');
-  } else {
-    // Try fetching from cloud in case local users are stale
-    const cloudResult = await api('GET', '/api/users').catch(() => null);
-    if (cloudResult && Array.isArray(cloudResult)) {
-      // Cloud returned users — update local and retry
-      const cloudUser = cloudResult.find(u => u.id === state.selectedUserId);
-      if (cloudUser) {
-        // We can't verify PIN from cloud (PINs aren't returned) — just show error
-      }
-    }
-    document.getElementById('login-error').textContent='Incorrect PIN. Please try again.';
-    state.pinBuffer=''; updatePinDisplay();
-    setTimeout(()=>{ document.getElementById('login-error').textContent=''; },2000);
+async function selectUser(userId) {
+  const user = state.users.find(u => u.id === userId);
+  if (!user) return;
+  // No PIN required — tap to log in directly
+  state.currentUser = user;
+  state.selectedUserId = userId;
+  // Set a simple auth token (userId only, no PIN) for Worker calls
+  setAuthToken(user.id, user.pin || 'nopin');
+  document.getElementById('nav-username-display').textContent = '/ ' + user.name;
+  if (user.role === 'admin') document.getElementById('nav-admin').style.display = 'inline-flex';
+  if (document.getElementById('mobile-nav-admin')) {
+    document.getElementById('mobile-nav-admin').style.display = user.role === 'admin' ? 'block' : 'none';
   }
+  loadUsers();
+  loadTrips().then(() => { if (document.getElementById('trips-grid')) renderDashboard(); });
+  loadTemplates();
+  loadClosetFromCloud();
+  loadProfileFromCloud();
+  showDashboard();
+  const loginEl = document.getElementById('screen-login');
+  loginEl.classList.add('hidden');
+  setTimeout(() => { loginEl.style.display = 'none'; }, 420);
+  toast('Welcome back, ' + user.name + '!');
 }
+
+// Stubs kept so nothing else breaks if referenced
+function pinKey() {}
+function pinDelete() {}
+function pinClear() {}
+function updatePinDisplay() {}
+function backToUserSelect() {}
+async function attemptLogin() {}
+
 function logout() {
   clearAuthToken();
-  state.currentUser=null; state.currentTrip=null; state.pinBuffer=''; state.selectedUserId=null;
+  state.currentUser = null; state.currentTrip = null; state.selectedUserId = null;
   const loginEl = document.getElementById('screen-login');
   loginEl.style.display = '';
   loginEl.style.opacity = '';
   loginEl.style.transform = '';
   loginEl.classList.remove('hidden');
-  document.getElementById('nav-admin').style.display='none';
-  document.getElementById('login-step-user').style.display='block';
-  document.getElementById('login-step-pin').style.display='none';
+  document.getElementById('nav-admin').style.display = 'none';
   renderLoginUsers();
 }
 
