@@ -1367,23 +1367,26 @@ async function selectUser(userId) {
   // No PIN required — tap to log in directly
   state.currentUser = user;
   state.selectedUserId = userId;
-  // Set a simple auth token (userId only, no PIN) for Worker calls
+  // Set a simple auth token (userId only) for Worker calls
   setAuthToken(user.id, user.pin || 'nopin');
   document.getElementById('nav-username-display').textContent = '/ ' + user.name;
   if (user.role === 'admin') document.getElementById('nav-admin').style.display = 'inline-flex';
   if (document.getElementById('mobile-nav-admin')) {
     document.getElementById('mobile-nav-admin').style.display = user.role === 'admin' ? 'block' : 'none';
   }
-  loadUsers();
-  loadTrips().then(() => { if (document.getElementById('trips-grid')) renderDashboard(); });
-  loadTemplates();
-  loadClosetFromCloud();
-  loadProfileFromCloud();
+  // Show the dashboard shell immediately
   showDashboard();
   const loginEl = document.getElementById('screen-login');
   loginEl.classList.add('hidden');
   setTimeout(() => { loginEl.style.display = 'none'; }, 420);
   toast('Welcome back, ' + user.name + '!');
+  // Load data — re-render dashboard once trips arrive
+  loadUsers();
+  loadTemplates();
+  loadClosetFromCloud();
+  loadProfileFromCloud();
+  await loadTrips();
+  renderDashboard();
 }
 
 // Stubs kept so nothing else breaks if referenced
