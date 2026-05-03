@@ -2040,10 +2040,13 @@ function exportListHTML(mode = 'both') {
     if (hasSnow) notes.push('Snow possible — waterproof boots and heavy winter gear recommended.');
     const dayCards = weather.daily.map(d => `
       <div class="wx-day">
-        <span class="wx-date">${parseLocalDate(d.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</span>
-        <span class="wx-icon">${weatherIcon(d.code)}</span>
-        <span class="wx-desc">${weatherDesc(d.code)}</span>
-        <span class="wx-temps"><span class="wx-day-label">Day</span> <span class="wx-high">${Math.round(d.tempMax)}°</span> <span class="wx-night-label">Night</span> <span class="wx-low">${Math.round(d.tempMin)}°</span></span>
+        <div class="wx-date">${parseLocalDate(d.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</div>
+        <div class="wx-icon">${weatherIcon(d.code)}</div>
+        <div class="wx-desc">${weatherDesc(d.code)}</div>
+        <div class="wx-temps">
+          <div class="wx-temp-row"><span class="wx-day-label">Day</span><span class="wx-high">${Math.round(d.tempMax)}°F</span></div>
+          <div class="wx-temp-row"><span class="wx-night-label">Night</span><span class="wx-low">${Math.round(d.tempMin)}°F</span></div>
+        </div>
       </div>`).join('');
     weatherHTML = `
       <section class="section">
@@ -2147,101 +2150,102 @@ function exportListHTML(mode = 'both') {
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
     --navy: #0C2D5A; --brown: #2C1810; --gold: #C9A84C; --gold-light: #e8c96a;
-    --cream: #FBF7EF; --cream-dark: #F0E8D8; --text: #1a1a1a; --text-muted: #777; --border: #d8cbb8; --checked: #bbb;
+    --cream: #FBF7EF; --cream-dark: #F0E8D8; --text: #1a1a1a; --text-muted: #666;
+    --border: #d0c4ae; --checked: #bbb;
   }
-  html { font-size: 8.5pt; }
-  body { font-family: 'Outfit', sans-serif; color: var(--text); background: white; padding: 0.3in 0.35in 0.2in; }
+  html { font-size: 12pt; }
+  body { font-family: 'Outfit', sans-serif; color: var(--text); background: white; width: 7.5in; margin: 0 auto; }
 
   /* ── HEADER ── */
-  .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2.5px solid var(--gold); padding-bottom: 0.25rem; margin-bottom: 0.4rem; gap: 1rem; }
-  .header-left { display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 0; }
-  .brand { font-family: 'Cormorant Garamond', serif; font-size: 0.85rem; color: var(--brown); font-weight: 600; letter-spacing: 0.04em; white-space: nowrap; }
-  .trip-title { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 600; color: var(--navy); line-height: 1; }
-  .trip-meta { font-size: 0.72rem; color: var(--text-muted); display: flex; gap: 0.7rem; flex-wrap: wrap; margin-top: 0.15rem; }
-  .header-right { text-align: right; font-size: 0.65rem; color: var(--text-muted); white-space: nowrap; flex-shrink: 0; }
-  .progress-bar { height: 3px; background: var(--cream-dark); border-radius: 99px; width: 160px; overflow: hidden; margin-top: 0.25rem; }
+  .header { display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 2.5px solid var(--gold); padding-bottom: 0.4rem; margin-bottom: 0.55rem; gap: 1rem; }
+  .header-left { flex: 1; min-width: 0; }
+  .brand-row { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.2rem; }
+  .brand { font-family: 'Cormorant Garamond', serif; font-size: 0.78rem; color: var(--brown); font-weight: 600; letter-spacing: 0.05em; }
+  .trip-title { font-family: 'Cormorant Garamond', serif; font-size: 1.7rem; font-weight: 600; color: var(--navy); line-height: 1.1; }
+  .trip-meta { font-size: 0.78rem; color: var(--text-muted); display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 0.2rem; }
+  .header-right { text-align: right; font-size: 0.72rem; color: var(--text-muted); flex-shrink: 0; padding-top: 0.2rem; }
+  .progress-bar { height: 4px; background: var(--cream-dark); border-radius: 99px; width: 130px; overflow: hidden; margin: 0.2rem 0 0.1rem auto; }
   .progress-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); border-radius: 99px; }
-  .progress-label { font-size: 0.62rem; color: var(--text-muted); margin-top: 0.1rem; }
+  .progress-label { font-size: 0.68rem; color: var(--text-muted); }
 
   /* ── SECTION ── */
-  .section { margin-bottom: 0.35rem; }
-  .section-title { font-family: 'Cormorant Garamond', serif; font-size: 0.82rem; font-weight: 600; color: var(--navy); border-bottom: 1px solid var(--border); padding-bottom: 0.1rem; margin-bottom: 0.25rem; display: flex; align-items: baseline; gap: 0.4rem; text-transform: uppercase; letter-spacing: 0.04em; }
-  .section-loc { font-size: 0.65rem; font-family: 'Outfit', sans-serif; font-weight: 400; color: var(--text-muted); text-transform: none; letter-spacing: 0; }
+  .section { margin-bottom: 0.6rem; }
+  .section-title { font-family: 'Cormorant Garamond', serif; font-size: 0.85rem; font-weight: 600; color: var(--navy); border-bottom: 1px solid var(--border); padding-bottom: 0.1rem; margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.06em; display: flex; align-items: baseline; gap: 0.4rem; }
+  .section-loc { font-size: 0.72rem; font-family: 'Outfit', sans-serif; font-weight: 400; color: var(--text-muted); text-transform: none; letter-spacing: 0; }
 
-  /* ── WEATHER — compact horizontal strip ── */
-  .wx-strip { display: flex; gap: 0.25rem; margin-bottom: 0.25rem; flex-wrap: wrap; }
-  .wx-day { background: var(--cream); border: 1px solid var(--border); border-radius: 5px; padding: 0.18rem 0.35rem; display: flex; align-items: center; gap: 0.3rem; flex: 1; min-width: 0; }
-  .wx-date { font-size: 0.6rem; color: var(--text-muted); font-weight: 500; white-space: nowrap; }
-  .wx-icon { font-size: 0.85rem; line-height: 1; }
-  .wx-temps { font-size: 0.65rem; white-space: nowrap; }
-  .wx-high { font-weight: 600; color: var(--navy); }
+  /* ── WEATHER ── */
+  .wx-strip { display: flex; gap: 0.3rem; margin-bottom: 0.3rem; }
+  .wx-day { background: var(--cream); border: 1px solid var(--border); border-radius: 6px; padding: 0.3rem 0.45rem; display: flex; flex-direction: column; gap: 0.1rem; flex: 1; }
+  .wx-date { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; }
+  .wx-icon { font-size: 1.1rem; line-height: 1.2; }
+  .wx-desc { font-size: 0.68rem; color: var(--text-muted); }
+  .wx-temps { font-size: 0.72rem; display: flex; flex-direction: column; gap: 0.05rem; }
+  .wx-temp-row { display: flex; align-items: center; gap: 0.25rem; }
+  .wx-day-label { font-size: 0.6rem; font-weight: 700; color: #d4820a; text-transform: uppercase; letter-spacing: 0.03em; width: 1.8rem; }
+  .wx-night-label { font-size: 0.6rem; font-weight: 700; color: #4a5fa8; text-transform: uppercase; letter-spacing: 0.03em; width: 1.8rem; }
+  .wx-high { font-weight: 700; color: var(--navy); }
   .wx-low { color: var(--text-muted); }
-  .wx-desc { font-size: 0.58rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .wx-day-label { font-size: 0.55rem; font-weight: 600; color: #e8a020; text-transform: uppercase; letter-spacing: 0.03em; }
-  .wx-night-label { font-size: 0.55rem; font-weight: 600; color: #5b6fa8; text-transform: uppercase; letter-spacing: 0.03em; margin-left: 0.3rem; }
-  .wx-notes { font-size: 0.65rem; color: #555; font-style: italic; background: var(--cream); border-left: 2px solid var(--gold); padding: 0.2rem 0.4rem; border-radius: 0 3px 3px 0; line-height: 1.4; margin-bottom: 0.2rem; }
+  .wx-notes { font-size: 0.78rem; color: #555; font-style: italic; background: var(--cream); border-left: 2.5px solid var(--gold); padding: 0.25rem 0.5rem; border-radius: 0 4px 4px 0; line-height: 1.5; margin-bottom: 0.3rem; }
 
-  /* ── OUTFITS — 3 columns ── */
-  .outfits-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.3rem 0.6rem; }
+  /* ── OUTFITS ── */
+  .outfits-grid { display: grid; gap: 0.5rem 0.9rem; }
   .day-block { break-inside: avoid; }
-  .day-label { font-family: 'Cormorant Garamond', serif; font-size: 0.72rem; font-weight: 600; color: var(--navy); text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); padding-bottom: 0.1rem; margin-bottom: 0.2rem; }
-  .outfit-block { background: var(--cream); border-radius: 4px; padding: 0.2rem 0.35rem; margin-bottom: 0.18rem; }
-  .outfit-slot-label { font-size: 0.65rem; font-weight: 600; color: var(--navy); margin-bottom: 0.12rem; }
+  .day-label { font-family: 'Cormorant Garamond', serif; font-size: 0.88rem; font-weight: 600; color: var(--navy); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); padding-bottom: 0.12rem; margin-bottom: 0.3rem; }
+  .outfit-block { background: var(--cream); border-radius: 5px; padding: 0.35rem 0.5rem; margin-bottom: 0.3rem; }
+  .outfit-slot-label { font-size: 0.82rem; font-weight: 600; color: var(--navy); margin-bottom: 0.2rem; }
   .outfit-slot-label em { font-weight: 400; color: var(--text-muted); }
-  .pieces-grid { display: flex; flex-direction: column; gap: 0.06rem; }
-  .piece { font-size: 0.62rem; color: var(--text); line-height: 1.3; }
-  .piece-label { font-weight: 600; color: var(--text-muted); font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.03em; margin-right: 0.15rem; }
-  .outfit-notes { font-size: 0.6rem; color: var(--text-muted); font-style: italic; margin-top: 0.12rem; }
+  .pieces-grid { display: flex; flex-direction: column; gap: 0.1rem; }
+  .piece { font-size: 0.8rem; color: var(--text); line-height: 1.45; }
+  .piece-label { font-weight: 700; color: var(--text-muted); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.03em; margin-right: 0.2rem; }
+  .outfit-notes { font-size: 0.75rem; color: var(--text-muted); font-style: italic; margin-top: 0.2rem; }
 
-  /* ── PACKING LIST — 3 columns ── */
-  .pack-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 0.7rem; }
-  .category-block { margin-bottom: 0.35rem; break-inside: avoid; }
-  .cat-title { font-family: 'Cormorant Garamond', serif; font-size: 0.72rem; font-weight: 600; color: var(--navy); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); padding-bottom: 0.08rem; margin-bottom: 0.15rem; }
+  /* ── PACKING LIST — 2 columns in portrait ── */
+  .pack-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.2rem; }
+  .category-block { margin-bottom: 0.5rem; break-inside: avoid; }
+  .cat-title { font-family: 'Cormorant Garamond', serif; font-size: 0.82rem; font-weight: 600; color: var(--navy); text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); padding-bottom: 0.1rem; margin-bottom: 0.2rem; }
   .pack-table { width: 100%; border-collapse: collapse; }
-  .pack-table td { padding: 0.06rem 0.15rem; vertical-align: top; line-height: 1.3; }
-  .check-cell { width: 12px; font-size: 0.7rem; color: var(--navy); padding-right: 0.15rem; }
-  .item-name { font-size: 0.68rem; font-weight: 500; }
-  .item-notes { font-size: 0.58rem; color: var(--text-muted); font-style: italic; }
+  .pack-table td { padding: 0.12rem 0.2rem; vertical-align: top; line-height: 1.45; }
+  .check-cell { width: 16px; font-size: 1rem; color: var(--navy); padding-right: 0.2rem; }
+  .item-name { font-size: 0.85rem; font-weight: 500; }
+  .item-notes { font-size: 0.72rem; color: var(--text-muted); font-style: italic; }
   .checked-row .check-cell, .checked-row .item-name { color: var(--checked); font-weight: 400; text-decoration: line-through; }
   .checked-row .item-notes { color: #ccc; }
-  .star { color: var(--gold); font-size: 0.6rem; }
-  .qty { color: var(--text-muted); font-size: 0.62rem; font-weight: 400; }
+  .star { color: var(--gold); font-size: 0.72rem; }
+  .qty { color: var(--text-muted); font-size: 0.75rem; font-weight: 400; }
 
   /* ── FOOTER ── */
-  .footer { margin-top: 0.3rem; border-top: 1px solid var(--border); padding-top: 0.2rem; display: flex; justify-content: space-between; font-size: 0.58rem; color: var(--text-muted); }
+  .footer { margin-top: 0.5rem; border-top: 1px solid var(--border); padding-top: 0.25rem; display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--text-muted); }
 
   /* ── PRINT ── */
   @media print {
-    @page { size: letter landscape; margin: 0.25in; }
+    @page { size: letter portrait; margin: 0.5in; }
     .no-print { display: none !important; }
-    body { padding: 0; }
+    body { width: 100%; }
   }
 </style>
 </head>
 <body>
-  <div class="no-print" style="background:#0C2D5A;color:white;padding:0.5rem 0.75rem;display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;font-family:'Outfit',sans-serif;font-size:0.8rem;border-radius:6px;">
+  <div class="no-print" style="background:#0C2D5A;color:white;padding:0.5rem 0.75rem;display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;font-family:'Outfit',sans-serif;font-size:0.85rem;border-radius:6px;">
     <span style="opacity:0.7;">PacktRite — <strong style="opacity:1;">${tripTitle}</strong> · ${modeLabel}</span>
-    <button onclick="window.print()" style="background:#C9A84C;color:#0C2D5A;border:none;padding:0.3rem 0.85rem;border-radius:5px;font-family:'Outfit',sans-serif;font-weight:600;font-size:0.78rem;cursor:pointer;">🖨 Print / Save as PDF</button>
+    <button onclick="window.print()" style="background:#C9A84C;color:#0C2D5A;border:none;padding:0.35rem 0.9rem;border-radius:5px;font-family:'Outfit',sans-serif;font-weight:600;font-size:0.82rem;cursor:pointer;">🖨 Print / Save as PDF</button>
   </div>
   <header class="header">
     <div class="header-left">
-      <div style="display:flex;align-items:center;gap:0.4rem;flex-shrink:0;">
-        ${logoSVG.replace('width="48" height="48"','width="32" height="32"')}
+      <div class="brand-row">
+        ${logoSVG.replace('width="48" height="48"','width="28" height="28"')}
         <span class="brand">PacktRite</span>
       </div>
-      <div>
-        <div class="trip-title">${tripTitle}</div>
-        <div class="trip-meta">
-          ${trip.destination && trip.tripName ? `<span>📍 ${trip.destination}</span>` : ''}
-          <span>📅 ${dateRange}</span>
-          ${trip.type ? `<span>🧳 ${trip.type}</span>` : ''}
-          ${trip.reason ? `<span>✦ ${trip.reason}</span>` : ''}
-        </div>
+      <div class="trip-title">${tripTitle}</div>
+      <div class="trip-meta">
+        ${trip.destination && trip.tripName ? `<span>📍 ${trip.destination}</span>` : ''}
+        <span>📅 ${dateRange}</span>
+        ${trip.type ? `<span>🧳 ${trip.type}</span>` : ''}
+        ${trip.reason ? `<span>✦ ${trip.reason}</span>` : ''}
       </div>
     </div>
     <div class="header-right">
       ${mode !== 'outfits' ? `<div class="progress-bar"><div class="progress-fill" style="width:${totalCount ? Math.round(packedCount/totalCount*100) : 0}%"></div></div><div class="progress-label">${packedCount} / ${totalCount} packed</div>` : ''}
-      <div style="margin-top:0.2rem;">${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+      <div style="margin-top:0.3rem;">${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
     </div>
   </header>
   ${weatherHTML}
