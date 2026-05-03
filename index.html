@@ -2042,8 +2042,8 @@ function exportListHTML(mode = 'both') {
       <div class="wx-day">
         <span class="wx-date">${parseLocalDate(d.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</span>
         <span class="wx-icon">${weatherIcon(d.code)}</span>
-        <span class="wx-temps"><span class="wx-high">${Math.round(d.tempMax)}°</span><span class="wx-low">/${Math.round(d.tempMin)}°</span></span>
         <span class="wx-desc">${weatherDesc(d.code)}</span>
+        <span class="wx-temps"><span class="wx-day-label">Day</span> <span class="wx-high">${Math.round(d.tempMax)}°</span> <span class="wx-night-label">Night</span> <span class="wx-low">${Math.round(d.tempMin)}°</span></span>
       </div>`).join('');
     weatherHTML = `
       <section class="section">
@@ -2060,6 +2060,9 @@ function exportListHTML(mode = 'both') {
     const dates = Object.keys(userOutfits).sort();
     if (dates.length) {
       const TIME_LABELS = { morning: 'Morning', afternoon: 'Afternoon', evening: 'Evening', night: 'Night', fullday: 'Full Day' };
+      // Scale layout based on number of days to fill available space
+      const cols = dates.length <= 2 ? 2 : dates.length <= 4 ? 2 : dates.length <= 6 ? 3 : 4;
+      const fontScale = mode === 'outfits' ? (dates.length <= 2 ? 1.35 : dates.length <= 4 ? 1.15 : dates.length <= 6 ? 1.0 : 0.88) : 1.0;
       const dayBlocks = dates.map(dateKey => {
         const d = parseLocalDate(dateKey);
         const label = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
@@ -2088,9 +2091,9 @@ function exportListHTML(mode = 'both') {
           </div>`;
       }).join('');
       outfitsHTML = `
-        <section class="section">
-          <h2 class="section-title">Outfits by Day</h2>
-          <div class="outfits-grid">${dayBlocks}</div>
+        <section class="section" style="font-size:${fontScale}em;">
+          <h2 class="section-title" style="font-size:${0.82/fontScale}rem;">Outfits by Day</h2>
+          <div class="outfits-grid" style="grid-template-columns:repeat(${cols},1fr);">${dayBlocks}</div>
         </section>`;
     }
   }
@@ -2174,6 +2177,8 @@ function exportListHTML(mode = 'both') {
   .wx-high { font-weight: 600; color: var(--navy); }
   .wx-low { color: var(--text-muted); }
   .wx-desc { font-size: 0.58rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wx-day-label { font-size: 0.55rem; font-weight: 600; color: #e8a020; text-transform: uppercase; letter-spacing: 0.03em; }
+  .wx-night-label { font-size: 0.55rem; font-weight: 600; color: #5b6fa8; text-transform: uppercase; letter-spacing: 0.03em; margin-left: 0.3rem; }
   .wx-notes { font-size: 0.65rem; color: #555; font-style: italic; background: var(--cream); border-left: 2px solid var(--gold); padding: 0.2rem 0.4rem; border-radius: 0 3px 3px 0; line-height: 1.4; margin-bottom: 0.2rem; }
 
   /* ── OUTFITS — 3 columns ── */
