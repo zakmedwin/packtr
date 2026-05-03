@@ -2,14 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<link rel="apple-touch-icon" href="packtr-icon.svg">
-<link rel="icon" type="image/svg+xml" href="packtr-icon.svg">
-<link rel="manifest" href="manifest.json">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="PacktRite">
-<meta name="theme-color" content="#2C1810">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PacktRite — Pack Smart, Travel Well</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -390,11 +383,8 @@
   
   /* MOBILE NAV */
   .hamburger-btn{display:none;background:none;border:none;color:rgba(240,232,216,0.8);font-size:1.3rem;cursor:pointer;padding:0.3rem;margin-left:auto;}
-  .mobile-nav-item{display:block;width:100%;text-align:left;padding:0.85rem 1rem;background:transparent;border:none;border-radius:var(--radius);color:rgba(240,232,216,0.85);font-family:var(--font-body);font-size:0.95rem;cursor:pointer;transition:all var(--transition);}
-  .mobile-nav-item:hover,.mobile-nav-item:active{background:rgba(201,168,76,0.12);color:var(--gold);}
-  #mobile-nav-drawer{display:none;position:fixed;top:56px;right:0;width:min(260px,80vw);background:#0C2D5A;flex-direction:column;padding:0.5rem;gap:0.15rem;z-index:200;box-shadow:-4px 8px 20px var(--shadow-deep);border-bottom-left-radius:var(--radius-lg);max-height:calc(100vh - 56px);overflow-y:auto;}
-  [data-theme="dark"] #mobile-nav-drawer{background:#060F1E;border:1px solid rgba(46,125,209,0.2);}
-  #mobile-nav-overlay{display:none;position:fixed;inset:56px 0 0 0;background:rgba(0,0,0,0.35);z-index:150;}
+  .mobile-nav-item{display:block;width:100%;text-align:left;padding:0.7rem 0.85rem;background:transparent;border:none;border-radius:var(--radius);color:rgba(240,232,216,0.8);font-family:var(--font-body);font-size:0.85rem;cursor:pointer;transition:all var(--transition);}
+  .mobile-nav-item:hover{background:rgba(201,168,76,0.12);color:var(--gold);}
   @media(max-width:640px){
     body::before{display:none;}
     .container{padding:0 0.85rem;}
@@ -405,11 +395,9 @@
     .nav-user{display:none;}
     .trips-grid{grid-template-columns:1fr;}
     .outfit-calendar{grid-template-columns:1fr;}
+    #mobile-nav-drawer{display:none;flex-direction:column;}
     #mobile-nav-drawer.open{display:flex !important;}
     #mobile-nav-overlay.open{display:block !important;}
-    /* Prevent iOS Safari from zooming in when an input is focused.
-       Safari zooms any input with font-size < 16px. Force 16px on mobile. */
-    input, select, textarea { font-size: 16px !important; }
   }
 
 
@@ -560,27 +548,15 @@
       <div class="topnav-nav">
         <button class="nav-btn active" id="nav-trips" onclick="showDashboard()">Trips</button>
         <button class="nav-btn" id="nav-closet" onclick="showCloset()">Closet</button>
-        <button class="nav-btn" id="nav-library" onclick="showLibrary()">Essentials</button>
+        <button class="nav-btn" id="nav-library" onclick="showLibrary()">My Items</button>
         <button class="nav-btn" id="nav-templates" onclick="showTemplates()">Templates</button>
         <div class="nav-divider"></div>
         <button class="nav-btn" id="nav-admin" onclick="showAdmin()" style="display:none;">Admin</button>
         <button class="nav-btn" onclick="toggleTheme()">◐ Theme</button>
         <button class="nav-btn" onclick="logout()">Sign Out</button>
       </div>
-      <button class="hamburger-btn" onclick="toggleMobileNav()" aria-label="Menu">☰</button>
     </div>
   </nav>
-  <div id="mobile-nav-overlay" onclick="closeMobileNav()"></div>
-  <div id="mobile-nav-drawer">
-    <button class="mobile-nav-item" onclick="showDashboard();closeMobileNav();">Trips</button>
-    <button class="mobile-nav-item" onclick="showCloset();closeMobileNav();">Closet</button>
-    <button class="mobile-nav-item" onclick="showLibrary();closeMobileNav();">Essentials</button>
-    <button class="mobile-nav-item" onclick="showTemplates();closeMobileNav();">Templates</button>
-    <button class="mobile-nav-item" id="mobile-nav-admin" onclick="showAdmin();closeMobileNav();" style="display:none;">Admin</button>
-    <div style="border-top:1px solid rgba(240,232,216,0.12);margin:0.4rem 0;"></div>
-    <button class="mobile-nav-item" onclick="toggleTheme();closeMobileNav();">◐ Theme</button>
-    <button class="mobile-nav-item" onclick="logout();closeMobileNav();">Sign Out</button>
-  </div>
 
   <!-- DASHBOARD -->
   <div id="view-dashboard" class="container">
@@ -660,7 +636,7 @@
     <div class="dashboard-header">
       <div class="dashboard-greeting">Frequently packed items — add to any trip's packing list</div>
       <div class="dashboard-title-row">
-        <h1 class="display-title">Essentials</h1>
+        <h1 class="display-title">My Items</h1>
         <button class="btn btn-primary" onclick="openAddLibraryItem()">+ Add Item</button>
       </div>
       <div style="margin-top:0.75rem;">
@@ -706,8 +682,14 @@
             <div style="font-size:1rem;font-weight:600;margin-top:0.2rem;white-space:nowrap;" id="progress-label">0 of 0 items packed</div>
             <div class="italic text-muted" style="font-size:0.8rem;margin-top:0.1rem;" id="progress-sublabel"></div>
           </div>
-          <div style="margin-left:auto;display:flex;gap:0.4rem;align-items:center;flex-shrink:0;">
-            <button class="btn btn-secondary" style="font-size:0.72rem;padding:0.4rem 0.7rem;" onclick="exportList()">Export</button>
+          <div style="margin-left:auto;display:flex;gap:0.4rem;align-items:center;flex-shrink:0;position:relative;">
+            <div style="position:relative;">
+              <button class="btn btn-secondary" style="font-size:0.72rem;padding:0.4rem 0.7rem;" onclick="toggleExportMenu(event)">Export ▾</button>
+              <div id="export-menu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 24px var(--shadow-deep);z-index:100;min-width:140px;overflow:hidden;">
+                <button onclick="exportListHTML();toggleExportMenu()" style="display:block;width:100%;text-align:left;padding:0.6rem 0.85rem;background:none;border:none;color:var(--text-primary);font-family:var(--font-body);font-size:0.82rem;cursor:pointer;" onmouseover="this.style.background='rgba(201,168,76,0.1)'" onmouseout="this.style.background='none'">📄 Export as PDF</button>
+                <button onclick="exportListText();toggleExportMenu()" style="display:block;width:100%;text-align:left;padding:0.6rem 0.85rem;background:none;border:none;color:var(--text-primary);font-family:var(--font-body);font-size:0.82rem;cursor:pointer;" onmouseover="this.style.background='rgba(201,168,76,0.1)'" onmouseout="this.style.background='none'">📝 Export as Text</button>
+              </div>
+            </div>
             <button class="btn btn-secondary" style="font-size:0.72rem;padding:0.4rem 0.7rem;" onclick="openImportModal()">Import</button>
           </div>
         </div>
@@ -1179,51 +1161,20 @@ let state = {
 // ═══════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
   applyTheme();
-  // Show a brief loading state on the login screen while we fetch real users from KV
-  const userList = document.getElementById('user-select-list');
-  if (userList) userList.innerHTML = '<div style="color:rgba(255,255,255,0.6);text-align:center;padding:2rem;font-size:0.9rem;">Loading…</div>';
-
-  // Load trips/templates from localStorage immediately (just for offline cache — will refresh from cloud post-login)
+  // Always start with hardcoded defaults
+  state.users = [
+    { id: 'u1', name: 'Zak', pin: '1234', role: 'admin', initials: 'Z' },
+    { id: 'u2', name: 'Swishy', pin: '5678', role: 'user', initials: 'S', showPersonalCare: true },
+  ];
+  // Layer in localStorage immediately so login screen shows fast
+  try { const u = JSON.parse(localStorage.getItem('pr_users')||'[]'); if(Array.isArray(u)&&u.length) state.users=u; } catch(e) {}
   try { const t = JSON.parse(localStorage.getItem('pr_trips')||'[]'); if(Array.isArray(t)) state.trips=t; } catch(e) {}
   try { const t = JSON.parse(localStorage.getItem('pr_templates')||'[]'); if(Array.isArray(t)&&t.length) state.templates=t; } catch(e) {}
   if (!state.templates.length) loadDefaultTemplates();
-
-  // Fetch the real user list from the Worker (PIN-less). This is the source of truth.
-  await loadUsersForLogin();
   renderLoginUsers();
 });
-
-// Fetch users from the Worker for the login screen.
-// No auth required — we just need the list of user IDs, names, and initials.
-// PINs are never returned by the Worker; they live only in KV and are verified on /api/auth/login.
-async function loadUsersForLogin() {
-  try {
-    const res = await fetch(CONFIG.workerUrl + '/api/users');
-    if (!res.ok) throw new Error('worker unreachable');
-    const users = await res.json();
-    if (Array.isArray(users) && users.length) {
-      state.users = users.map(u => ({ ...u, pin: '' })); // pin field kept empty — never stored client-side
-      return;
-    }
-  } catch (e) {
-    console.warn('Could not load users from cloud, trying localStorage cache:', e.message);
-  }
-  // Fallback — try a locally cached user list (names/ids only, no PINs)
-  try {
-    const cached = JSON.parse(localStorage.getItem('pr_users_cache') || '[]');
-    if (Array.isArray(cached) && cached.length) {
-      state.users = cached.map(u => ({ ...u, pin: '' }));
-      return;
-    }
-  } catch(e) {}
-  // Last-resort fallback — hardcoded defaults so the app is never completely broken offline
-  state.users = [
-    { id: 'u1', name: 'Zak', pin: '', role: 'admin', initials: 'Z' },
-    { id: 'u2', name: 'Swishy', pin: '', role: 'user', initials: 'S', showPersonalCare: true },
-  ];
-}
 
 // ═══════════════════════════════════════════════
 // API LAYER — cloud-first, localStorage fallback
@@ -1264,25 +1215,34 @@ async function api(method, path, body) {
 }
 
 // ── USERS ──
-// The login screen populates state.users via loadUsersForLogin (no auth required).
-// After login, loadUsers refreshes state.users from the authenticated endpoint so
-// the admin panel sees the latest names/roles. PINs are never stored client-side.
 async function loadUsers() {
   const cloud = await api('GET', '/api/users');
   if (cloud && Array.isArray(cloud) && cloud.length > 0) {
-    state.users = cloud.map(cu => ({ ...cu, pin: '' }));
-    saveUsers(); // refresh the offline cache
+    // Worker returns users without PINs — merge with local pins for login
+    const localRaw = localStorage.getItem('pr_users');
+    const local = localRaw ? JSON.parse(localRaw) : [];
+    // Use cloud users but preserve local pins (worker strips them for security)
+    state.users = cloud.map(cu => {
+      const lu = local.find(u => u.id === cu.id);
+      return { ...cu, pin: lu?.pin || '' };
+    });
+    // If cloud users have no pins locally, keep hardcoded defaults for Zak/Swishy
+    if (!state.users.find(u => u.pin)) {
+      state.users = [
+        { id: 'u1', name: 'Zak', pin: '1234', role: 'admin', initials: 'Z' },
+        { id: 'u2', name: 'Swishy', pin: '5678', role: 'user', initials: 'S', showPersonalCare: true },
+      ];
+    }
+    localStorage.setItem('pr_users', JSON.stringify(state.users));
+    return;
   }
+  // Fallback to localStorage
+  try { const u = JSON.parse(localStorage.getItem('pr_users') || '[]'); if (Array.isArray(u) && u.length) state.users = u; } catch(e) {}
 }
 
 function saveUsers() {
-  // Cache PIN-less user list for the offline login fallback only.
-  try {
-    const safe = state.users.map(u => ({ id: u.id, name: u.name, role: u.role, initials: u.initials, showPersonalCare: u.showPersonalCare }));
-    localStorage.setItem('pr_users_cache', JSON.stringify(safe));
-  } catch(e) {}
-  // The old pr_users key is no longer used — clear it if present.
-  try { localStorage.removeItem('pr_users'); } catch(e) {}
+  try { localStorage.setItem('pr_users', JSON.stringify(state.users)); } catch(e) {}
+  // Users are managed via admin panel — no direct push needed
 }
 
 // ── TRIPS ──
@@ -1302,80 +1262,8 @@ async function saveTrips() {
   if (!state.currentUser || !getAuthToken()) return;
   // Push current trip to cloud if we have one
   if (state.currentTrip) {
-    await saveTripWithConflictCheck(state.currentTrip);
+    await api('PUT', '/api/trips/' + state.currentTrip.id, state.currentTrip);
   }
-}
-
-// ── CONFLICT DETECTION ──
-// When we save a trip, first check if the cloud copy is newer than our baseline.
-// If yes, show the user a choice: reload to get the remote changes, or force-overwrite.
-// Every save stamps `lastModified` (ms since epoch) on the trip so the next device can compare.
-async function saveTripWithConflictCheck(trip) {
-  if (!trip || !trip.id) return;
-  // Fetch the current cloud version to compare timestamps
-  const cloud = await api('GET', '/api/trips/' + trip.id);
-  if (cloud && cloud.lastModified && trip.lastModified && cloud.lastModified > trip.lastModified) {
-    // Cloud has a newer version than our local baseline → another device edited in the meantime
-    const choice = await showConflictDialog(cloud, trip);
-    if (choice === 'reload') {
-      // Replace current trip with cloud version
-      const idx = state.trips.findIndex(t => t.id === trip.id);
-      if (idx >= 0) state.trips[idx] = cloud;
-      state.currentTrip = cloud;
-      try { localStorage.setItem('pr_trips', JSON.stringify(state.trips)); } catch(e) {}
-      // Re-render whatever tab is active
-      if (typeof renderPackingList === 'function') renderPackingList();
-      toast('Loaded the latest version from the cloud.');
-      return;
-    }
-    if (choice === 'cancel') {
-      // Abort save — local changes stay in state but aren't pushed
-      toast('Save cancelled. Your local changes are kept on this device only.', 'warn');
-      return;
-    }
-    // choice === 'overwrite' falls through to the PUT below
-  }
-  // Stamp new lastModified and save
-  trip.lastModified = Date.now();
-  await api('PUT', '/api/trips/' + trip.id, trip);
-  try { localStorage.setItem('pr_trips', JSON.stringify(state.trips)); } catch(e) {}
-}
-
-function showConflictDialog(cloudTrip, localTrip) {
-  return new Promise((resolve) => {
-    const cloudTime = cloudTrip.lastModified ? new Date(cloudTrip.lastModified).toLocaleString() : 'unknown time';
-    const localTime = localTrip.lastModified ? new Date(localTrip.lastModified).toLocaleString() : 'unknown time';
-    // Build a simple modal
-    const backdrop = document.createElement('div');
-    backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:1rem;';
-    backdrop.innerHTML = `
-      <div style="background:var(--bg-card);color:var(--text-primary);padding:1.5rem;border-radius:var(--radius-lg);max-width:460px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
-        <h3 style="margin:0 0 0.5rem;font-family:var(--font-display);font-size:1.15rem;">⚠️ This trip was edited on another device</h3>
-        <p style="color:var(--text-secondary);font-size:0.88rem;line-height:1.5;margin:0.75rem 0;">
-          Someone (probably you, on another device) saved changes to this trip.
-        </p>
-        <div style="font-size:0.8rem;color:var(--text-muted);margin:0.75rem 0;line-height:1.6;">
-          <div><strong>This device last saved:</strong> ${localTime}</div>
-          <div><strong>The cloud was updated:</strong> ${cloudTime}</div>
-        </div>
-        <p style="color:var(--text-secondary);font-size:0.85rem;line-height:1.5;margin:0.75rem 0;">
-          Choose how to handle this:
-        </p>
-        <div style="display:flex;flex-direction:column;gap:0.5rem;margin-top:1rem;">
-          <button class="btn btn-primary" data-choice="reload" style="width:100%;justify-content:center;">Use the cloud version (discard my local changes)</button>
-          <button class="btn btn-danger" data-choice="overwrite" style="width:100%;justify-content:center;">Overwrite with my local changes</button>
-          <button class="btn btn-secondary" data-choice="cancel" style="width:100%;justify-content:center;">Cancel — don't save right now</button>
-        </div>
-      </div>`;
-    backdrop.addEventListener('click', (e) => {
-      const btn = e.target.closest('[data-choice]');
-      if (btn) {
-        document.body.removeChild(backdrop);
-        resolve(btn.dataset.choice);
-      }
-    });
-    document.body.appendChild(backdrop);
-  });
 }
 
 async function createTripInCloud(trip) {
@@ -1470,18 +1358,20 @@ function loadDefaultTemplates() {
   try { saveTemplates(); } catch(e) {}
 }
 
-async function hardResetApp() {
-  if (!confirm('This will clear all local data on this device. Continue?')) return;
-  ['pr_users','pr_users_cache','pr_trips','pr_templates','pr_theme','pr_auth_token','pr_worker_setup_done'].forEach(k => { try { localStorage.removeItem(k); } catch(e) {} });
+function hardResetApp() {
+  if (!confirm('This will clear all local data and restore defaults. Continue?')) return;
+  ['pr_users','pr_trips','pr_templates','pr_theme','pr_auth_token','pr_worker_setup_done'].forEach(k => { try { localStorage.removeItem(k); } catch(e) {} });
   clearAuthToken();
-  state.users = [];
+  state.users = [
+    { id: 'u1', name: 'Zak', pin: '1234', role: 'admin', initials: 'Z' },
+    { id: 'u2', name: 'Swishy', pin: '5678', role: 'user', initials: 'S', showPersonalCare: true },
+  ];
   state.trips = []; state.templates = [];
   loadDefaultTemplates();
-  await loadUsersForLogin();
   renderLoginUsers();
   document.getElementById('login-step-user').style.display = 'block';
   document.getElementById('login-step-pin').style.display = 'none';
-  toast('Local data cleared. Log in with your current PIN.');
+  toast('App reset. PIN: Zak=1234, Swishy=5678');
 }
 
 // ═══════════════════════════════════════════════
@@ -1531,64 +1421,45 @@ document.addEventListener('keydown', function(e) {
 });
 function updatePinDisplay() { for(let i=0;i<4;i++) document.getElementById(`dot-${i}`).classList.toggle('filled',i<state.pinBuffer.length); }
 async function attemptLogin() {
-  const selected = state.users.find(u => u.id === state.selectedUserId);
-  if (!selected) {
-    document.getElementById('login-error').textContent = 'Please select a user first.';
-    return;
+  const user = state.users.find(u => u.id===state.selectedUserId);
+  if (user && state.pinBuffer===user.pin) {
+    state.currentUser = user;
+    // Always set auth token from the PIN the user just typed
+    setAuthToken(user.id, state.pinBuffer);
+    // Persist correct PIN in state.users
+    const userIdx = state.users.findIndex(u => u.id === user.id);
+    if (userIdx >= 0) state.users[userIdx].pin = state.pinBuffer;
+    saveUsers();
+    // Push PIN to KV so all devices stay in sync
+    api('PUT', '/api/users/' + user.id, {
+      name: user.name, pin: state.pinBuffer,
+      role: user.role, showPersonalCare: user.showPersonalCare || false
+    }).catch(() => {}); // fire and forget — don't block login
+    document.getElementById('nav-username-display').textContent = '/ ' + user.name;
+    if (user.role==='admin') document.getElementById('nav-admin').style.display='inline-flex';
+    loadTrips().then(() => { if(document.getElementById('trips-grid')) renderDashboard(); });
+    loadTemplates();
+    loadClosetFromCloud();
+    loadProfileFromCloud();
+    showDashboard();
+    const loginEl = document.getElementById('screen-login');
+    loginEl.classList.add('hidden');
+    setTimeout(() => { loginEl.style.display = 'none'; }, 420);
+    toast('Welcome back, ' + user.name + '!');
+  } else {
+    // Try fetching from cloud in case local users are stale
+    const cloudResult = await api('GET', '/api/users').catch(() => null);
+    if (cloudResult && Array.isArray(cloudResult)) {
+      // Cloud returned users — update local and retry
+      const cloudUser = cloudResult.find(u => u.id === state.selectedUserId);
+      if (cloudUser) {
+        // We can't verify PIN from cloud (PINs aren't returned) — just show error
+      }
+    }
+    document.getElementById('login-error').textContent='Incorrect PIN. Please try again.';
+    state.pinBuffer=''; updatePinDisplay();
+    setTimeout(()=>{ document.getElementById('login-error').textContent=''; },2000);
   }
-  const pin = state.pinBuffer;
-  if (!/^\d{4}$/.test(pin)) {
-    document.getElementById('login-error').textContent = 'PIN must be 4 digits.';
-    return;
-  }
-
-  // Ask the Worker to verify. KV is the source of truth — no local PIN check.
-  let res, data;
-  try {
-    res = await fetch(CONFIG.workerUrl + '/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: state.selectedUserId, pin }),
-    });
-    data = await res.json().catch(() => ({}));
-  } catch (e) {
-    document.getElementById('login-error').textContent = 'Cannot reach server. Check your connection.';
-    state.pinBuffer = ''; updatePinDisplay();
-    setTimeout(() => { document.getElementById('login-error').textContent = ''; }, 3000);
-    return;
-  }
-
-  if (!res.ok || !data.ok) {
-    document.getElementById('login-error').textContent = 'Incorrect PIN. Please try again.';
-    state.pinBuffer = ''; updatePinDisplay();
-    setTimeout(() => { document.getElementById('login-error').textContent = ''; }, 2000);
-    return;
-  }
-
-  // Success — Worker confirmed the PIN matches KV.
-  // The auth token is userId:pin, which the Worker validates on every subsequent API call.
-  // We do NOT persist the PIN anywhere in localStorage — it only lives in memory for this session.
-  const user = data.user;
-  state.currentUser = user;
-  setAuthToken(user.id, pin);
-  // Cache the PIN-less user list for offline fallback on the login screen only
-  try {
-    const safeUsers = state.users.map(u => ({ id: u.id, name: u.name, role: u.role, initials: u.initials, showPersonalCare: u.showPersonalCare }));
-    localStorage.setItem('pr_users_cache', JSON.stringify(safeUsers));
-  } catch(e) {}
-
-  document.getElementById('nav-username-display').textContent = '/ ' + user.name;
-  if (user.role === 'admin') document.getElementById('nav-admin').style.display = 'inline-flex';
-  loadUsers(); // refresh authenticated user list (PIN-less, for admin panel)
-  loadTrips().then(() => { if (document.getElementById('trips-grid')) renderDashboard(); });
-  loadTemplates();
-  loadClosetFromCloud();
-  loadProfileFromCloud();
-  showDashboard();
-  const loginEl = document.getElementById('screen-login');
-  loginEl.classList.add('hidden');
-  setTimeout(() => { loginEl.style.display = 'none'; }, 420);
-  toast('Welcome back, ' + user.name + '!');
 }
 function logout() {
   clearAuthToken();
@@ -1728,7 +1599,7 @@ function isTripArchived(trip) {
 function buildTripCard(trip, archived) {
   const card = document.createElement('div');
   card.className = 'card trip-card' + (archived ? ' archived' : '');
-  if (archived) {
+  if (isArchived) {
     card.onclick = () => { state.tripReadOnly = true; showTripDetail(trip.id); };
   } else {
     card.onclick = () => { state.tripReadOnly = false; showTripDetail(trip.id); };
@@ -1897,7 +1768,7 @@ function createTrip() {
     startDate:document.getElementById('new-trip-start').value,
     endDate:document.getElementById('new-trip-end').value, type:document.getElementById('new-trip-type').value,
     ownerId:state.currentUser.id, sharedWith:[], categories, outfits:{}, outfitCombos:[],
-    includePersonalCare:includePC, createdAt:new Date().toISOString(), lastModified:Date.now(),
+    includePersonalCare:includePC, createdAt:new Date().toISOString(),
   };
   // Auto-detect personal care
   if (shouldIncludePersonalCare(trip) || includePC) {
@@ -2174,26 +2045,257 @@ function updateProgressRing() {
 // ═══════════════════════════════════════════════
 // EXPORT / IMPORT
 // ═══════════════════════════════════════════════
-function exportList() {
-  const trip=state.currentTrip;
-  let text=`PACKING LIST — ${trip.tripName||trip.destination}\n`;
-  if(trip.tripName&&trip.destination) text+=`Destination: ${trip.destination}\n`;
-  text+=`${formatDateRange(trip.startDate,trip.endDate)}\n${'='.repeat(40)}\n\n`;
-  Object.entries(trip.categories).forEach(([cat,items])=>{
-    if(cat==='Personal Care'&&!state.currentUser.showPersonalCare) return;
-    text+=`${cat.toUpperCase()}\n`;
-    items.forEach(item=>{
-      text+=`  ${item.checked?'☑':'☐'} ${item.name}${item.qty>1?` (x${item.qty})`:''}${item.essential?' ★':''}`;
-      if(item.description) text+=` — ${item.description}`;
-      text+='\n';
-      if(item.notes) text+=`     📝 ${item.notes}\n`;
-    });
-    text+='\n';
+function toggleExportMenu(e) {
+  if(e) e.stopPropagation();
+  const menu = document.getElementById('export-menu');
+  const isOpen = menu.style.display !== 'none';
+  menu.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) {
+    const close = () => { menu.style.display = 'none'; document.removeEventListener('click', close); };
+    setTimeout(() => document.addEventListener('click', close), 0);
+  }
+}
+
+function exportListHTML() {
+  const trip = state.currentTrip;
+  const user = state.currentUser;
+  const weather = trip.weatherCache || state.weather || null;
+  const tripTitle = trip.tripName || trip.destination;
+  const dateRange = formatDateRange(trip.startDate, trip.endDate);
+  const packedCount = Object.values(trip.categories).flat().filter(i => i.checked).length;
+  const totalCount = Object.values(trip.categories).flat().length;
+
+  // Build weather section HTML
+  let weatherHTML = '';
+  if (weather && weather.daily && weather.daily.length) {
+    const avgHigh = weather.daily.reduce((s,d) => s + d.tempMax, 0) / weather.daily.length;
+    const hasRain = weather.daily.some(d => [61,63,65,80,81,82].includes(d.code));
+    const hasSnow = weather.daily.some(d => [71,73,75,77,85,86].includes(d.code));
+    let notes = [];
+    if (avgHigh > 85) notes.push('Hot weather — pack light, breathable fabrics and extra sunscreen.');
+    else if (avgHigh > 65) notes.push('Mild and comfortable — layers work well for day-to-night.');
+    else if (avgHigh > 45) notes.push('Cool weather — bring a mid-weight jacket and warm layers.');
+    else notes.push('Cold weather — pack heavy coats, thermals, and warm accessories.');
+    if (hasRain) notes.push('Rain in the forecast — pack a compact umbrella and waterproof layer.');
+    if (hasSnow) notes.push('Snow possible — waterproof boots and heavy winter gear recommended.');
+
+    const dayCards = weather.daily.map(d => `
+      <div class="wx-day">
+        <div class="wx-date">${parseLocalDate(d.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</div>
+        <div class="wx-icon">${weatherIcon(d.code)}</div>
+        <div class="wx-temps"><span class="wx-high">${Math.round(d.tempMax)}°</span><span class="wx-low"> / ${Math.round(d.tempMin)}°F</span></div>
+        <div class="wx-desc">${weatherDesc(d.code)}</div>
+      </div>`).join('');
+
+    weatherHTML = `
+      <section class="section weather-section">
+        <h2 class="section-title">Weather Forecast <span class="section-loc">${weather.location}</span></h2>
+        <div class="wx-grid">${dayCards}</div>
+        <div class="wx-notes">${notes.join(' ')}</div>
+      </section>`;
+  }
+
+  // Build packing list HTML
+  let packingHTML = '';
+  Object.entries(trip.categories).forEach(([cat, items]) => {
+    if (cat === 'Personal Care' && !user.showPersonalCare) return;
+    if (!items || !items.length) return;
+    const rows = items.map(item => `
+      <tr class="${item.checked ? 'checked-row' : ''}">
+        <td class="check-cell">${item.checked ? '☑' : '☐'}</td>
+        <td class="item-name">${item.name}${item.essential ? ' <span class="star">★</span>' : ''}${item.qty > 1 ? ` <span class="qty">×${item.qty}</span>` : ''}</td>
+        <td class="item-notes">${item.description ? item.description : ''}${item.notes ? (item.description ? ' · ' : '') + item.notes : ''}</td>
+      </tr>`).join('');
+    packingHTML += `
+      <div class="category-block">
+        <h3 class="cat-title">${cat}</h3>
+        <table class="pack-table">
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
   });
-  const blob=new Blob([text],{type:'text/plain'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download=`${(trip.tripName||trip.destination).replace(/\s+/g,'_')}_packing_list.txt`; a.click();
-  toast('List exported!','success');
+
+  // SVG logo inline (vintage suitcase icon — simplified version for print)
+  const logoSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="48" height="48">
+    <rect width="512" height="512" rx="112" fill="#2C1810"/>
+    <rect x="80" y="170" width="352" height="252" rx="22" fill="#A0622E"/>
+    <rect x="80" y="170" width="352" height="252" rx="22" fill="none" stroke="#C9A84C" stroke-width="4"/>
+    <rect x="80" y="230" width="352" height="5" fill="#7A4520"/>
+    <rect x="188" y="154" width="28" height="26" rx="6" fill="#C9A84C"/>
+    <rect x="296" y="154" width="28" height="26" rx="6" fill="#C9A84C"/>
+    <path d="M204 164 Q256 106 308 164" fill="none" stroke="#C9A84C" stroke-width="16" stroke-linecap="round"/>
+    <path d="M174 318 C180 322 200 344 220 368 C240 344 290 272 358 222" fill="none" stroke="#F5D680" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PacktRite — ${tripTitle}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy: #0C2D5A;
+    --brown: #2C1810;
+    --gold: #C9A84C;
+    --gold-light: #e8c96a;
+    --cream: #FBF7EF;
+    --cream-dark: #F0E8D8;
+    --text: #1a1a1a;
+    --text-muted: #888;
+    --border: #d8cbb8;
+    --checked: #bbb;
+  }
+  body {
+    font-family: 'Outfit', sans-serif;
+    font-size: 10.5pt;
+    color: var(--text);
+    background: white;
+    width: 11.5in;
+    margin: 0 auto;
+    padding: 0.6in 0.75in;
+  }
+  /* HEADER */
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    border-bottom: 3px solid var(--gold);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.2rem;
+  }
+  .header-left { display: flex; align-items: center; gap: 0.75rem; }
+  .brand { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; color: var(--brown); letter-spacing: 0.04em; font-weight: 600; }
+  .trip-title { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; font-weight: 600; color: var(--navy); line-height: 1.1; margin-bottom: 0.15rem; }
+  .trip-meta { font-size: 0.8rem; color: var(--text-muted); display: flex; gap: 1.2rem; flex-wrap: wrap; margin-top: 0.25rem; }
+  .trip-meta span { display: flex; align-items: center; gap: 0.3rem; }
+  .progress-bar-wrap { margin-top: 0.6rem; }
+  .progress-bar { height: 5px; background: var(--cream-dark); border-radius: 99px; width: 280px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); border-radius: 99px; }
+  .progress-label { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; }
+  /* WEATHER */
+  .weather-section { margin-bottom: 1.4rem; }
+  .section-title { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-weight: 600; color: var(--navy); border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; margin-bottom: 0.8rem; display: flex; align-items: baseline; gap: 0.5rem; }
+  .section-loc { font-size: 0.78rem; font-family: 'Outfit', sans-serif; font-weight: 400; color: var(--text-muted); }
+  .wx-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.6rem; }
+  .wx-day { background: var(--cream); border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.65rem; text-align: center; min-width: 78px; flex: 1; }
+  .wx-date { font-size: 0.68rem; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.2rem; }
+  .wx-icon { font-size: 1.4rem; line-height: 1; margin-bottom: 0.15rem; }
+  .wx-temps { font-size: 0.78rem; }
+  .wx-high { font-weight: 600; color: var(--navy); }
+  .wx-low { color: var(--text-muted); }
+  .wx-desc { font-size: 0.65rem; color: var(--text-muted); margin-top: 0.1rem; }
+  .wx-notes { font-size: 0.78rem; color: #555; font-style: italic; background: var(--cream); border-left: 3px solid var(--gold); padding: 0.4rem 0.6rem; border-radius: 0 4px 4px 0; line-height: 1.5; }
+  /* PACKING LIST */
+  .pack-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.5rem; }
+  .category-block { margin-bottom: 0.9rem; break-inside: avoid; }
+  .cat-title { font-family: 'Cormorant Garamond', serif; font-size: 0.95rem; font-weight: 600; color: var(--navy); text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); padding-bottom: 0.2rem; margin-bottom: 0.35rem; }
+  .pack-table { width: 100%; border-collapse: collapse; }
+  .pack-table td { padding: 0.18rem 0.3rem; vertical-align: top; line-height: 1.4; }
+  .check-cell { width: 18px; font-size: 0.9rem; color: var(--navy); padding-right: 0.3rem; }
+  .item-name { font-size: 0.82rem; font-weight: 500; }
+  .item-notes { font-size: 0.72rem; color: var(--text-muted); font-style: italic; }
+  .checked-row .check-cell { color: var(--checked); }
+  .checked-row .item-name { color: var(--checked); font-weight: 400; text-decoration: line-through; }
+  .checked-row .item-notes { color: #ccc; }
+  .star { color: var(--gold); font-size: 0.7rem; }
+  .qty { color: var(--text-muted); font-size: 0.75rem; font-weight: 400; }
+  /* FOOTER */
+  .footer { margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 0.5rem; display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--text-muted); }
+  /* PRINT */
+  @media print {
+    body { width: 100%; padding: 0.4in 0.5in; }
+    @page { size: letter landscape; margin: 0.4in; }
+    .no-print { display: none !important; }
+  }
+</style>
+</head>
+<body>
+  <!-- PRINT BUTTON (hidden on print) -->
+  <div class="no-print" style="background:#0C2D5A;color:white;padding:0.6rem 1rem;display:flex;align-items:center;justify-content:space-between;margin:-0.6in -0.75in 1rem;font-family:'Outfit',sans-serif;font-size:0.85rem;">
+    <span style="opacity:0.7;">PacktRite Export — <strong style="opacity:1;">${tripTitle}</strong></span>
+    <button onclick="window.print()" style="background:#C9A84C;color:#0C2D5A;border:none;padding:0.4rem 1rem;border-radius:6px;font-family:'Outfit',sans-serif;font-weight:600;font-size:0.82rem;cursor:pointer;">🖨 Print / Save as PDF</button>
+  </div>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div>
+      <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.4rem;">
+        ${logoSVG}
+        <span class="brand">PacktRite</span>
+      </div>
+      <div class="trip-title">${tripTitle}</div>
+      <div class="trip-meta">
+        ${trip.destination && trip.tripName ? `<span>📍 ${trip.destination}</span>` : ''}
+        <span>📅 ${dateRange}</span>
+        ${trip.type ? `<span>🧳 ${trip.type}</span>` : ''}
+        ${trip.reason ? `<span>✦ ${trip.reason}</span>` : ''}
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar"><div class="progress-fill" style="width:${totalCount ? Math.round(packedCount/totalCount*100) : 0}%"></div></div>
+        <div class="progress-label">${packedCount} of ${totalCount} items packed</div>
+      </div>
+    </div>
+    <div style="text-align:right;font-size:0.72rem;color:var(--text-muted);padding-top:0.5rem;">
+      Exported ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}<br>
+      <em style="font-size:0.65rem;">packtr.zakmedwin.com</em>
+    </div>
+  </header>
+
+  <!-- WEATHER -->
+  ${weatherHTML}
+
+  <!-- PACKING LIST -->
+  <section class="section">
+    <h2 class="section-title">Packing List</h2>
+    <div class="pack-grid">${packingHTML}</div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <span>PacktRite — Pack Smart, Travel Well</span>
+    <span>${tripTitle} · ${dateRange} · Exported ${new Date().toLocaleDateString()}</span>
+  </footer>
+</body>
+</html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  toast('Export ready — use Print to save as PDF', 'success');
+}
+
+function exportListText() {
+  const trip = state.currentTrip;
+  let text = `PACKING LIST — ${trip.tripName||trip.destination}\n`;
+  if (trip.tripName && trip.destination) text += `Destination: ${trip.destination}\n`;
+  text += `${formatDateRange(trip.startDate, trip.endDate)}\n${'='.repeat(40)}\n\n`;
+  const weather = trip.weatherCache || state.weather || null;
+  if (weather && weather.daily && weather.daily.length) {
+    text += `WEATHER FORECAST — ${weather.location}\n`;
+    weather.daily.forEach(d => {
+      text += `  ${parseLocalDate(d.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}  ${weatherIcon(d.code)} ${weatherDesc(d.code)}  High: ${Math.round(d.tempMax)}°F / Low: ${Math.round(d.tempMin)}°F\n`;
+    });
+    text += '\n';
+  }
+  Object.entries(trip.categories).forEach(([cat, items]) => {
+    if (cat === 'Personal Care' && !state.currentUser.showPersonalCare) return;
+    text += `${cat.toUpperCase()}\n`;
+    items.forEach(item => {
+      text += `  ${item.checked ? '☑' : '☐'} ${item.name}${item.qty > 1 ? ` (×${item.qty})` : ''}${item.essential ? ' ★' : ''}`;
+      if (item.description) text += ` — ${item.description}`;
+      text += '\n';
+      if (item.notes) text += `     📝 ${item.notes}\n`;
+    });
+    text += '\n';
+  });
+  const blob = new Blob([text], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${(trip.tripName||trip.destination).replace(/\s+/g,'_')}_packing_list.txt`;
+  a.click();
+  toast('Text export downloaded!', 'success');
 }
 function openImportModal() { openModal('modal-import'); document.getElementById('import-text').value=''; }
 function importList() {
@@ -2954,20 +3056,17 @@ function deleteTemplate(templateId){if(!confirm('Delete this template?')) return
 // ADMIN
 // ═══════════════════════════════════════════════
 function renderAdmin(){
-  document.getElementById('admin-user-list').innerHTML=state.users.map(u=>`<div class="admin-user-row"><div class="admin-avatar">${u.initials||u.name[0].toUpperCase()}</div><div class="admin-user-info"><div class="admin-user-name">${u.name} ${u.id===state.currentUser.id?'<span style="color:var(--gold);font-size:0.7rem;">(you)</span>':''}</div><div class="admin-user-role">${u.role} · PIN: •••• ${u.showPersonalCare?'· 🌸':''}</div></div><button class="btn btn-secondary" style="font-size:0.72rem;" onclick="openEditUserModal('${u.id}')">Edit</button></div>`).join('');
+  document.getElementById('admin-user-list').innerHTML=state.users.map(u=>`<div class="admin-user-row"><div class="admin-avatar">${u.initials||u.name[0].toUpperCase()}</div><div class="admin-user-info"><div class="admin-user-name">${u.name} ${u.id===state.currentUser.id?'<span style="color:var(--gold);font-size:0.7rem;">(you)</span>':''}</div><div class="admin-user-role">${u.role} · PIN: ${'•'.repeat(u.pin.length)} ${u.showPersonalCare?'· 🌸':''}</div></div><button class="btn btn-secondary" style="font-size:0.72rem;" onclick="openEditUserModal('${u.id}')">Edit</button></div>`).join('');
 }
 function openNewUserModal(){document.getElementById('new-user-name').value='';document.getElementById('new-user-pin').value='';document.getElementById('new-user-role').value='user';openModal('modal-new-user');}
-async function createUser(){
+function createUser(){
   const name=document.getElementById('new-user-name').value.trim();
   const pin=document.getElementById('new-user-pin').value.trim();
   const role=document.getElementById('new-user-role').value;
   if(!name){toast('Enter a name','error');return;}
   if(!/^\d{4}$/.test(pin)){toast('PIN must be exactly 4 digits','error');return;}
-  // Push to Worker first — if this fails, we don't want local state to get ahead of KV.
-  const created = await api('POST', '/api/users', { name, pin, role, showPersonalCare: false });
-  if (!created || !created.id) { toast('Could not create user. Check your connection.', 'error'); return; }
-  state.users.push({ ...created, pin: '' });
-  closeModal('modal-new-user'); renderAdmin();
+  const user={id:uid(),name,pin,role,initials:name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2)};
+  state.users.push(user); saveUsers(); closeModal('modal-new-user'); renderAdmin();
   toast(`User "${name}" created!`,'success');
 }
 function openEditUserModal(userId){
@@ -2978,40 +3077,32 @@ function openEditUserModal(userId){
   document.getElementById('edit-user-role').value=user.role;
   openModal('modal-edit-user');
 }
-async function saveUserEdit(){
+function saveUserEdit(){
   const userId=document.getElementById('edit-user-id').value;
   const user=state.users.find(u=>u.id===userId); if(!user) return;
   const newPin=document.getElementById('edit-user-pin').value.trim();
   if(newPin&&!/^\d{4}$/.test(newPin)){toast('PIN must be 4 digits','error');return;}
-  const newName = document.getElementById('edit-user-name').value.trim() || user.name;
-  const newRole = document.getElementById('edit-user-role').value;
-  // Push changes to Worker — KV is the source of truth for PINs.
-  const payload = { name: newName, role: newRole };
-  if (newPin) payload.pin = newPin;
-  const updated = await api('PUT', '/api/users/' + userId, payload);
-  if (!updated) { toast('Could not save changes. Check your connection.', 'error'); return; }
-  user.name = newName;
-  user.role = newRole;
-  user.initials = newName.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-  if (newPin && userId === state.currentUser?.id) {
-    // If we changed our own PIN, update the auth token so subsequent API calls keep working
-    setAuthToken(userId, newPin);
-    toast('PIN updated. Use your new PIN on every device.','success');
-  } else if (newPin) {
-    toast('PIN updated for ' + newName + '.','success');
-  } else {
-    toast('User updated!','success');
+  user.name=document.getElementById('edit-user-name').value.trim()||user.name;
+  user.role=document.getElementById('edit-user-role').value;
+  user.initials=user.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  if(newPin) {
+    user.pin=newPin;
+    // Update auth token and current user immediately if changing own PIN
+    if(userId === state.currentUser?.id) {
+      setAuthToken(userId, newPin);
+      state.currentUser.pin = newPin;
+      toast('PIN updated. Your next login will sync it across all devices.','success');
+    }
   }
-  closeModal('modal-edit-user'); renderAdmin();
+  // Save locally — KV will be updated automatically on next login
+  saveUsers(); closeModal('modal-edit-user'); renderAdmin();
+  if(!newPin) toast('User updated!','success');
 }
-async function deleteUserFromModal(){
+function deleteUserFromModal(){
   const userId=document.getElementById('edit-user-id').value;
   if(userId===state.currentUser.id){toast("Can't delete yourself",'error');return;}
   if(!confirm('Delete this user?')) return;
-  const res = await api('DELETE', '/api/users/' + userId);
-  if (!res) { toast('Could not delete user. Check your connection.', 'error'); return; }
-  state.users=state.users.filter(u=>u.id!==userId);
-  closeModal('modal-edit-user'); renderAdmin(); toast('User deleted');
+  state.users=state.users.filter(u=>u.id!==userId); saveUsers(); closeModal('modal-edit-user'); renderAdmin(); toast('User deleted');
 }
 
 
