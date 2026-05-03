@@ -660,9 +660,12 @@
           <div style="margin-left:auto;display:flex;gap:0.4rem;align-items:center;flex-shrink:0;position:relative;">
             <div style="position:relative;">
               <button class="btn btn-secondary" style="font-size:0.72rem;padding:0.4rem 0.7rem;" onclick="toggleExportMenu(event)">Export ▾</button>
-              <div id="export-menu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 24px var(--shadow-deep);z-index:100;min-width:140px;overflow:hidden;">
-                <button onclick="exportListHTML();toggleExportMenu()" style="display:block;width:100%;text-align:left;padding:0.6rem 0.85rem;background:none;border:none;color:var(--text-primary);font-family:var(--font-body);font-size:0.82rem;cursor:pointer;" onmouseover="this.style.background='rgba(201,168,76,0.1)'" onmouseout="this.style.background='none'">📄 Export as PDF</button>
-                <button onclick="exportListText();toggleExportMenu()" style="display:block;width:100%;text-align:left;padding:0.6rem 0.85rem;background:none;border:none;color:var(--text-primary);font-family:var(--font-body);font-size:0.82rem;cursor:pointer;" onmouseover="this.style.background='rgba(201,168,76,0.1)'" onmouseout="this.style.background='none'">📝 Export as Text</button>
+              <div id="export-menu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 24px var(--shadow-deep);z-index:100;min-width:180px;overflow:hidden;">
+                <button onclick="exportListHTML('both');toggleExportMenu()" style="display:block;width:100%;text-align:left;padding:0.6rem 0.85rem;background:none;border:none;color:var(--text-primary);font-family:var(--font-body);font-size:0.82rem;cursor:pointer;" onmouseover="this.style.background='rgba(201,168,76,0.1)'" onmouseout="this.style.background='none'">📄 Full Export (outfits + list)</button>
+                <button onclick="exportListHTML('outfits');toggleExportMenu()" style="display:block;width:100%;text-align:left;padding:0.6rem 0.85rem;background:none;border:none;color:var(--text-primary);font-family:var(--font-body);font-size:0.82rem;cursor:pointer;" onmouseover="this.style.background='rgba(201,168,76,0.1)'" onmouseout="this.style.background='none'">📅 Outfits by Day</button>
+                <button onclick="exportListHTML('packing');toggleExportMenu()" style="display:block;width:100%;text-align:left;padding:0.6rem 0.85rem;background:none;border:none;color:var(--text-primary);font-family:var(--font-body);font-size:0.82rem;cursor:pointer;" onmouseover="this.style.background='rgba(201,168,76,0.1)'" onmouseout="this.style.background='none'">☑ Packing List Only</button>
+                <div style="border-top:1px solid var(--border);margin:0.2rem 0;"></div>
+                <button onclick="exportListText();toggleExportMenu()" style="display:block;width:100%;text-align:left;padding:0.6rem 0.85rem;background:none;border:none;color:var(--text-primary);font-family:var(--font-body);font-size:0.82rem;cursor:pointer;" onmouseover="this.style.background='rgba(201,168,76,0.1)'" onmouseout="this.style.background='none'">📝 Text Export</button>
               </div>
             </div>
             <button class="btn btn-secondary" style="font-size:0.72rem;padding:0.4rem 0.7rem;" onclick="openImportModal()">Import</button>
@@ -1136,20 +1139,43 @@ let state = {
 // ═══════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   applyTheme();
-  // Always start with hardcoded defaults
-  state.users = [
-    { id: 'u1', name: 'Zak', pin: '1234', role: 'admin', initials: 'Z' },
-    { id: 'u2', name: 'Swishy', pin: '5678', role: 'user', initials: 'S', showPersonalCare: true },
-  ];
-  // Layer in localStorage immediately so login screen shows fast
-  try { const u = JSON.parse(localStorage.getItem('pr_users')||'[]'); if(Array.isArray(u)&&u.length) state.users=u; } catch(e) {}
+  // Load cached trips/templates immediately for offline fallback
   try { const t = JSON.parse(localStorage.getItem('pr_trips')||'[]'); if(Array.isArray(t)) state.trips=t; } catch(e) {}
   try { const t = JSON.parse(localStorage.getItem('pr_templates')||'[]'); if(Array.isArray(t)&&t.length) state.templates=t; } catch(e) {}
   if (!state.templates.length) loadDefaultTemplates();
+  // Show loading indicator on login screen while we fetch real users
+  const userList = document.getElementById('user-select-list');
+  if (userList) userList.innerHTML = '<div style="color:rgba(255,255,255,0.5);text-align:center;padding:2rem;font-size:0.9rem;">Loading…</div>';
+  // Fetch real user list from Worker (no auth needed for login screen)
+  await loadUsersForLogin();
   renderLoginUsers();
 });
+
+async function loadUsersForLogin() {
+  try {
+    const res = await fetch(CONFIG.workerUrl + '/api/users');
+    if (res.ok) {
+      const users = await res.json();
+      if (Array.isArray(users) && users.length) {
+        state.users = users.map(u => ({ ...u, pin: '' }));
+        try { localStorage.setItem('pr_users_cache', JSON.stringify(state.users)); } catch(e) {}
+        return;
+      }
+    }
+  } catch(e) { console.warn('Could not reach Worker for user list:', e.message); }
+  // Fallback to cached user list
+  try {
+    const cached = JSON.parse(localStorage.getItem('pr_users_cache') || '[]');
+    if (Array.isArray(cached) && cached.length) { state.users = cached; return; }
+  } catch(e) {}
+  // Last resort
+  state.users = [
+    { id: 'u1', name: 'Zak', pin: '', role: 'admin', initials: 'Z' },
+    { id: 'u2', name: 'Swishy', pin: '', role: 'user', initials: 'S', showPersonalCare: true },
+  ];
+}
 
 // ═══════════════════════════════════════════════
 // API LAYER — cloud-first, localStorage fallback
@@ -1533,7 +1559,7 @@ function isTripArchived(trip) {
 function buildTripCard(trip, archived) {
   const card = document.createElement('div');
   card.className = 'card trip-card' + (archived ? ' archived' : '');
-  if (isArchived) {
+  if (archived) {
     card.onclick = () => { state.tripReadOnly = true; showTripDetail(trip.id); };
   } else {
     card.onclick = () => { state.tripReadOnly = false; showTripDetail(trip.id); };
@@ -1990,7 +2016,7 @@ function toggleExportMenu(e) {
   }
 }
 
-function exportListHTML() {
+function exportListHTML(mode = 'both') {
   const trip = state.currentTrip;
   const user = state.currentUser;
   const weather = trip.weatherCache || state.weather || null;
@@ -1999,7 +2025,7 @@ function exportListHTML() {
   const packedCount = Object.values(trip.categories).flat().filter(i => i.checked).length;
   const totalCount = Object.values(trip.categories).flat().length;
 
-  // Build weather section HTML
+  // ── WEATHER ──
   let weatherHTML = '';
   if (weather && weather.daily && weather.daily.length) {
     const avgHigh = weather.daily.reduce((s,d) => s + d.tempMax, 0) / weather.daily.length;
@@ -2012,7 +2038,6 @@ function exportListHTML() {
     else notes.push('Cold weather — pack heavy coats, thermals, and warm accessories.');
     if (hasRain) notes.push('Rain in the forecast — pack a compact umbrella and waterproof layer.');
     if (hasSnow) notes.push('Snow possible — waterproof boots and heavy winter gear recommended.');
-
     const dayCards = weather.daily.map(d => `
       <div class="wx-day">
         <div class="wx-date">${parseLocalDate(d.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</div>
@@ -2020,7 +2045,6 @@ function exportListHTML() {
         <div class="wx-temps"><span class="wx-high">${Math.round(d.tempMax)}°</span><span class="wx-low"> / ${Math.round(d.tempMin)}°F</span></div>
         <div class="wx-desc">${weatherDesc(d.code)}</div>
       </div>`).join('');
-
     weatherHTML = `
       <section class="section weather-section">
         <h2 class="section-title">Weather Forecast <span class="section-loc">${weather.location}</span></h2>
@@ -2029,27 +2053,74 @@ function exportListHTML() {
       </section>`;
   }
 
-  // Build packing list HTML
-  let packingHTML = '';
-  Object.entries(trip.categories).forEach(([cat, items]) => {
-    if (cat === 'Personal Care' && !user.showPersonalCare) return;
-    if (!items || !items.length) return;
-    const rows = items.map(item => `
-      <tr class="${item.checked ? 'checked-row' : ''}">
-        <td class="check-cell">${item.checked ? '☑' : '☐'}</td>
-        <td class="item-name">${item.name}${item.essential ? ' <span class="star">★</span>' : ''}${item.qty > 1 ? ` <span class="qty">×${item.qty}</span>` : ''}</td>
-        <td class="item-notes">${item.description ? item.description : ''}${item.notes ? (item.description ? ' · ' : '') + item.notes : ''}</td>
-      </tr>`).join('');
-    packingHTML += `
-      <div class="category-block">
-        <h3 class="cat-title">${cat}</h3>
-        <table class="pack-table">
-          <tbody>${rows}</tbody>
-        </table>
-      </div>`;
-  });
+  // ── OUTFITS BY DAY ──
+  let outfitsHTML = '';
+  if (mode === 'outfits' || mode === 'both') {
+    const userOutfits = (trip.outfits || {})[user.id] || {};
+    const dates = Object.keys(userOutfits).sort();
+    if (dates.length) {
+      const TIME_LABELS = { morning: 'Morning', afternoon: 'Afternoon', evening: 'Evening', night: 'Night', fullday: 'Full Day' };
+      const dayBlocks = dates.map(dateKey => {
+        const d = parseLocalDate(dateKey);
+        const label = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+        const dayOutfits = userOutfits[dateKey] || [];
+        const outfitRows = dayOutfits.map(o => {
+          const pieces = [
+            o.top        && `<div class="piece"><span class="piece-label">Top</span> ${o.top}</div>`,
+            o.bottom     && `<div class="piece"><span class="piece-label">Bottom</span> ${o.bottom}</div>`,
+            o.undergarment && `<div class="piece"><span class="piece-label">Under</span> ${o.undergarment}</div>`,
+            o.shoes      && `<div class="piece"><span class="piece-label">Shoes</span> ${o.shoes}</div>`,
+            o.outer      && `<div class="piece"><span class="piece-label">Outer</span> ${o.outer}</div>`,
+            o.accessories && `<div class="piece"><span class="piece-label">Accessories</span> ${o.accessories}</div>`,
+            o.bag        && `<div class="piece"><span class="piece-label">Bag</span> ${o.bag}</div>`,
+          ].filter(Boolean).join('');
+          return `
+            <div class="outfit-block">
+              <div class="outfit-slot-label">${TIME_LABELS[o.timeslot] || o.timeslot}${o.occasion ? ` — ${o.occasion}` : ''}${o.event ? ` <em>(${o.event})</em>` : ''}</div>
+              <div class="pieces-grid">${pieces}</div>
+              ${o.notes ? `<div class="outfit-notes">📝 ${o.notes}</div>` : ''}
+            </div>`;
+        }).join('');
+        return `
+          <div class="day-block">
+            <div class="day-label">${label}</div>
+            ${outfitRows || '<div style="color:#aaa;font-size:0.8rem;font-style:italic;padding:0.4rem 0;">No outfits planned</div>'}
+          </div>`;
+      }).join('');
+      outfitsHTML = `
+        <section class="section">
+          <h2 class="section-title">Outfits by Day</h2>
+          <div class="outfits-grid">${dayBlocks}</div>
+        </section>`;
+    }
+  }
 
-  // SVG logo inline (vintage suitcase icon — simplified version for print)
+  // ── PACKING LIST ──
+  let packingHTML = '';
+  if (mode === 'packing' || mode === 'both') {
+    Object.entries(trip.categories).forEach(([cat, items]) => {
+      if (cat === 'Personal Care' && !user.showPersonalCare) return;
+      if (!items || !items.length) return;
+      const rows = items.map(item => `
+        <tr class="${item.checked ? 'checked-row' : ''}">
+          <td class="check-cell">${item.checked ? '☑' : '☐'}</td>
+          <td class="item-name">${item.name}${item.essential ? ' <span class="star">★</span>' : ''}${item.qty > 1 ? ` <span class="qty">×${item.qty}</span>` : ''}</td>
+          <td class="item-notes">${item.description ? item.description : ''}${item.notes ? (item.description ? ' · ' : '') + item.notes : ''}</td>
+        </tr>`).join('');
+      packingHTML += `
+        <div class="category-block">
+          <h3 class="cat-title">${cat}</h3>
+          <table class="pack-table"><tbody>${rows}</tbody></table>
+        </div>`;
+    });
+    packingHTML = `
+      <section class="section">
+        <h2 class="section-title">Packing List</h2>
+        <div class="pack-grid">${packingHTML}</div>
+      </section>`;
+  }
+
+  // ── LOGO ──
   const logoSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="48" height="48">
     <rect width="512" height="512" rx="112" fill="#2C1810"/>
     <rect x="80" y="170" width="352" height="252" rx="22" fill="#A0622E"/>
@@ -2061,6 +2132,8 @@ function exportListHTML() {
     <path d="M174 318 C180 322 200 344 220 368 C240 344 290 272 358 222" fill="none" stroke="#F5D680" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>`;
 
+  const modeLabel = mode === 'outfits' ? 'Outfits by Day' : mode === 'packing' ? 'Packing List' : 'Full Export';
+
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2070,57 +2143,39 @@ function exportListHTML() {
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --navy: #0C2D5A;
-    --brown: #2C1810;
-    --gold: #C9A84C;
-    --gold-light: #e8c96a;
-    --cream: #FBF7EF;
-    --cream-dark: #F0E8D8;
-    --text: #1a1a1a;
-    --text-muted: #888;
-    --border: #d8cbb8;
-    --checked: #bbb;
+    --navy: #0C2D5A; --brown: #2C1810; --gold: #C9A84C; --gold-light: #e8c96a;
+    --cream: #FBF7EF; --cream-dark: #F0E8D8; --text: #1a1a1a; --text-muted: #888; --border: #d8cbb8; --checked: #bbb;
   }
-  body {
-    font-family: 'Outfit', sans-serif;
-    font-size: 10.5pt;
-    color: var(--text);
-    background: white;
-    width: 11.5in;
-    margin: 0 auto;
-    padding: 0.6in 0.75in;
-  }
-  /* HEADER */
-  .header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    border-bottom: 3px solid var(--gold);
-    padding-bottom: 0.5rem;
-    margin-bottom: 1.2rem;
-  }
-  .header-left { display: flex; align-items: center; gap: 0.75rem; }
+  body { font-family: 'Outfit', sans-serif; font-size: 10.5pt; color: var(--text); background: white; width: 11.5in; margin: 0 auto; padding: 0.6in 0.75in; }
+  .header { display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 3px solid var(--gold); padding-bottom: 0.5rem; margin-bottom: 1.2rem; }
   .brand { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; color: var(--brown); letter-spacing: 0.04em; font-weight: 600; }
   .trip-title { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; font-weight: 600; color: var(--navy); line-height: 1.1; margin-bottom: 0.15rem; }
   .trip-meta { font-size: 0.8rem; color: var(--text-muted); display: flex; gap: 1.2rem; flex-wrap: wrap; margin-top: 0.25rem; }
-  .trip-meta span { display: flex; align-items: center; gap: 0.3rem; }
-  .progress-bar-wrap { margin-top: 0.6rem; }
-  .progress-bar { height: 5px; background: var(--cream-dark); border-radius: 99px; width: 280px; overflow: hidden; }
+  .progress-bar { height: 5px; background: var(--cream-dark); border-radius: 99px; width: 280px; overflow: hidden; margin-top: 0.6rem; }
   .progress-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); border-radius: 99px; }
   .progress-label { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; }
-  /* WEATHER */
-  .weather-section { margin-bottom: 1.4rem; }
+  .section { margin-bottom: 1.4rem; }
   .section-title { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-weight: 600; color: var(--navy); border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; margin-bottom: 0.8rem; display: flex; align-items: baseline; gap: 0.5rem; }
   .section-loc { font-size: 0.78rem; font-family: 'Outfit', sans-serif; font-weight: 400; color: var(--text-muted); }
+  /* WEATHER */
   .wx-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.6rem; }
   .wx-day { background: var(--cream); border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.65rem; text-align: center; min-width: 78px; flex: 1; }
   .wx-date { font-size: 0.68rem; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.2rem; }
   .wx-icon { font-size: 1.4rem; line-height: 1; margin-bottom: 0.15rem; }
-  .wx-temps { font-size: 0.78rem; }
-  .wx-high { font-weight: 600; color: var(--navy); }
-  .wx-low { color: var(--text-muted); }
+  .wx-temps { font-size: 0.78rem; } .wx-high { font-weight: 600; color: var(--navy); } .wx-low { color: var(--text-muted); }
   .wx-desc { font-size: 0.65rem; color: var(--text-muted); margin-top: 0.1rem; }
   .wx-notes { font-size: 0.78rem; color: #555; font-style: italic; background: var(--cream); border-left: 3px solid var(--gold); padding: 0.4rem 0.6rem; border-radius: 0 4px 4px 0; line-height: 1.5; }
+  /* OUTFITS */
+  .outfits-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem 1.5rem; }
+  .day-block { break-inside: avoid; margin-bottom: 0.5rem; }
+  .day-label { font-family: 'Cormorant Garamond', serif; font-size: 0.95rem; font-weight: 600; color: var(--navy); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); padding-bottom: 0.2rem; margin-bottom: 0.4rem; }
+  .outfit-block { background: var(--cream); border-radius: 6px; padding: 0.5rem 0.65rem; margin-bottom: 0.35rem; }
+  .outfit-slot-label { font-size: 0.78rem; font-weight: 600; color: var(--navy); margin-bottom: 0.3rem; }
+  .outfit-slot-label em { font-weight: 400; color: var(--text-muted); }
+  .pieces-grid { display: flex; flex-wrap: wrap; gap: 0.2rem 0.8rem; }
+  .piece { font-size: 0.75rem; color: var(--text); }
+  .piece-label { font-weight: 600; color: var(--text-muted); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; margin-right: 0.2rem; }
+  .outfit-notes { font-size: 0.72rem; color: var(--text-muted); font-style: italic; margin-top: 0.3rem; }
   /* PACKING LIST */
   .pack-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.5rem; }
   .category-block { margin-bottom: 0.9rem; break-inside: avoid; }
@@ -2130,35 +2185,21 @@ function exportListHTML() {
   .check-cell { width: 18px; font-size: 0.9rem; color: var(--navy); padding-right: 0.3rem; }
   .item-name { font-size: 0.82rem; font-weight: 500; }
   .item-notes { font-size: 0.72rem; color: var(--text-muted); font-style: italic; }
-  .checked-row .check-cell { color: var(--checked); }
-  .checked-row .item-name { color: var(--checked); font-weight: 400; text-decoration: line-through; }
+  .checked-row .check-cell, .checked-row .item-name { color: var(--checked); font-weight: 400; text-decoration: line-through; }
   .checked-row .item-notes { color: #ccc; }
-  .star { color: var(--gold); font-size: 0.7rem; }
-  .qty { color: var(--text-muted); font-size: 0.75rem; font-weight: 400; }
-  /* FOOTER */
+  .star { color: var(--gold); font-size: 0.7rem; } .qty { color: var(--text-muted); font-size: 0.75rem; font-weight: 400; }
   .footer { margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 0.5rem; display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--text-muted); }
-  /* PRINT */
-  @media print {
-    body { width: 100%; padding: 0.4in 0.5in; }
-    @page { size: letter landscape; margin: 0.4in; }
-    .no-print { display: none !important; }
-  }
+  @media print { body { width: 100%; padding: 0.4in 0.5in; } @page { size: letter landscape; margin: 0.4in; } .no-print { display: none !important; } }
 </style>
 </head>
 <body>
-  <!-- PRINT BUTTON (hidden on print) -->
   <div class="no-print" style="background:#0C2D5A;color:white;padding:0.6rem 1rem;display:flex;align-items:center;justify-content:space-between;margin:-0.6in -0.75in 1rem;font-family:'Outfit',sans-serif;font-size:0.85rem;">
-    <span style="opacity:0.7;">PacktRite Export — <strong style="opacity:1;">${tripTitle}</strong></span>
+    <span style="opacity:0.7;">PacktRite — <strong style="opacity:1;">${tripTitle}</strong> · ${modeLabel}</span>
     <button onclick="window.print()" style="background:#C9A84C;color:#0C2D5A;border:none;padding:0.4rem 1rem;border-radius:6px;font-family:'Outfit',sans-serif;font-weight:600;font-size:0.82rem;cursor:pointer;">🖨 Print / Save as PDF</button>
   </div>
-
-  <!-- HEADER -->
   <header class="header">
     <div>
-      <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.4rem;">
-        ${logoSVG}
-        <span class="brand">PacktRite</span>
-      </div>
+      <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.4rem;">${logoSVG}<span class="brand">PacktRite</span></div>
       <div class="trip-title">${tripTitle}</div>
       <div class="trip-meta">
         ${trip.destination && trip.tripName ? `<span>📍 ${trip.destination}</span>` : ''}
@@ -2166,30 +2207,19 @@ function exportListHTML() {
         ${trip.type ? `<span>🧳 ${trip.type}</span>` : ''}
         ${trip.reason ? `<span>✦ ${trip.reason}</span>` : ''}
       </div>
-      <div class="progress-bar-wrap">
-        <div class="progress-bar"><div class="progress-fill" style="width:${totalCount ? Math.round(packedCount/totalCount*100) : 0}%"></div></div>
-        <div class="progress-label">${packedCount} of ${totalCount} items packed</div>
-      </div>
+      ${mode !== 'outfits' ? `<div class="progress-bar"><div class="progress-fill" style="width:${totalCount ? Math.round(packedCount/totalCount*100) : 0}%"></div></div><div class="progress-label">${packedCount} of ${totalCount} items packed</div>` : ''}
     </div>
     <div style="text-align:right;font-size:0.72rem;color:var(--text-muted);padding-top:0.5rem;">
       Exported ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}<br>
-      <em style="font-size:0.65rem;">packtr.zakmedwin.com</em>
+      <em style="font-size:0.65rem;">PacktRite</em>
     </div>
   </header>
-
-  <!-- WEATHER -->
   ${weatherHTML}
-
-  <!-- PACKING LIST -->
-  <section class="section">
-    <h2 class="section-title">Packing List</h2>
-    <div class="pack-grid">${packingHTML}</div>
-  </section>
-
-  <!-- FOOTER -->
+  ${outfitsHTML}
+  ${packingHTML}
   <footer class="footer">
     <span>PacktRite — Pack Smart, Travel Well</span>
-    <span>${tripTitle} · ${dateRange} · Exported ${new Date().toLocaleDateString()}</span>
+    <span>${tripTitle} · ${dateRange} · ${modeLabel}</span>
   </footer>
 </body>
 </html>`;
