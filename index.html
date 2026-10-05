@@ -2,7 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/packtrite-icon-180.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/packtrite-icon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/packtrite-icon-192.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PacktRite">
+<meta name="theme-color" content="#3A82E8">
 <title>PacktRite — Pack Smart, Travel Well</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -92,8 +100,8 @@
   [data-theme="dark"] .login-card{background:#0D1F38;border-top-color:var(--gold);}
   @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
   .login-logo{text-align:center;margin-bottom:2rem;}
-  .login-logo .wordmark{font-family:var(--font-display);font-size:2.2rem;font-weight:700;color:#0C2D5A;letter-spacing:-0.02em;}
-  [data-theme="dark"] .login-logo .wordmark{color:var(--gold);}
+  .login-logo .wordmark{font-family:var(--font-display);font-size:1.8rem;font-weight:700;letter-spacing:-0.02em;text-align:center;}
+  [data-theme="dark"] .login-logo .wordmark{}
   .login-logo .tagline{font-family:var(--font-accent);font-style:italic;font-size:0.95rem;color:var(--warm-gray);margin-top:0.25rem;}
   .pin-display{display:flex;justify-content:center;gap:0.75rem;margin:1.5rem 0;}
   .pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border-strong);transition:all var(--transition);}
@@ -270,6 +278,25 @@
   .outfit-wx-day{color:#f5c06a;font-weight:600;}
   .outfit-wx-night{color:#8eaadb;font-weight:600;}
   .outfit-day-date{font-family:var(--font-display);font-size:0.9rem;}
+  .outfit-day-city{display:block;font-family:var(--font-accent);font-style:italic;font-size:0.75rem;opacity:0.8;margin-top:0.1rem;}
+  .stops-editor .stop-row{display:grid;grid-template-columns:1.6fr 1fr 1fr 2rem;gap:0.6rem;align-items:end;}
+  .stops-editor.single .stop-row{grid-template-columns:1.6fr 1fr 1fr;}
+  .stops-editor .stop-row .form-group{margin-bottom:0.8rem;}
+  .stops-editor .stop-row input{height:2.6rem;box-sizing:border-box;}
+  .stop-remove{width:2rem;height:2.4rem;margin-bottom:0.8rem;border:1px solid var(--border-strong);background:transparent;border-radius:var(--radius);color:var(--text-muted);font-size:1.1rem;cursor:pointer;}
+  .stop-remove-txt{display:none;}
+  .stop-remove:hover{color:var(--burgundy);border-color:var(--burgundy);}
+  .stop-add{margin:-0.2rem 0 1rem;padding-left:0;font-size:0.82rem;}
+  .stops-error{color:var(--burgundy);font-size:0.8rem;margin:-0.4rem 0 0.8rem;}
+  .stops-error:empty{display:none;}
+  .wd-city{font-family:var(--font-accent);font-style:italic;font-size:0.72rem;color:var(--text-secondary);margin-top:0.15rem;}
+  @media (max-width:600px){
+    .stops-editor .stop-row,.stops-editor.single .stop-row{grid-template-columns:1fr 1fr;}
+    .stops-editor .stop-row .stop-city{grid-column:1 / -1;}
+    .stops-editor .stop-row .stop-remove{grid-column:1 / -1;width:auto;justify-self:start;height:auto;padding:0;border:none;font-size:0.8rem;margin:-0.5rem 0 0.4rem;}
+    .stop-remove-x{display:none;} .stop-remove-txt{display:inline;}
+    .stops-editor:not(.single) .stop-row{border-bottom:1px solid var(--border);margin-bottom:0.8rem;}
+  }
   .outfit-day-weather{font-size:0.85rem;}
   .outfit-day-body{padding:0;}
 
@@ -387,8 +414,11 @@
   
   /* MOBILE NAV */
   .hamburger-btn{display:none;background:none;border:none;color:rgba(240,232,216,0.8);font-size:1.3rem;cursor:pointer;padding:0.3rem;margin-left:auto;}
-  .mobile-nav-item{display:block;width:100%;text-align:left;padding:0.7rem 0.85rem;background:transparent;border:none;border-radius:var(--radius);color:rgba(240,232,216,0.8);font-family:var(--font-body);font-size:0.85rem;cursor:pointer;transition:all var(--transition);}
-  .mobile-nav-item:hover{background:rgba(201,168,76,0.12);color:var(--gold);}
+  .mobile-nav-item{display:block;width:100%;text-align:left;padding:0.85rem 1rem;background:transparent;border:none;border-radius:var(--radius);color:rgba(240,232,216,0.95);font-family:var(--font-body);font-size:1rem;cursor:pointer;transition:all var(--transition);}
+  .mobile-nav-item:hover{background:rgba(201,168,76,0.15);color:var(--gold);}
+  #mobile-nav-drawer{display:none;position:fixed;top:56px;right:0;width:min(280px,85vw);background:#0C2D5A;flex-direction:column;padding:0.5rem;gap:0.1rem;z-index:200;box-shadow:-4px 8px 24px rgba(0,0,0,0.5);border-bottom-left-radius:var(--radius-lg);}
+  [data-theme="dark"] #mobile-nav-drawer{background:#060F1E;border:1px solid rgba(46,125,209,0.2);}
+  #mobile-nav-overlay{display:none;position:fixed;inset:56px 0 0 0;background:rgba(0,0,0,0.4);z-index:150;}
   @media(max-width:640px){
     body::before{display:none;}
     .container{padding:0 0.85rem;}
@@ -504,16 +534,48 @@
   <div class="login-bg"></div>
   <div class="login-card">
     <div class="login-logo">
-      <div class="wordmark">Packt<em>Rite</em></div>
+      <div class="wordmark"><img src="icons/packtrite-icon-180.png" alt="PacktRite" style="width:80px;height:80px;border-radius:18px;display:block;margin:0 auto 0.75rem;"><span style="display:inline-flex;"><span style="color:#3A82E8;">Packt</span><span style="color:#F5C842;">Rite</span></span></div>
       <div class="tagline">pack smart, travel well</div>
     </div>
-    <div id="login-step-user">
-      <div class="label-small mb-1">Who's packing?</div>
-      <div class="user-select" id="user-select-list"></div>
-      <div style="text-align:center;margin-top:1rem;">
-        <button class="btn btn-ghost" style="font-size:0.65rem;color:var(--warm-gray);" onclick="hardResetApp()">Reset app data</button>
+
+    <!-- SIGN IN -->
+    <div id="login-signin">
+      <div class="label-small mb-1" style="text-align:center;">Sign in to your account</div>
+      <div class="form-group" style="margin-bottom:0.6rem;">
+        <input type="email" id="signin-email" placeholder="Email address" autocomplete="email" style="width:100%;" oninput="clearLoginError()">
+      </div>
+      <div class="form-group" style="margin-bottom:0.6rem;">
+        <input type="password" id="signin-password" placeholder="Password" autocomplete="current-password" style="width:100%;" oninput="clearLoginError()" onkeydown="if(event.key==='Enter')submitSignIn()">
+      </div>
+      <div class="login-error" id="signin-error"></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:0.5rem;justify-content:center;" onclick="submitSignIn()">Sign In</button>
+      <div style="text-align:center;margin-top:1rem;font-size:0.75rem;color:var(--text-muted);">
+        Don't have an account? <button class="btn btn-ghost" style="font-size:0.75rem;padding:0;color:var(--gold);" onclick="showSignUp()">Create one</button>
       </div>
     </div>
+
+    <!-- SIGN UP -->
+    <div id="login-signup" style="display:none;">
+      <div class="label-small mb-1" style="text-align:center;">Create your account</div>
+      <div class="form-group" style="margin-bottom:0.5rem;">
+        <input type="text" id="signup-name" placeholder="Your name" autocomplete="name" style="width:100%;" oninput="clearSignUpError()">
+      </div>
+      <div class="form-group" style="margin-bottom:0.5rem;">
+        <input type="email" id="signup-email" placeholder="Email address" autocomplete="email" style="width:100%;" oninput="clearSignUpError()">
+      </div>
+      <div class="form-group" style="margin-bottom:0.5rem;">
+        <input type="password" id="signup-password" placeholder="Password (6+ characters)" autocomplete="new-password" style="width:100%;" oninput="clearSignUpError()">
+      </div>
+      <div class="form-group" style="margin-bottom:0.5rem;">
+        <input type="text" id="signup-code" placeholder="Invite code" style="width:100%;letter-spacing:0.08em;" oninput="clearSignUpError()" onkeydown="if(event.key==='Enter')submitSignUp()">
+      </div>
+      <div class="login-error" id="signup-error"></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:0.5rem;justify-content:center;" onclick="submitSignUp()">Create Account</button>
+      <div style="text-align:center;margin-top:1rem;font-size:0.75rem;color:var(--text-muted);">
+        Already have an account? <button class="btn btn-ghost" style="font-size:0.75rem;padding:0;color:var(--gold);" onclick="showSignIn()">Sign in</button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -523,7 +585,7 @@
 <div id="screen-app">
   <nav class="topnav">
     <div class="topnav-inner">
-      <div class="topnav-brand" onclick="showDashboard()">Packt<em>Rite</em> <span id="nav-username-display"></span></div>
+      <div class="topnav-brand" onclick="showDashboard()"><span style="display:inline-flex;font-weight:700;"><span style="color:#3A82E8;">Packt</span><span style="color:#F5C842;">Rite</span></span><span id="nav-username-display" style="color:rgba(240,232,216,0.5);font-size:0.9rem;font-weight:400;font-style:italic;margin-left:0.5rem;"></span></div>
       <div class="topnav-nav">
         <button class="nav-btn active" id="nav-trips" onclick="showDashboard()">Trips</button>
         <button class="nav-btn" id="nav-closet" onclick="showCloset()">Closet</button>
@@ -531,11 +593,78 @@
         <button class="nav-btn" id="nav-templates" onclick="showTemplates()">Templates</button>
         <div class="nav-divider"></div>
         <button class="nav-btn" id="nav-admin" onclick="showAdmin()" style="display:none;">Admin</button>
+        <button class="nav-btn" onclick="showProfile()">⚙ Account</button>
         <button class="nav-btn" onclick="toggleTheme()">◐ Theme</button>
         <button class="nav-btn" onclick="logout()">Sign Out</button>
       </div>
+      <button class="hamburger-btn" onclick="toggleMobileNav()" aria-label="Menu">☰</button>
     </div>
   </nav>
+  <div id="mobile-nav-overlay" onclick="closeMobileNav()"></div>
+  <div id="mobile-nav-drawer">
+    <button class="mobile-nav-item" onclick="showDashboard();closeMobileNav();">Trips</button>
+    <button class="mobile-nav-item" onclick="showCloset();closeMobileNav();">Closet</button>
+    <button class="mobile-nav-item" onclick="showLibrary();closeMobileNav();">Essentials</button>
+    <button class="mobile-nav-item" onclick="showTemplates();closeMobileNav();">Templates</button>
+    <button class="mobile-nav-item" id="mobile-nav-admin" onclick="showAdmin();closeMobileNav();" style="display:none;">Admin</button>
+    <div style="border-top:1px solid rgba(240,232,216,0.12);margin:0.4rem 0;"></div>
+    <button class="mobile-nav-item" onclick="showProfile();closeMobileNav();">⚙ Account</button>
+    <button class="mobile-nav-item" onclick="toggleTheme();closeMobileNav();">◐ Theme</button>
+    <button class="mobile-nav-item" onclick="logout();closeMobileNav();">Sign Out</button>
+  </div>
+
+  <!-- ACCOUNT SETTINGS -->
+  <div id="view-profile" class="container" style="display:none;">
+    <div class="dashboard-header">
+      <div class="dashboard-greeting">Manage your account</div>
+      <div class="dashboard-title-row">
+        <h1 class="display-title">Account Settings</h1>
+      </div>
+    </div>
+    <div class="card mb-2 mt-3">
+      <div class="card-header"><h3>Profile</h3></div>
+      <div class="card-body">
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" id="profile-name" placeholder="Your name" style="max-width:320px;">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="profile-email" placeholder="your@email.com" style="max-width:320px;">
+        </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+            <input type="checkbox" id="profile-personal-care" style="width:auto;">
+            Show personal care items in packing lists
+          </label>
+        </div>
+        <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+        <div id="profile-save-msg" style="font-size:0.78rem;color:var(--gold);margin-top:0.5rem;display:none;">✓ Saved</div>
+      </div>
+    </div>
+    <div class="card mb-2">
+      <div class="card-header"><h3>Change Password</h3></div>
+      <div class="card-body">
+        <div class="form-group">
+          <label>New Password</label>
+          <input type="password" id="profile-new-password" placeholder="New password (6+ characters)" style="max-width:320px;">
+        </div>
+        <div class="form-group">
+          <label>Confirm New Password</label>
+          <input type="password" id="profile-confirm-password" placeholder="Confirm new password" style="max-width:320px;">
+        </div>
+        <button class="btn btn-secondary" onclick="changePassword()">Update Password</button>
+        <div id="profile-pw-msg" style="font-size:0.78rem;margin-top:0.5rem;display:none;"></div>
+      </div>
+    </div>
+    <div class="card" style="border-color:var(--burgundy);">
+      <div class="card-header"><h3 style="color:var(--burgundy);">Danger Zone</h3></div>
+      <div class="card-body">
+        <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:1rem;">Permanently delete your account and all your data. This cannot be undone.</p>
+        <button class="btn btn-danger" onclick="deleteAccount()">Delete My Account</button>
+      </div>
+    </div>
+  </div>
 
   <!-- DASHBOARD -->
   <div id="view-dashboard" class="container">
@@ -615,7 +744,7 @@
     <div class="dashboard-header">
       <div class="dashboard-greeting">Frequently packed items — add to any trip's packing list</div>
       <div class="dashboard-title-row">
-        <h1 class="display-title">My Items</h1>
+        <h1 class="display-title">Essentials</h1>
         <button class="btn btn-primary" onclick="openAddLibraryItem()">+ Add Item</button>
       </div>
       <div style="margin-top:0.75rem;">
@@ -639,7 +768,7 @@
       <div class="tabs-inner">
         <button class="tab-btn active" onclick="showTab('packing')">📋 Packing List</button>
         <button class="tab-btn" onclick="showTab('weather')">🌤 Weather</button>
-        <button class="tab-btn" onclick="showTab('outfits');renderClosetPalette();">👗 Outfits</button>
+        <button class="tab-btn" onclick="showTab('outfits');loadClosetFromCloud().then(()=>renderClosetPalette());">👗 Outfits</button>
         <button class="tab-btn" onclick="showTab('share')">👥 Sharing</button>
         <button class="tab-btn" onclick="showTab('settings')">⚙ Settings</button>
       </div>
@@ -742,15 +871,25 @@
 
       <!-- SHARE TAB -->
       <div id="tab-share" class="tab-content">
-        <div class="card">
-          <div class="card-header"><h3>Trip Sharing</h3></div>
+        <div class="card mb-2">
+          <div class="card-header"><h3>Share with a PacktRite User</h3></div>
           <div class="card-body">
             <div class="label-small mb-1">Currently shared with</div>
             <div id="shared-with-list" style="margin-bottom:1.5rem;"></div>
-            <div class="label-small mb-1">Share with user</div>
+            <div class="label-small mb-1">Add collaborator by email</div>
             <div style="display:flex;gap:0.5rem;">
-              <select id="share-user-select" style="flex:1;"><option value="">Select a user...</option></select>
-              <button class="btn btn-primary" onclick="shareWithUser()">Share</button>
+              <input type="email" id="share-email-input" placeholder="their@email.com" style="flex:1;">
+              <button class="btn btn-primary" onclick="shareWithEmail()">Share</button>
+            </div>
+            <div class="login-error" id="share-error" style="margin-top:0.5rem;"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Read-Only Link</h3></div>
+          <div class="card-body">
+            <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:1rem;">Anyone with this link can view this trip's packing list and outfits — no account needed.</p>
+            <div id="share-link-area">
+              <button class="btn btn-secondary" onclick="generateShareLink()">Generate Link</button>
             </div>
           </div>
         </div>
@@ -765,17 +904,10 @@
               <label>Trip Name</label>
               <input type="text" id="settings-tripname" placeholder="e.g. Anniversary Trip, Work Summit" onchange="saveSettings()">
             </div>
-            <div class="form-group">
-              <label>Destination</label>
-              <input type="text" id="settings-destination" onchange="saveSettings()">
-            </div>
+            <div id="settings-stops" class="stops-editor"></div>
             <div class="form-group">
               <label>Reason for Trip</label>
               <input type="text" id="settings-reason" placeholder="e.g. Anniversary, Work conference, Honeymoon" onchange="saveSettings()">
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-              <div class="form-group"><label>Start Date</label><input type="date" id="settings-start" onchange="saveSettings()"></div>
-              <div class="form-group"><label>End Date</label><input type="date" id="settings-end" onchange="saveSettings()"></div>
             </div>
             <div class="form-group">
               <label>Trip Type</label>
@@ -834,15 +966,9 @@
   <div class="modal">
     <div class="modal-header"><h3>New Trip</h3><button class="modal-close" onclick="closeModal('modal-new-trip')">×</button></div>
     <div class="modal-body">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-        <div class="form-group"><label>Trip Name</label><input type="text" id="new-trip-name" placeholder="e.g. Italy Anniversary"></div>
-        <div class="form-group"><label>Destination (City, Country)</label><input type="text" id="new-trip-dest" placeholder="e.g. Rome, Italy"></div>
-      </div>
+      <div class="form-group"><label>Trip Name</label><input type="text" id="new-trip-name" placeholder="e.g. Italy Anniversary"></div>
+      <div id="new-trip-stops" class="stops-editor"></div>
       <div class="form-group"><label>Reason for Trip</label><input type="text" id="new-trip-reason" placeholder="e.g. Anniversary, Work conference, Honeymoon"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-        <div class="form-group"><label>Start Date</label><input type="date" id="new-trip-start"></div>
-        <div class="form-group"><label>End Date</label><input type="date" id="new-trip-end"></div>
-      </div>
       <div class="form-group"><label>Trip Type</label>
         <select id="new-trip-type">
           <option value="leisure">Leisure / Vacation</option>
@@ -874,7 +1000,7 @@
     <div class="modal-header"><h3>Add User</h3><button class="modal-close" onclick="closeModal('modal-new-user')">×</button></div>
     <div class="modal-body">
       <div class="form-group"><label>Display Name</label><input type="text" id="new-user-name" placeholder="e.g. Sarah"></div>
-      <div class="form-group"><label>PIN (4 digits)</label><input type="password" id="new-user-pin" placeholder="••••" maxlength="4" pattern="[0-9]{4}"></div>
+      <div class="form-group"><label>Password</label><input type="password" id="new-user-pin" placeholder="6+ characters"></div>
       <div class="form-group"><label>Role</label>
         <select id="new-user-role"><option value="user">Standard User</option><option value="admin">Admin</option></select>
       </div>
@@ -893,7 +1019,8 @@
     <div class="modal-body">
       <input type="hidden" id="edit-user-id">
       <div class="form-group"><label>Display Name</label><input type="text" id="edit-user-name"></div>
-      <div class="form-group"><label>New PIN (leave blank to keep current)</label><input type="password" id="edit-user-pin" placeholder="••••" maxlength="4"></div>
+      <div class="form-group"><label>Email</label><input type="email" id="edit-user-email" placeholder="user@email.com"></div>
+      <div class="form-group"><label>Reset Password <span style="font-weight:400;color:var(--text-muted);font-size:0.78rem;">(leave blank to keep current)</span></label><input type="password" id="edit-user-password" placeholder="New password"></div>
       <div class="form-group"><label>Role</label>
         <select id="edit-user-role"><option value="user">Standard User</option><option value="admin">Admin</option></select>
       </div>
@@ -947,15 +1074,22 @@
 
       <!-- STEP 1: Pieces -->
       <div id="outfit-step-1">
-        <div class="label-small mb-1">Outfit Pieces <span class="italic text-muted" style="font-weight:400;text-transform:none;letter-spacing:0;">— fill what applies</span></div>
+        <div class="label-small mb-1">Outfit Pieces <span class="italic text-muted" style="font-weight:400;text-transform:none;letter-spacing:0;">— pick from your closet or type freely</span></div>
         <div class="piece-grid">
-          <div class="piece-row"><span class="piece-label">Top</span><input type="text" id="piece-top" placeholder="e.g. white linen blouse"></div>
-          <div class="piece-row"><span class="piece-label">Bottom</span><input type="text" id="piece-bottom" placeholder="e.g. high-waist trousers"></div>
-          <div class="piece-row"><span class="piece-label">Undergarment</span><input type="text" id="piece-undergarment" placeholder="e.g. boxer briefs, sports bra"></div>
-          <div class="piece-row"><span class="piece-label">Shoes</span><input type="text" id="piece-shoes" placeholder="e.g. tan leather sandals"></div>
-          <div class="piece-row"><span class="piece-label">Outerwear</span><input type="text" id="piece-outer" placeholder="e.g. light trench coat"></div>
-          <div class="piece-row"><span class="piece-label">Accessories</span><input type="text" id="piece-accessories" placeholder="e.g. gold hoops, silk scarf"></div>
-          <div class="piece-row"><span class="piece-label">Bag</span><input type="text" id="piece-bag" placeholder="e.g. crossbody rattan bag"></div>
+          <div class="piece-row"><span class="piece-label">Top</span><input type="text" id="piece-top" placeholder="e.g. white linen blouse" list="closet-tops" autocomplete="off"></div>
+          <datalist id="closet-tops"></datalist>
+          <div class="piece-row"><span class="piece-label">Bottom</span><input type="text" id="piece-bottom" placeholder="e.g. high-waist trousers" list="closet-bottoms" autocomplete="off"></div>
+          <datalist id="closet-bottoms"></datalist>
+          <div class="piece-row"><span class="piece-label">Undergarment</span><input type="text" id="piece-undergarment" placeholder="e.g. sports bra" list="closet-undergarments" autocomplete="off"></div>
+          <datalist id="closet-undergarments"></datalist>
+          <div class="piece-row"><span class="piece-label">Shoes</span><input type="text" id="piece-shoes" placeholder="e.g. tan leather sandals" list="closet-shoes" autocomplete="off"></div>
+          <datalist id="closet-shoes"></datalist>
+          <div class="piece-row"><span class="piece-label">Outerwear</span><input type="text" id="piece-outer" placeholder="e.g. light trench coat" list="closet-outerwear" autocomplete="off"></div>
+          <datalist id="closet-outerwear"></datalist>
+          <div class="piece-row"><span class="piece-label">Accessories</span><input type="text" id="piece-accessories" placeholder="e.g. gold hoops, silk scarf" list="closet-accessories" autocomplete="off"></div>
+          <datalist id="closet-accessories"></datalist>
+          <div class="piece-row"><span class="piece-label">Bag</span><input type="text" id="piece-bag" placeholder="e.g. crossbody rattan bag" list="closet-bags" autocomplete="off"></div>
+          <datalist id="closet-bags"></datalist>
         </div>
         <div class="form-group mt-2"><label>Notes (optional)</label><textarea id="outfit-notes" placeholder="Styling notes..." style="min-height:55px;"></textarea></div>
       </div>
@@ -1095,7 +1229,8 @@
         <select id="closet-item-cat">
           <option value="Tops">Tops</option><option value="Bottoms">Bottoms</option>
           <option value="Dresses & Jumpsuits">Dresses & Jumpsuits</option><option value="Outerwear">Outerwear</option>
-          <option value="Shoes">Shoes</option><option value="Accessories">Accessories</option>
+          <option value="Shoes">Shoes</option><option value="Undergarments">Undergarments</option>
+          <option value="Accessories">Accessories</option>
           <option value="Bags">Bags</option><option value="Swimwear">Swimwear</option>
           <option value="Activewear">Activewear</option><option value="Other">Other</option>
         </select>
@@ -1145,41 +1280,31 @@ let state = {
 // ═══════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async () => {
   applyTheme();
-  // Load cached trips/templates immediately for offline fallback
   try { const t = JSON.parse(localStorage.getItem('pr_trips')||'[]'); if(Array.isArray(t)) state.trips=t; } catch(e) {}
   try { const t = JSON.parse(localStorage.getItem('pr_templates')||'[]'); if(Array.isArray(t)&&t.length) state.templates=t; } catch(e) {}
   if (!state.templates.length) loadDefaultTemplates();
-  // Show loading indicator on login screen while we fetch real users
-  const userList = document.getElementById('user-select-list');
-  if (userList) userList.innerHTML = '<div style="color:rgba(255,255,255,0.5);text-align:center;padding:2rem;font-size:0.9rem;">Loading…</div>';
-  // Fetch real user list from Worker (no auth needed for login screen)
-  await loadUsersForLogin();
-  renderLoginUsers();
-});
-
-async function loadUsersForLogin() {
-  try {
-    const res = await fetch(CONFIG.workerUrl + '/api/users');
-    if (res.ok) {
-      const users = await res.json();
-      if (Array.isArray(users) && users.length) {
-        state.users = users.map(u => ({ ...u, pin: '' }));
-        try { localStorage.setItem('pr_users_cache', JSON.stringify(state.users)); } catch(e) {}
-        return;
+  // Check for read-only share link
+  const shareToken = new URLSearchParams(window.location.search).get('share');
+  if (shareToken) { loadSharedTrip(shareToken); return; }
+  // Pre-fill email if previously signed in
+  const savedEmail = localStorage.getItem('pr_auth_email') || '';
+  if (savedEmail) { const el = document.getElementById('signin-email'); if(el) el.value = savedEmail; }
+  // Restore a saved session (stay signed in)
+  const savedToken = getAuthToken();
+  if (savedToken) {
+    try {
+      const res = await fetch(CONFIG.workerUrl + '/api/auth/me', { headers: { 'Authorization': 'Bearer ' + savedToken } });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.user) { await completeLogin(data.user, null, true); return; }
+      } else if (res.status === 401) {
+        clearAuthToken();
       }
-    }
-  } catch(e) { console.warn('Could not reach Worker for user list:', e.message); }
-  // Fallback to cached user list
-  try {
-    const cached = JSON.parse(localStorage.getItem('pr_users_cache') || '[]');
-    if (Array.isArray(cached) && cached.length) { state.users = cached; return; }
-  } catch(e) {}
-  // Last resort
-  state.users = [
-    { id: 'u1', name: 'Zak', pin: '', role: 'admin', initials: 'Z' },
-    { id: 'u2', name: 'Swishy', pin: '', role: 'user', initials: 'S', showPersonalCare: true },
-  ];
-}
+    } catch(e) { /* offline — stay on sign-in screen */ }
+  }
+  // Old-style saved password token from previous version: discard it
+  try { localStorage.removeItem('pr_auth_token'); } catch(e) {}
+});
 
 // ═══════════════════════════════════════════════
 // API LAYER — cloud-first, localStorage fallback
@@ -1187,10 +1312,18 @@ async function loadUsersForLogin() {
 
 const WORKER = CONFIG.workerUrl;
 
-// Auth token: userId:pin stored after login
-function getAuthToken() { return localStorage.getItem('pr_auth_token') || ''; }
-function setAuthToken(userId, pin) { localStorage.setItem('pr_auth_token', userId + ':' + pin); }
-function clearAuthToken() { localStorage.removeItem('pr_auth_token'); }
+// Auth: random session token issued by the Worker at sign-in (password is never stored)
+function getAuthToken() { return localStorage.getItem('pr_session') || ''; }
+function setAuthToken(token) { try { localStorage.setItem('pr_session', token); localStorage.removeItem('pr_auth_token'); } catch(e) {} }
+function clearAuthToken() { try { localStorage.removeItem('pr_session'); localStorage.removeItem('pr_auth_token'); } catch(e) {} }
+let _sessionExpiredShown = false;
+function handleSessionExpired() {
+  if (!state.currentUser || _sessionExpiredShown) return;
+  _sessionExpiredShown = true;
+  logout(true);
+  toast('Please sign in again.', 'error');
+  setTimeout(() => { _sessionExpiredShown = false; }, 3000);
+}
 
 async function api(method, path, body) {
   try {
@@ -1200,17 +1333,7 @@ async function api(method, path, body) {
     };
     if (body) opts.body = JSON.stringify(body);
     const res = await fetch(WORKER + path, opts);
-    if (res.status === 401) {
-      // Token mismatch — try to recover from stored users
-      if (state.currentUser) {
-        const stored = state.users.find(u => u.id === state.currentUser.id);
-        if (stored && stored.pin) {
-          setAuthToken(state.currentUser.id, stored.pin);
-          console.warn('Auth token refreshed from stored PIN');
-        }
-      }
-      return null;
-    }
+    if (res.status === 401) { handleSessionExpired(); return null; }
     if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error || res.status); }
     return await res.json();
   } catch(e) {
@@ -1222,27 +1345,10 @@ async function api(method, path, body) {
 // ── USERS ──
 async function loadUsers() {
   const cloud = await api('GET', '/api/users');
-  if (cloud && Array.isArray(cloud) && cloud.length > 0) {
-    // Worker returns users without PINs — merge with local pins for login
-    const localRaw = localStorage.getItem('pr_users');
-    const local = localRaw ? JSON.parse(localRaw) : [];
-    // Use cloud users but preserve local pins (worker strips them for security)
-    state.users = cloud.map(cu => {
-      const lu = local.find(u => u.id === cu.id);
-      return { ...cu, pin: lu?.pin || '' };
-    });
-    // If cloud users have no pins locally, keep hardcoded defaults for Zak/Swishy
-    if (!state.users.find(u => u.pin)) {
-      state.users = [
-        { id: 'u1', name: 'Zak', pin: '1234', role: 'admin', initials: 'Z' },
-        { id: 'u2', name: 'Swishy', pin: '5678', role: 'user', initials: 'S', showPersonalCare: true },
-      ];
-    }
-    localStorage.setItem('pr_users', JSON.stringify(state.users));
-    return;
+  if (cloud && Array.isArray(cloud)) {
+    state.users = cloud;
+    try { localStorage.setItem('pr_users', JSON.stringify(state.users)); } catch(e) {}
   }
-  // Fallback to localStorage
-  try { const u = JSON.parse(localStorage.getItem('pr_users') || '[]'); if (Array.isArray(u) && u.length) state.users = u; } catch(e) {}
 }
 
 function saveUsers() {
@@ -1365,13 +1471,12 @@ function loadDefaultTemplates() {
 
 async function hardResetApp() {
   if (!confirm('This will clear all local data on this device. Continue?')) return;
-  ['pr_users','pr_users_cache','pr_trips','pr_templates','pr_theme','pr_auth_token','pr_worker_setup_done'].forEach(k => { try { localStorage.removeItem(k); } catch(e) {} });
+  ['pr_users','pr_users_cache','pr_trips','pr_templates','pr_theme','pr_auth_token','pr_session','pr_worker_setup_done'].forEach(k => { try { localStorage.removeItem(k); } catch(e) {} });
   clearAuthToken();
   state.users = []; state.trips = []; state.templates = [];
   loadDefaultTemplates();
-  await loadUsersForLogin();
-  renderLoginUsers();
-  toast('App data cleared. Tap your name to log in.');
+  logout();
+  toast('App data cleared on this device. Sign in to reload your trips.');
 }
 
 // ═══════════════════════════════════════════════
@@ -1383,67 +1488,199 @@ function applyTheme() { document.documentElement.setAttribute('data-theme', stat
 // ═══════════════════════════════════════════════
 // LOGIN
 // ═══════════════════════════════════════════════
-function renderLoginUsers() {
-  document.getElementById('user-select-list').innerHTML = state.users.map(u => `
-    <button class="user-btn" onclick="selectUser('${u.id}')">
-      <div class="user-avatar">${u.initials||u.name[0].toUpperCase()}</div>
-      <div><div style="font-weight:600;">${u.name}</div><div style="font-size:0.7rem;color:var(--text-muted);letter-spacing:0.1em;text-transform:uppercase;">${u.role}</div></div>
-    </button>`).join('');
+function showSignIn() {
+  document.getElementById('login-signin').style.display = 'block';
+  document.getElementById('login-signup').style.display = 'none';
+  clearLoginError(); clearSignUpError();
+}
+function showSignUp() {
+  document.getElementById('login-signin').style.display = 'none';
+  document.getElementById('login-signup').style.display = 'block';
+  clearLoginError(); clearSignUpError();
+}
+function clearLoginError() { document.getElementById('signin-error').textContent = ''; }
+function clearSignUpError() { document.getElementById('signup-error').textContent = ''; }
+
+async function submitSignIn() {
+  const email = document.getElementById('signin-email').value.trim();
+  const password = document.getElementById('signin-password').value;
+  const errEl = document.getElementById('signin-error');
+  if (!email || !password) { errEl.textContent = 'Please enter your email and password.'; return; }
+  const btn = document.querySelector('#login-signin .btn-primary');
+  btn.textContent = 'Signing in…'; btn.disabled = true;
+  try {
+    const res = await fetch(CONFIG.workerUrl + '/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) {
+      errEl.textContent = data.error || 'Incorrect email or password.';
+      btn.textContent = 'Sign In'; btn.disabled = false;
+      return;
+    }
+    await completeLogin(data.user, data.token);
+  } catch(e) {
+    errEl.textContent = 'Cannot reach server. Check your connection.';
+    btn.textContent = 'Sign In'; btn.disabled = false;
+  }
 }
 
-async function selectUser(userId) {
-  const user = state.users.find(u => u.id === userId);
-  if (!user) return;
-  // No PIN required — tap to log in directly
+async function submitSignUp() {
+  const name = document.getElementById('signup-name').value.trim();
+  const email = document.getElementById('signup-email').value.trim();
+  const password = document.getElementById('signup-password').value;
+  const inviteCode = document.getElementById('signup-code').value.trim();
+  const errEl = document.getElementById('signup-error');
+  if (!name || !email || !password || !inviteCode) { errEl.textContent = 'Please fill in all fields.'; return; }
+  if (password.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; return; }
+  const btn = document.querySelector('#login-signup .btn-primary');
+  btn.textContent = 'Creating account…'; btn.disabled = true;
+  try {
+    const res = await fetch(CONFIG.workerUrl + '/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password, inviteCode }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) {
+      errEl.textContent = data.error || 'Could not create account. Try again.';
+      btn.textContent = 'Create Account'; btn.disabled = false;
+      return;
+    }
+    await completeLogin(data.user, data.token);
+  } catch(e) {
+    errEl.textContent = 'Cannot reach server. Check your connection.';
+    btn.textContent = 'Create Account'; btn.disabled = false;
+  }
+}
+
+async function completeLogin(user, token, quiet) {
   state.currentUser = user;
-  state.selectedUserId = userId;
-  // Set a simple auth token (userId only) for Worker calls
-  setAuthToken(user.id, user.pin || 'nopin');
+  if (token) setAuthToken(token);
+  try { localStorage.setItem('pr_auth_email', user.email || ''); } catch(e) {}
   document.getElementById('nav-username-display').textContent = '/ ' + user.name;
   if (user.role === 'admin') document.getElementById('nav-admin').style.display = 'inline-flex';
   if (document.getElementById('mobile-nav-admin')) {
     document.getElementById('mobile-nav-admin').style.display = user.role === 'admin' ? 'block' : 'none';
   }
-  // Show the dashboard shell immediately
-  showDashboard();
-  const loginEl = document.getElementById('screen-login');
-  loginEl.classList.add('hidden');
-  setTimeout(() => { loginEl.style.display = 'none'; }, 420);
-  toast('Welcome back, ' + user.name + '!');
-  // Load data — re-render dashboard once trips arrive
   loadUsers();
   loadTemplates();
   loadClosetFromCloud();
   loadProfileFromCloud();
   await loadTrips();
+  showDashboard();
   renderDashboard();
+  const loginEl = document.getElementById('screen-login');
+  loginEl.classList.add('hidden');
+  setTimeout(() => { loginEl.style.display = 'none'; }, 420);
+  if (!quiet) toast('Welcome, ' + user.name + '!');
 }
 
-// Stubs kept so nothing else breaks if referenced
+async function loadSharedTrip(token) {
+  // Show a simple loading state
+  document.getElementById('screen-login').style.display = 'none';
+  document.getElementById('screen-app').style.display = 'block';
+  // Fetch all trips and find the one with this token
+  // We need to call a public endpoint — use the Worker's shared trip endpoint
+  try {
+    const res = await fetch(CONFIG.workerUrl + '/api/shared/' + token);
+    if (!res.ok) {
+      document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#888;">
+        <div style="text-align:center;"><h2 style="margin-bottom:0.5rem;">Link not found</h2><p>This share link may have been revoked or doesn't exist.</p></div>
+      </div>`;
+      return;
+    }
+    const trip = await res.json();
+    state.currentTrip = trip;
+    state.tripReadOnly = true;
+    // Render a stripped-down read-only view
+    renderSharedTripView(trip);
+  } catch(e) {
+    document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:height:100vh;font-family:sans-serif;color:#888;padding:2rem;">Could not load trip. Check your connection.</div>`;
+  }
+}
+
+function renderSharedTripView(trip) {
+  const packedCount = Object.values(trip.categories||{}).flat().filter(i=>i.checked).length;
+  const totalCount = Object.values(trip.categories||{}).flat().length;
+  const pct = totalCount ? Math.round(packedCount/totalCount*100) : 0;
+  let categoriesHtml = '';
+  Object.entries(trip.categories||{}).forEach(([cat, items]) => {
+    if (!items.length) return;
+    categoriesHtml += `<div style="margin-bottom:1.5rem;">
+      <h3 style="font-family:var(--font-display);font-size:0.9rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--gold);border-bottom:1px solid var(--border);padding-bottom:0.3rem;margin-bottom:0.75rem;">${cat}</h3>
+      ${items.map(item => `<div style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+        <span style="color:${item.checked?'var(--gold)':'var(--text-muted)'};font-size:1rem;">${item.checked?'☑':'☐'}</span>
+        <span style="font-size:0.88rem;${item.checked?'text-decoration:line-through;color:var(--text-muted)':''}">${item.name}${item.qty>1?` ×${item.qty}`:''}</span>
+        ${item.essential?'<span style="color:var(--gold);font-size:0.7rem;">★</span>':''}
+      </div>`).join('')}
+    </div>`;
+  });
+  document.getElementById('screen-app').innerHTML = `
+    <div style="min-height:100vh;background:var(--bg-primary);padding:1.5rem 1rem;max-width:700px;margin:0 auto;">
+      <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1.5rem;">
+        <img src="icons/packtrite-icon-32.png" alt="PacktRite" style="width:28px;height:28px;border-radius:6px;">
+        <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:700;"><span style="color:#3A82E8;">Packt</span><span style="color:#F5C842;">Rite</span></div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-left:auto;">Read-only view</div>
+      </div>
+      <h1 style="font-family:var(--font-display);font-size:1.8rem;color:var(--text-primary);margin-bottom:0.25rem;">${trip.tripName||trip.destination}</h1>
+      ${trip.destination&&trip.tripName?`<div style="color:var(--text-muted);font-size:0.85rem;margin-bottom:0.25rem;">📍 ${trip.destination}</div>`:''}
+      <div style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1.25rem;">📅 ${formatDateRange(trip.startDate,trip.endDate)}</div>
+      <div style="background:var(--bg-card);border-radius:var(--radius);padding:0.75rem 1rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem;">
+        <div style="flex:1;height:6px;background:var(--border);border-radius:99px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:var(--gold);border-radius:99px;"></div>
+        </div>
+        <div style="font-size:0.8rem;color:var(--text-muted);white-space:nowrap;">${packedCount}/${totalCount} packed</div>
+      </div>
+      ${categoriesHtml}
+      <div style="text-align:center;margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border);">
+        <a href="${window.location.origin}${window.location.pathname}" style="color:var(--gold);font-size:0.85rem;text-decoration:none;">Create your own PacktRite account →</a>
+      </div>
+    </div>`;
+}
+async function selectUser() {}
 function pinKey() {}
 function pinDelete() {}
 function pinClear() {}
 function updatePinDisplay() {}
 function backToUserSelect() {}
 async function attemptLogin() {}
+async function loadUsersForLogin() {
+  // No longer needed — login is email+password
+  state.users = [];
+}
 
-function logout() {
+
+function logout(expired) {
+  const token = getAuthToken();
+  if (token && !expired) {
+    fetch(CONFIG.workerUrl + '/api/auth/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } }).catch(()=>{});
+  }
   clearAuthToken();
+  ['pr_trips','pr_users'].forEach(k => { try { localStorage.removeItem(k); } catch(e) {} });
   state.currentUser = null; state.currentTrip = null; state.selectedUserId = null;
+  state.trips = []; state.users = [];
   const loginEl = document.getElementById('screen-login');
   loginEl.style.display = '';
   loginEl.style.opacity = '';
   loginEl.style.transform = '';
   loginEl.classList.remove('hidden');
   document.getElementById('nav-admin').style.display = 'none';
-  renderLoginUsers();
+  showSignIn();
+  // Pre-fill saved email
+  const savedEmail = localStorage.getItem('pr_auth_email') || '';
+  const emailEl = document.getElementById('signin-email');
+  if (emailEl && savedEmail) emailEl.value = savedEmail;
+  document.getElementById('signin-password').value = '';
 }
 
 // ═══════════════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════════════
 function hideAllViews() {
-  ['view-dashboard','view-closet','view-library','view-templates','view-admin','view-trip-detail'].forEach(id=>{
+  ['view-dashboard','view-closet','view-library','view-templates','view-admin','view-trip-detail','view-profile'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.style.display='none';
   });
   ['nav-trips','nav-closet','nav-library','nav-templates','nav-admin'].forEach(id=>{
@@ -1458,7 +1695,74 @@ function showDashboard(skipHistory) {
   if (!skipHistory) history.pushState({view:'dashboard'}, '', '');
 }
 function showTemplates() { hideAllViews(); document.getElementById('view-templates').style.display='block'; document.getElementById('nav-templates').classList.add('active'); renderTemplates(); }
-function showAdmin() { hideAllViews(); document.getElementById('view-admin').style.display='block'; document.getElementById('nav-admin').classList.add('active'); renderAdmin(); }
+function showAdmin() { hideAllViews(); document.getElementById('view-admin').style.display='block'; document.getElementById('nav-admin').classList.add('active'); loadUsers().then(()=>renderAdmin()); }
+function showProfile() {
+  hideAllViews();
+  document.getElementById('view-profile').style.display = 'block';
+  const u = state.currentUser;
+  document.getElementById('profile-name').value = u.name || '';
+  document.getElementById('profile-email').value = u.email || '';
+  document.getElementById('profile-personal-care').checked = u.showPersonalCare || false;
+  document.getElementById('profile-save-msg').style.display = 'none';
+  document.getElementById('profile-pw-msg').style.display = 'none';
+  document.getElementById('profile-new-password').value = '';
+  document.getElementById('profile-confirm-password').value = '';
+}
+
+async function saveProfile() {
+  const name = document.getElementById('profile-name').value.trim();
+  const email = document.getElementById('profile-email').value.trim().toLowerCase();
+  const showPersonalCare = document.getElementById('profile-personal-care').checked;
+  if (!name || !email) { toast('Name and email are required.', 'error'); return; }
+  // Update via Worker admin endpoint — but user is updating their own account
+  // We'll use a new self-update endpoint; for now use the admin PUT with self-auth
+  const res = await api('PUT', '/api/users/' + state.currentUser.id + '/self', { name, email, showPersonalCare });
+  if (res) {
+    state.currentUser.name = name;
+    state.currentUser.email = email;
+    state.currentUser.showPersonalCare = showPersonalCare;
+    try { localStorage.setItem('pr_auth_email', email); } catch(e) {}
+    document.getElementById('nav-username-display').textContent = '/ ' + name;
+    const msg = document.getElementById('profile-save-msg');
+    msg.style.display = 'block';
+    setTimeout(() => { msg.style.display = 'none'; }, 2000);
+  } else {
+    toast('Could not save changes. Try again.', 'error');
+  }
+}
+
+async function changePassword() {
+  const newPw = document.getElementById('profile-new-password').value;
+  const confirmPw = document.getElementById('profile-confirm-password').value;
+  const msgEl = document.getElementById('profile-pw-msg');
+  msgEl.style.display = 'block';
+  if (newPw.length < 6) { msgEl.style.color = 'var(--burgundy)'; msgEl.textContent = 'Password must be at least 6 characters.'; return; }
+  if (newPw !== confirmPw) { msgEl.style.color = 'var(--burgundy)'; msgEl.textContent = 'Passwords do not match.'; return; }
+  const res = await api('PUT', '/api/users/' + state.currentUser.id + '/self', { password: newPw });
+  if (res) {
+    msgEl.style.color = 'var(--gold)';
+    msgEl.textContent = '✓ Password updated. Use your new password next time you sign in.';
+    document.getElementById('profile-new-password').value = '';
+    document.getElementById('profile-confirm-password').value = '';
+  } else {
+    msgEl.style.color = 'var(--burgundy)';
+    msgEl.textContent = 'Could not update password. Try again.';
+  }
+}
+
+async function deleteAccount() {
+  if (!confirm('Are you sure? This will permanently delete your account and ALL your trips, closet, and essentials. This cannot be undone.')) return;
+  if (!confirm('Last chance — delete everything?')) return;
+  const res = await api('DELETE', '/api/users/' + state.currentUser.id + '/self');
+  if (res) {
+    clearAuthToken();
+    try { localStorage.clear(); } catch(e) {}
+    toast('Account deleted. Goodbye!');
+    setTimeout(() => { window.location.reload(); }, 1500);
+  } else {
+    toast('Could not delete account. Try again.', 'error');
+  }
+}
 
 function showTripDetail(tripId, skipHistory) {
   const trip = state.trips.find(t=>t.id===tripId);
@@ -1469,10 +1773,8 @@ function showTripDetail(tripId, skipHistory) {
   renderTripDetailHeader();
   if (!skipHistory) history.pushState({view:'trip', tripId}, '', '');
   document.getElementById('settings-tripname').value = trip.tripName || '';
-  document.getElementById('settings-destination').value = trip.destination || '';
+  renderStopsEditor('settings-stops', getTripStops(trip).length ? getTripStops(trip) : [{ id: uid(), city: '', startDate: '', endDate: '' }], true);
   if(document.getElementById('settings-reason')) document.getElementById('settings-reason').value = trip.reason || '';
-  document.getElementById('settings-start').value = trip.startDate || '';
-  document.getElementById('settings-end').value = trip.endDate || '';
   document.getElementById('settings-type').value = trip.type || 'leisure';
 
   // Show personal care settings only for users with showPersonalCare flag
@@ -1625,7 +1927,7 @@ function renderDashboard() {
   document.getElementById('dashboard-greeting').textContent = `${hour<12?'Good morning':hour<17?'Good afternoon':'Good evening'}, ${state.currentUser.name}.`;
 
   const userTrips = state.trips.filter(t => t.ownerId===state.currentUser.id || (t.sharedWith&&t.sharedWith.includes(state.currentUser.id)));
-  const active = userTrips.filter(t => !isTripArchived(t));
+  const active = userTrips.filter(t => !isTripArchived(t)).sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
   const archived = userTrips.filter(t => isTripArchived(t)).sort((a,b) => new Date(b.endDate)-new Date(a.endDate));
 
   // Active trips
@@ -1696,14 +1998,123 @@ function getTripProgress(trip) {
 }
 
 // ═══════════════════════════════════════════════
+// MULTI-STOP TRIPS
+// trip.stops = [{id, city, startDate, endDate}] when a trip has 2+ stops.
+// trip.destination / startDate / endDate are always kept in sync (derived),
+// so everything that reads them keeps working.
+// ═══════════════════════════════════════════════
+function cityOnly(c) { return (c || '').split(',')[0].trim(); }
+function getTripStops(trip) {
+  if (Array.isArray(trip.stops) && trip.stops.length) return trip.stops;
+  if (!trip.destination && !trip.startDate) return [];
+  return [{ id: 'single', city: trip.destination || '', startDate: trip.startDate || '', endDate: trip.endDate || '' }];
+}
+function isMultiStop(trip) { return Array.isArray(trip.stops) && trip.stops.length > 1; }
+function stopsToDestination(stops) {
+  return stops.length > 1 ? stops.map(s => cityOnly(s.city)).join(' → ') : (stops[0]?.city || '');
+}
+function formatItinerary(trip) {
+  return getTripStops(trip).map(s => {
+    const d = (s.startDate || s.endDate) ? ' (' + formatDateRange(s.startDate, s.endDate) + ')' : '';
+    return cityOnly(s.city) + d;
+  }).join(', ');
+}
+// Which city on a given day. Travel days (one stop ends, next begins) return "A → B".
+function cityLabelForDate(trip, dateKey) {
+  const stops = getTripStops(trip);
+  const leaving = stops.find(s => s.endDate === dateKey);
+  const here = stops.filter(s => (!s.startDate || s.startDate <= dateKey) && (!s.endDate || s.endDate >= dateKey));
+  const arriving = here[here.length - 1];
+  if (!arriving) return '';
+  if (leaving && leaving !== arriving) return cityOnly(leaving.city) + ' → ' + cityOnly(arriving.city);
+  return cityOnly(arriving.city);
+}
+function sortStops(stops) {
+  return [...stops].sort((a, b) => (a.startDate || '9999') < (b.startDate || '9999') ? -1 : (a.startDate || '9999') > (b.startDate || '9999') ? 1 : 0);
+}
+// Returns an error message, or '' if valid. `strict` = also require dates on multi-stop trips.
+function validateStops(stops, strict) {
+  if (!stops.length || !stops[0].city) return 'Please enter a destination.';
+  for (let i = 0; i < stops.length; i++) {
+    const s = stops[i], n = stops.length > 1 ? 'Stop ' + (i + 1) : 'Trip';
+    if (!s.city) return n + ' needs a city.';
+    if (stops.length > 1 && strict && (!s.startDate || !s.endDate)) return n + ' (' + cityOnly(s.city) + ') needs arrive and leave dates.';
+    if (s.startDate && s.endDate && s.endDate < s.startDate) return n + ': the end date is before the start date.';
+  }
+  const sorted = sortStops(stops);
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = sorted[i - 1], cur = sorted[i];
+    if (prev.endDate && cur.startDate && cur.startDate < prev.endDate)
+      return cityOnly(prev.city) + ' and ' + cityOnly(cur.city) + ' overlap. Arrive in the next city on or after the day you leave the last one.';
+  }
+  return '';
+}
+function applyStopsToTrip(trip, stops) {
+  const sorted = sortStops(stops).map(s => ({ id: (s.id && s.id !== 'single') ? s.id : uid(), city: s.city.trim(), startDate: s.startDate || '', endDate: s.endDate || '' }));
+  if (sorted.length > 1) trip.stops = sorted; else delete trip.stops;
+  trip.destination = stopsToDestination(sorted);
+  const starts = sorted.map(s => s.startDate).filter(Boolean).sort();
+  const ends = sorted.map(s => s.endDate).filter(Boolean).sort();
+  trip.startDate = starts[0] || '';
+  trip.endDate = ends[ends.length - 1] || '';
+}
+
+// ── Stops editor (used in New Trip modal and Trip Settings) ──
+const _stopsDraft = {};
+function escAttr(v) { return String(v || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+function renderStopsEditor(cid, stops, live) {
+  _stopsDraft[cid] = { stops: stops.map(s => ({ ...s })), live: !!live };
+  drawStopsEditor(cid);
+}
+function drawStopsEditor(cid, errorMsg) {
+  const el = document.getElementById(cid); if (!el) return;
+  const { stops, live } = _stopsDraft[cid];
+  const multi = stops.length > 1;
+  const save = live ? ` onchange="saveSettings()"` : '';
+  el.classList.toggle('single', !multi);
+  el.innerHTML = stops.map((s, i) => `
+    <div class="stop-row">
+      <div class="form-group stop-city"><label>${multi ? 'Stop ' + (i + 1) + ' city' : 'Destination (City, Country)'}</label>
+        <input type="text" value="${escAttr(s.city)}" placeholder="${i === 0 ? 'e.g. Rome, Italy' : 'e.g. Florence, Italy'}" oninput="stopEdit('${cid}',${i},'city',this.value)"${save}></div>
+      <div class="form-group"><label>${multi ? 'Arrive' : 'Start Date'}</label>
+        <input type="date" value="${escAttr(s.startDate)}" oninput="stopEdit('${cid}',${i},'startDate',this.value)"${save}></div>
+      <div class="form-group"><label>${multi ? 'Leave' : 'End Date'}</label>
+        <input type="date" value="${escAttr(s.endDate)}" oninput="stopEdit('${cid}',${i},'endDate',this.value)"${save}></div>
+      ${multi ? `<button type="button" class="stop-remove" title="Remove this stop" onclick="removeStop('${cid}',${i})"><span class="stop-remove-x">×</span><span class="stop-remove-txt">Remove ${s.city ? cityOnly(s.city) : 'this stop'}</span></button>` : ''}
+    </div>`).join('') +
+    `<div class="stops-error" id="${cid}-error">${errorMsg || ''}</div>
+     <button type="button" class="btn btn-ghost stop-add" onclick="addStop('${cid}')">+ Add another stop</button>`;
+}
+function stopEdit(cid, i, field, value) { _stopsDraft[cid].stops[i][field] = value; }
+function readStops(cid) {
+  return (_stopsDraft[cid]?.stops || []).map(s => ({ ...s, city: (s.city || '').trim() }));
+}
+function setStopsError(cid, msg) { const e = document.getElementById(cid + '-error'); if (e) e.textContent = msg || ''; }
+function addStop(cid) {
+  const d = _stopsDraft[cid];
+  const last = d.stops[d.stops.length - 1] || {};
+  d.stops.push({ id: uid(), city: '', startDate: last.endDate || '', endDate: '' });
+  drawStopsEditor(cid);
+  const inputs = document.querySelectorAll('#' + cid + ' .stop-city input');
+  inputs[inputs.length - 1]?.focus();
+}
+function removeStop(cid, i) {
+  const d = _stopsDraft[cid];
+  const s = d.stops[i];
+  if (s.city && !confirm('Remove ' + cityOnly(s.city) + ' from this trip?')) return;
+  d.stops.splice(i, 1);
+  drawStopsEditor(cid);
+  if (d.live) saveSettings();
+}
+
+// ═══════════════════════════════════════════════
 // TRIP CREATION
 // ═══════════════════════════════════════════════
 function openNewTripModal() {
   const sel=document.getElementById('new-trip-template');
   sel.innerHTML='<option value="">Blank list</option>';
   state.templates.forEach(t=>{ sel.innerHTML+=`<option value="${t.id}">${t.name}</option>`; });
-  document.getElementById('new-trip-start').value=new Date().toISOString().split('T')[0];
-  document.getElementById('new-trip-dest').value='';
+  renderStopsEditor('new-trip-stops', [{ id: uid(), city: '', startDate: new Date().toISOString().split('T')[0], endDate: '' }], false);
   document.getElementById('new-trip-name').value='';
   // Show personal care toggle only for eligible users
   const pcWrap = document.getElementById('personal-care-toggle-wrap');
@@ -1713,9 +2124,12 @@ function openNewTripModal() {
 }
 
 function createTrip() {
-  const dest=document.getElementById('new-trip-dest').value.trim();
+  const stops = readStops('new-trip-stops');
   const tripName=document.getElementById('new-trip-name').value.trim();
-  if (!dest) { toast('Please enter a destination','error'); return; }
+  const stopErr = validateStops(stops, true);
+  if (stopErr) { setStopsError('new-trip-stops', stopErr); toast(stopErr,'error'); return; }
+  const stopInfo = {}; applyStopsToTrip(stopInfo, stops);
+  const dest = stopInfo.destination;
   const templateId=document.getElementById('new-trip-template').value;
   const template=state.templates.find(t=>t.id===templateId);
   let categories={};
@@ -1729,8 +2143,8 @@ function createTrip() {
   const includePC = state.currentUser.showPersonalCare && document.getElementById('new-trip-personal-care').checked;
   const trip = {
     id:uid(), destination:dest, tripName, reason:document.getElementById('new-trip-reason').value.trim(),
-    startDate:document.getElementById('new-trip-start').value,
-    endDate:document.getElementById('new-trip-end').value, type:document.getElementById('new-trip-type').value,
+    startDate:stopInfo.startDate,
+    endDate:stopInfo.endDate, ...(stopInfo.stops ? { stops: stopInfo.stops } : {}), type:document.getElementById('new-trip-type').value,
     ownerId:state.currentUser.id, sharedWith:[], categories, outfits:{}, outfitCombos:[],
     includePersonalCare:includePC, createdAt:new Date().toISOString(),
   };
@@ -2044,7 +2458,7 @@ function exportListHTML(mode = 'both') {
     if (hasSnow) notes.push('Snow possible — waterproof boots and heavy winter gear recommended.');
     const dayCards = weather.daily.map(d => `
       <div class="wx-day">
-        <div class="wx-date">${parseLocalDate(d.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</div>
+        <div class="wx-date">${parseLocalDate(d.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}${weather.multi && d.city ? '<br>' + d.city : ''}</div>
         <div class="wx-icon">${weatherIcon(d.code)}</div>
         <div class="wx-desc">${weatherDesc(d.code)}</div>
         <div class="wx-temps">
@@ -2230,18 +2644,18 @@ function exportListHTML(mode = 'both') {
 </head>
 <body>
   <div class="no-print" style="background:#0C2D5A;color:white;padding:0.5rem 0.75rem;display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;font-family:'Outfit',sans-serif;font-size:0.85rem;border-radius:6px;">
-    <span style="opacity:0.7;">PacktRite — <strong style="opacity:1;">${tripTitle}</strong> · ${modeLabel}</span>
+    <span style="opacity:0.7;"><span style="color:#3A82E8;">Packt</span><span style="color:#F5C842;">Rite</span> — <strong style="opacity:1;">${tripTitle}</strong> · ${modeLabel}</span>
     <button onclick="window.print()" style="background:#C9A84C;color:#0C2D5A;border:none;padding:0.35rem 0.9rem;border-radius:5px;font-family:'Outfit',sans-serif;font-weight:600;font-size:0.82rem;cursor:pointer;">🖨 Print / Save as PDF</button>
   </div>
   <header class="header">
     <div class="header-left">
       <div class="brand-row">
         ${logoSVG.replace('width="48" height="48"','width="28" height="28"')}
-        <span class="brand">PacktRite</span>
+        <span class="brand"><span style="color:#3A82E8;">Packt</span><span style="color:#F5C842;">Rite</span></span>
       </div>
       <div class="trip-title">${tripTitle}</div>
       <div class="trip-meta">
-        ${trip.destination && trip.tripName ? `<span>📍 ${trip.destination}</span>` : ''}
+        ${isMultiStop(trip) ? `<span>📍 ${formatItinerary(trip)}</span>` : (trip.destination && trip.tripName ? `<span>📍 ${trip.destination}</span>` : '')}
         <span>📅 ${dateRange}</span>
         ${trip.type ? `<span>🧳 ${trip.type}</span>` : ''}
         ${trip.reason ? `<span>✦ ${trip.reason}</span>` : ''}
@@ -2256,7 +2670,7 @@ function exportListHTML(mode = 'both') {
   ${outfitsHTML}
   ${packingHTML}
   <footer class="footer">
-    <span>PacktRite — Pack Smart, Travel Well</span>
+    <span><span style="color:#3A82E8;">Packt</span><span style="color:#F5C842;">Rite</span> — packtrite.com</span>
     <span>${tripTitle} · ${dateRange} · ${modeLabel}</span>
   </footer>
 </body>
@@ -2271,13 +2685,14 @@ function exportListHTML(mode = 'both') {
 function exportListText() {
   const trip = state.currentTrip;
   let text = `PACKING LIST — ${trip.tripName||trip.destination}\n`;
-  if (trip.tripName && trip.destination) text += `Destination: ${trip.destination}\n`;
+  if (isMultiStop(trip)) text += `Itinerary: ${formatItinerary(trip)}\n`;
+  else if (trip.tripName && trip.destination) text += `Destination: ${trip.destination}\n`;
   text += `${formatDateRange(trip.startDate, trip.endDate)}\n${'='.repeat(40)}\n\n`;
   const weather = trip.weatherCache || state.weather || null;
   if (weather && weather.daily && weather.daily.length) {
     text += `WEATHER FORECAST — ${weather.location}\n`;
     weather.daily.forEach(d => {
-      text += `  ${parseLocalDate(d.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}  ${weatherIcon(d.code)} ${weatherDesc(d.code)}  High: ${Math.round(d.tempMax)}°F / Low: ${Math.round(d.tempMin)}°F\n`;
+      text += `  ${parseLocalDate(d.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}${weather.multi && d.city ? '  ' + d.city : ''}  ${weatherIcon(d.code)} ${weatherDesc(d.code)}  High: ${Math.round(d.tempMax)}°F / Low: ${Math.round(d.tempMin)}°F\n`;
     });
     text += '\n';
   }
@@ -2315,57 +2730,60 @@ function importList() {
 // WEATHER
 // ═══════════════════════════════════════════════
 async function fetchWeather(trip) {
-  if (!trip.destination || !trip.startDate) {
-    document.getElementById('weather-days-full').innerHTML = '<div style="padding:2rem;color:var(--text-muted);font-family:var(--font-accent);font-style:italic;">Set a destination and start date to see the forecast.</div>';
-    return;
-  }
-  document.getElementById('weather-days-full').innerHTML = '<div style="padding:2rem;color:var(--text-muted);font-family:var(--font-accent);font-style:italic;">Loading forecast...</div>';
+  const box = document.getElementById('weather-days-full');
+  const msg = t => '<div style="padding:2rem;color:var(--text-muted);font-family:var(--font-accent);font-style:italic;">' + t + '</div>';
+  const stops = getTripStops(trip).filter(s => s.city);
+  if (!stops.length || !trip.startDate) { box.innerHTML = msg('Set a destination and start date to see the forecast.'); return; }
+  box.innerHTML = msg('Loading forecast...');
+  const iso = d => d.toISOString().split('T')[0];
+  const today = iso(new Date());
+  const maxEnd = new Date(); maxEnd.setDate(maxEnd.getDate() + 15);
+  const maxEndStr = iso(maxEnd);
+  const multi = stops.length > 1;
   try {
-    // Step 1: Geocode destination
-    // Strip country suffix for better geocoding (e.g. "Rome, Italy" → "Rome")
-    const cleanDest = trip.destination.split(',')[0].trim();
-    const geoRes = await fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(cleanDest) + '&count=1');
-    const geoData = await geoRes.json();
-    if (!geoData.results || !geoData.results.length) {
-      document.getElementById('weather-days-full').innerHTML = '<div style="padding:2rem;color:var(--text-muted);font-family:var(--font-accent);font-style:italic;">Could not find location: ' + trip.destination + '</div>';
+    const byDate = {};
+    const notFound = [];
+    let singleLocation = '';
+    for (const stop of stops) {
+      // Geocode the city part only (e.g. "Rome, Italy" → "Rome")
+      const geoRes = await fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(cityOnly(stop.city)) + '&count=1');
+      const geoData = await geoRes.json();
+      if (!geoData.results || !geoData.results.length) { notFound.push(stop.city); continue; }
+      const { latitude, longitude, name, country } = geoData.results[0];
+      singleLocation = name + ', ' + country;
+      // Date range for this stop, clipped to today … today+15 (forecast limit)
+      const sStart = stop.startDate || trip.startDate;
+      const start = sStart >= today ? sStart : today;
+      const rawEnd = stop.endDate || trip.endDate || iso(new Date(new Date(start).getTime() + 7*86400000));
+      const end = rawEnd <= maxEndStr ? rawEnd : maxEndStr;
+      if (start > end) continue; // stop is past, or beyond the forecast window
+      const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + latitude + '&longitude=' + longitude +
+        '&daily=weathercode,temperature_2m_max,temperature_2m_min' +
+        '&temperature_unit=fahrenheit&timezone=auto' +
+        '&start_date=' + start + '&end_date=' + end;
+      const wData = await (await fetch(url)).json();
+      if (!wData.daily || !wData.daily.time) continue;
+      wData.daily.time.forEach((date, i) => {
+        // Later stops overwrite earlier ones on travel days (you sleep in the new city)
+        byDate[date] = { date, code: wData.daily.weathercode[i], tempMax: wData.daily.temperature_2m_max[i], tempMin: wData.daily.temperature_2m_min[i], city: name };
+      });
+    }
+    const daily = Object.keys(byDate).sort().map(d => byDate[d]);
+    if (!daily.length) {
+      if (notFound.length === stops.length) { box.innerHTML = msg('Could not find location: ' + notFound.join(', ')); return; }
+      box.innerHTML = msg('No forecast available yet. Forecasts cover the next 16 days.' + (notFound.length ? ' Could not find: ' + notFound.join(', ') + '.' : ''));
       return;
     }
-    const {latitude, longitude, name, country} = geoData.results[0];
-
-    // Step 2: Build date range — always start from today at minimum
-    const today = new Date().toISOString().split('T')[0];
-    const start = trip.startDate >= today ? trip.startDate : today;
-    // End: use trip end date if set and in range, else 7 days from start
-    const maxEnd = new Date(); maxEnd.setDate(maxEnd.getDate() + 15);
-    const maxEndStr = maxEnd.toISOString().split('T')[0];
-    const rawEnd = (trip.endDate && trip.endDate >= today) ? trip.endDate : new Date(new Date(start).getTime() + 7*86400000).toISOString().split('T')[0];
-    const end = rawEnd <= maxEndStr ? rawEnd : maxEndStr;
-
-    // Step 3: Fetch forecast
-    const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + latitude + '&longitude=' + longitude +
-      '&daily=weathercode,temperature_2m_max,temperature_2m_min' +
-      '&temperature_unit=fahrenheit&timezone=auto' +
-      '&start_date=' + start + '&end_date=' + end;
-    const wRes = await fetch(url);
-    const wData = await wRes.json();
-
-    if (!wData.daily || !wData.daily.time || !wData.daily.time.length) {
-      document.getElementById('weather-days-full').innerHTML = '<div style="padding:2rem;color:var(--text-muted);font-family:var(--font-accent);font-style:italic;">No forecast available for these dates.</div>';
-      return;
-    }
-
-    const daily = wData.daily.time.map((date, i) => ({
-      date, code: wData.daily.weathercode[i],
-      tempMax: wData.daily.temperature_2m_max[i],
-      tempMin: wData.daily.temperature_2m_min[i],
-    }));
-    state.weather = {daily, location: name + ', ' + country};
-    trip.weatherCache = {daily: daily.slice(0,7), location: name + ', ' + country};
+    const location = multi ? stops.map(s => cityOnly(s.city)).join(' → ') : singleLocation;
+    trip.weatherCache = { daily, location, multi };
     saveTrips();
+    if (state.currentTrip !== trip) return; // user moved to another trip while loading
+    state.weather = { daily, location, multi, notFound };
     renderWeatherTab(state.weather);
+    if (document.getElementById('outfit-calendar')) { try { renderOutfitCalendar(); } catch(e) {} }
   } catch(e) {
     console.warn('Weather fetch failed:', e);
-    document.getElementById('weather-days-full').innerHTML = '<div style="padding:2rem;color:var(--text-muted);font-family:var(--font-accent);font-style:italic;">Could not load forecast. Check your connection and try ↻ Refresh.</div>';
+    box.innerHTML = msg('Could not load forecast. Check your connection and try ↻ Refresh.');
   }
 }
 function renderWeatherTab(weather) {
@@ -2374,6 +2792,7 @@ function renderWeatherTab(weather) {
   document.getElementById('weather-days-full').innerHTML=weather.daily.map(d=>`
     <div class="weather-day">
       <div class="wd-date">${parseLocalDate(d.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</div>
+      ${weather.multi && d.city ? `<div class="wd-city">${d.city}</div>` : ''}
       <div class="wd-icon">${weatherIcon(d.code)}</div>
       <div class="wd-temps"><span class="high">${Math.round(d.tempMax)}°</span><span class="low"> / ${Math.round(d.tempMin)}°</span></div>
       <div class="wd-desc">${weatherDesc(d.code)}</div>
@@ -2388,6 +2807,8 @@ function renderWeatherTab(weather) {
   else notes.push('Cold weather — pack heavy coats, thermals, and warm accessories.');
   if(hasRain) notes.push('Rain in the forecast — bring a compact umbrella and waterproof outer layer.');
   if(hasSnow) notes.push('Snow is possible — waterproof boots and heavy winter gear recommended.');
+  if(weather.multi) notes.push('Conditions vary by stop — each day shows the city you\'ll be in.');
+  if(weather.notFound && weather.notFound.length) notes.push('Could not find a forecast for: ' + weather.notFound.join(', ') + '. Check the spelling in Trip Settings.');
   document.getElementById('weather-packing-notes').textContent=notes.join(' ');
 }
 function weatherIcon(code){if(code===0)return'☀️';if([1,2].includes(code))return'⛅';if(code===3)return'☁️';if([45,48].includes(code))return'🌫️';if([51,53,55,61,63,65,80,81,82].includes(code))return'🌧️';if([71,73,75,77,85,86].includes(code))return'❄️';if([95,96,99].includes(code))return'⛈️';return'🌤️';}
@@ -2438,6 +2859,7 @@ async function generateAISuggestions(trip) {
 
   const prompt = 'You are a precise travel packing expert. Generate exactly 14 packing suggestions tailored specifically to this trip.' +
     '\n\nDESTINATION: ' + (trip.destination||'Unknown') +
+    (isMultiStop(trip) ? '\nITINERARY (multi-city — pack for every stop, one bag): ' + formatItinerary(trip) : '') +
     '\nTRIP TYPE: ' + (typeDescriptions[trip.type]||trip.type||'leisure') +
     (trip.reason ? '\nREASON: ' + trip.reason : '') +
     (tripDuration ? '\nDURATION: ' + tripDuration + ' days' : '') +
@@ -2567,9 +2989,10 @@ function renderOutfitCalendar() {
       : outfits.sort((a,b) => TIME_SLOTS.indexOf(a.timeslot)-TIME_SLOTS.indexOf(b.timeslot))
           .map(o => renderOutfitSlot(o, dateKey)).join('') +
         `<div class="outfit-add-slot" onclick="openOutfitDayModal('${dateKey}')">+ Add another outfit</div>`;
+    const dayCity = isMultiStop(trip) ? cityLabelForDate(trip, dateKey) : '';
     card.innerHTML = `
       <div class="outfit-day-header">
-        <span class="outfit-day-date">${day.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</span>
+        <div><span class="outfit-day-date">${day.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</span>${dayCity ? `<span class="outfit-day-city">📍 ${dayCity}</span>` : ''}</div>
         ${weatherDay ? `
         <div class="outfit-wx-pill">
           <span style="font-size:1rem;line-height:1;">${weatherIcon(weatherDay.code)}</span>
@@ -2770,7 +3193,30 @@ function renderOutfitStep2Preview() {
   preview.innerHTML = `<strong>Outfit summary</strong>${pieces.map(([l,v])=>`<span style="display:block;"><span style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);min-width:70px;display:inline-block;">${l}</span>${v}</span>`).join('')}`;
 }
 
+// Populate datalists in the outfit modal from the user's closet
+function populateOutfitDataLists() {
+  const closet = getCloset();
+  const map = {
+    'closet-tops':         ['Tops', 'Dresses & Jumpsuits'],
+    'closet-bottoms':      ['Bottoms', 'Dresses & Jumpsuits'],
+    'closet-undergarments':['Undergarments'],
+    'closet-shoes':        ['Shoes'],
+    'closet-outerwear':    ['Outerwear'],
+    'closet-accessories':  ['Accessories'],
+    'closet-bags':         ['Bags'],
+  };
+  Object.entries(map).forEach(([id, cats]) => {
+    const dl = document.getElementById(id);
+    if (!dl) return;
+    const items = closet.filter(i => cats.includes(i.cat));
+    dl.innerHTML = items.map(i =>
+      `<option value="${i.name.replace(/"/g,'&quot;')}">${i.name}${i.color ? ' — ' + i.color : ''}</option>`
+    ).join('');
+  });
+}
+
 function openOutfitDayModal(dateKey, outfitId) {
+  populateOutfitDataLists(); // Load closet items into datalists
   const today = dateKey || (state.currentTrip?.startDate) || new Date().toISOString().split('T')[0];
   document.getElementById('outfit-date').value = today;
   document.getElementById('outfit-edit-id').value = outfitId || '';
@@ -2778,7 +3224,7 @@ function openOutfitDayModal(dateKey, outfitId) {
   document.getElementById('outfit-occasion').value = 'casual';
   document.getElementById('outfit-event').value = '';
   document.getElementById('outfit-notes').value = '';
-  ['top','bottom','shoes','outer','accessories','bag'].forEach(p => document.getElementById(`piece-${p}`).value = '');
+  ['top','bottom','undergarment','shoes','outer','accessories','bag'].forEach(p => { const el = document.getElementById(`piece-${p}`); if(el) el.value = ''; });
   if (outfitId) {
     const existing = getUserDayOutfits(today).find(o => o.id === outfitId);
     if (existing) {
@@ -2899,29 +3345,119 @@ function applyComboToDay() {}
 // SHARING
 // ═══════════════════════════════════════════════
 function renderShareTab() {
-  const trip=state.currentTrip; const sharedWith=trip.sharedWith||[];
-  const list=document.getElementById('shared-with-list');
-  if(!sharedWith.length){list.innerHTML='<p class="italic text-muted" style="font-size:0.85rem;">Not shared with anyone yet.</p>';}
-  else{list.innerHTML=sharedWith.map(uid=>{const user=state.users.find(u=>u.id===uid);return user?`<div class="admin-user-row"><div class="admin-avatar">${user.initials||user.name[0]}</div><div class="admin-user-info"><div class="admin-user-name">${user.name}</div><div class="admin-user-role">Can view & edit</div></div><button class="btn btn-ghost" style="color:var(--burgundy);font-size:0.75rem;" onclick="revokeShare('${uid}')">Revoke</button></div>`:''}).join('');}
-  const sel=document.getElementById('share-user-select');
-  const excluded=[trip.ownerId,...sharedWith];
-  sel.innerHTML='<option value="">Select a user...</option>'+state.users.filter(u=>!excluded.includes(u.id)).map(u=>`<option value="${u.id}">${u.name}</option>`).join('');
+  const trip = state.currentTrip;
+  const sharedWith = trip.sharedWith || [];
+  const list = document.getElementById('shared-with-list');
+  if (!sharedWith.length) {
+    list.innerHTML = '<p class="italic text-muted" style="font-size:0.85rem;">Not shared with anyone yet.</p>';
+  } else {
+    list.innerHTML = sharedWith.map(uid => {
+      const user = state.users.find(u => u.id === uid);
+      const label = user ? user.name : uid;
+      const sub = user ? (user.email || 'PacktRite user') : 'Unknown user';
+      return `<div class="admin-user-row">
+        <div class="admin-avatar">${user ? (user.initials || user.name[0]) : '?'}</div>
+        <div class="admin-user-info">
+          <div class="admin-user-name">${label}</div>
+          <div class="admin-user-role">${sub} · Can view & edit</div>
+        </div>
+        <button class="btn btn-ghost" style="color:var(--burgundy);font-size:0.75rem;" onclick="revokeShare('${uid}')">Revoke</button>
+      </div>`;
+    }).join('');
+  }
+  // Render existing share link if one exists
+  if (trip.shareToken) {
+    renderShareLinkUI(trip.shareToken);
+  }
 }
-function shareWithUser(){
-  const userId=document.getElementById('share-user-select').value; if(!userId){toast('Select a user first','error');return;}
-  if(!state.currentTrip.sharedWith) state.currentTrip.sharedWith=[];
-  state.currentTrip.sharedWith.push(userId); saveTrips();
-  const user=state.users.find(u=>u.id===userId); toast(`Shared with ${user?.name}!`,'success'); renderShareTab();
+
+async function shareWithEmail() {
+  const email = document.getElementById('share-email-input').value.trim().toLowerCase();
+  const errEl = document.getElementById('share-error');
+  errEl.textContent = '';
+  if (!email) { errEl.textContent = 'Enter an email address.'; return; }
+  if (email === state.currentUser.email?.toLowerCase()) { errEl.textContent = "That's your own email."; return; }
+  // Look up the account by email (server-side, so emails aren't exposed to the app)
+  let match = null;
+  try {
+    const res = await fetch(WORKER + '/api/users/lookup?email=' + encodeURIComponent(email), {
+      headers: { 'Authorization': 'Bearer ' + getAuthToken() }
+    });
+    if (res.status === 401) { handleSessionExpired(); return; }
+    if (res.ok) match = await res.json();
+  } catch(e) { errEl.textContent = 'Cannot reach server. Check your connection.'; return; }
+  if (!match || !match.id) { errEl.textContent = 'No PacktRite account found with that email.'; return; }
+  if (!state.users.find(u => u.id === match.id)) state.users.push(match);
+  shareUserById(match.id, match.name);
 }
-function revokeShare(userId){state.currentTrip.sharedWith=state.currentTrip.sharedWith.filter(id=>id!==userId);saveTrips();renderShareTab();toast('Access revoked');}
+
+function shareUserById(userId, userName) {
+  const errEl = document.getElementById('share-error');
+  if (!state.currentTrip.sharedWith) state.currentTrip.sharedWith = [];
+  if (state.currentTrip.sharedWith.includes(userId)) {
+    errEl.textContent = `Already shared with ${userName}.`; return;
+  }
+  state.currentTrip.sharedWith.push(userId);
+  saveTrips();
+  document.getElementById('share-email-input').value = '';
+  toast(`Shared with ${userName}!`, 'success');
+  renderShareTab();
+}
+
+function revokeShare(userId) {
+  state.currentTrip.sharedWith = (state.currentTrip.sharedWith || []).filter(id => id !== userId);
+  saveTrips(); renderShareTab(); toast('Access revoked');
+}
+
+function generateShareLink() {
+  const trip = state.currentTrip;
+  if (!trip.shareToken) {
+    // Generate a random token
+    trip.shareToken = Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2,'0')).join('');
+    saveTrips();
+  }
+  renderShareLinkUI(trip.shareToken);
+}
+
+function renderShareLinkUI(token) {
+  const url = `${window.location.origin}${window.location.pathname}?share=${token}`;
+  document.getElementById('share-link-area').innerHTML = `
+    <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+      <input type="text" value="${url}" readonly style="flex:1;font-size:0.75rem;color:var(--text-secondary);" onclick="this.select()">
+      <button class="btn btn-secondary" onclick="copyShareLink('${url}')">Copy</button>
+      <button class="btn btn-ghost" style="color:var(--burgundy);font-size:0.75rem;" onclick="revokeShareLink()">Revoke</button>
+    </div>
+    <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.4rem;">Anyone with this link can view but not edit.</div>`;
+}
+
+function copyShareLink(url) {
+  navigator.clipboard.writeText(url).then(() => toast('Link copied!', 'success')).catch(() => {
+    const el = document.querySelector('#share-link-area input');
+    if (el) { el.select(); document.execCommand('copy'); toast('Link copied!', 'success'); }
+  });
+}
+
+function revokeShareLink() {
+  delete state.currentTrip.shareToken;
+  saveTrips();
+  document.getElementById('share-link-area').innerHTML = '<button class="btn btn-secondary" onclick="generateShareLink()">Generate Link</button>';
+  toast('Share link revoked');
+}
 
 // ═══════════════════════════════════════════════
 // TRIP SETTINGS
 // ═══════════════════════════════════════════════
 function saveSettings(){
   if(!state.currentTrip) return;
-  const newStart = document.getElementById('settings-start').value;
-  const newEnd = document.getElementById('settings-end').value;
+  const trip = state.currentTrip;
+  const newStops = readStops('settings-stops');
+  // Don't save half-finished stops (e.g. a new stop with no city yet) — just show what's missing
+  const stopErr = validateStops(newStops, true);
+  if (stopErr) { setStopsError('settings-stops', stopErr); return; }
+  setStopsError('settings-stops', '');
+  const preview = {}; applyStopsToTrip(preview, newStops);
+  const newStart = preview.startDate;
+  const newEnd = preview.endDate;
 
   // #41 — Check if date change would hide existing outfits
   if (newStart || newEnd) {
@@ -2936,21 +3472,28 @@ function saveSettings(){
       const msg = hidden.length + ' outfit' + (hidden.length>1?'s':'') + ' on ' +
         hidden.map(d => parseLocalDate(d).toLocaleDateString('en-US',{month:'short',day:'numeric'})).join(', ') +
         ' fall outside the new date range and will not show on the calendar. Outfits are not deleted.';
-      if (!confirm(msg + '\n\nSave anyway?')) return;
+      if (!confirm(msg + '\n\nSave anyway?')) { renderStopsEditor('settings-stops', getTripStops(trip), true); return; }
     }
   }
 
+  const before = JSON.stringify(getTripStops(trip).map(s => [s.city, s.startDate, s.endDate]));
   state.currentTrip.tripName=document.getElementById('settings-tripname').value;
-  state.currentTrip.destination=document.getElementById('settings-destination').value;
   state.currentTrip.reason=document.getElementById('settings-reason').value;
-  state.currentTrip.startDate=newStart;
-  state.currentTrip.endDate=newEnd;
+  applyStopsToTrip(state.currentTrip, newStops);
   state.currentTrip.type=document.getElementById('settings-type').value;
-  // Clear cached geo so it re-fetches with new destination
-  delete state.currentTrip.timezone;
-  delete state.currentTrip.currency;
+  const after = JSON.stringify(getTripStops(trip).map(s => [s.city, s.startDate, s.endDate]));
+  const stopsChanged = before !== after;
+  if (stopsChanged) {
+    // Clear cached geo + weather so they re-fetch for the new cities/dates
+    delete state.currentTrip.timezone;
+    delete state.currentTrip.currency;
+    state.currentTrip.weatherCache = null;
+    state.weather = null;
+    renderStopsEditor('settings-stops', getTripStops(trip), true);
+  }
   saveTrips();
   renderTripDetailHeader();
+  if (stopsChanged) fetchWeather(state.currentTrip);
   toast('Settings saved');
 }
 function saveAsTemplate(){
@@ -3066,53 +3609,80 @@ function deleteTemplate(templateId){if(!confirm('Delete this template?')) return
 // ADMIN
 // ═══════════════════════════════════════════════
 function renderAdmin(){
-  document.getElementById('admin-user-list').innerHTML=state.users.map(u=>`<div class="admin-user-row"><div class="admin-avatar">${u.initials||u.name[0].toUpperCase()}</div><div class="admin-user-info"><div class="admin-user-name">${u.name} ${u.id===state.currentUser.id?'<span style="color:var(--gold);font-size:0.7rem;">(you)</span>':''}</div><div class="admin-user-role">${u.role} · PIN: ${'•'.repeat(u.pin.length)} ${u.showPersonalCare?'· 🌸':''}</div></div><button class="btn btn-secondary" style="font-size:0.72rem;" onclick="openEditUserModal('${u.id}')">Edit</button></div>`).join('');
+  document.getElementById('admin-user-list').innerHTML = state.users.map(u => `
+    <div class="admin-user-row">
+      <div class="admin-avatar">${u.initials||u.name[0].toUpperCase()}</div>
+      <div class="admin-user-info">
+        <div class="admin-user-name">${u.name} ${u.id===state.currentUser.id?'<span style="color:var(--gold);font-size:0.7rem;">(you)</span>':''}</div>
+        <div class="admin-user-role">${u.role} · ${u.email||'no email'} ${u.showPersonalCare?'· 🌸':''}</div>
+      </div>
+      <button class="btn btn-secondary" style="font-size:0.72rem;" onclick="openEditUserModal('${u.id}')">Edit</button>
+    </div>`).join('');
 }
-function openNewUserModal(){document.getElementById('new-user-name').value='';document.getElementById('new-user-pin').value='';document.getElementById('new-user-role').value='user';openModal('modal-new-user');}
-function createUser(){
-  const name=document.getElementById('new-user-name').value.trim();
-  const pin=document.getElementById('new-user-pin').value.trim();
-  const role=document.getElementById('new-user-role').value;
+
+function openNewUserModal(){
+  document.getElementById('new-user-name').value='';
+  document.getElementById('new-user-pin').value='';
+  document.getElementById('new-user-role').value='user';
+  openModal('modal-new-user');
+}
+
+async function createUser(){
+  const name = document.getElementById('new-user-name').value.trim();
+  const password = document.getElementById('new-user-pin').value.trim();
+  const role = document.getElementById('new-user-role').value;
   if(!name){toast('Enter a name','error');return;}
-  if(!/^\d{4}$/.test(pin)){toast('PIN must be exactly 4 digits','error');return;}
-  const user={id:uid(),name,pin,role,initials:name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2)};
-  state.users.push(user); saveUsers(); closeModal('modal-new-user'); renderAdmin();
+  if(!password||password.length<6){toast('Password must be at least 6 characters','error');return;}
+  const created = await api('POST', '/api/users', { name, password, role, showPersonalCare: false });
+  if (!created || !created.id) { toast('Could not create user. Check your connection.', 'error'); return; }
+  state.users.push({ ...created, pin: '' });
+  closeModal('modal-new-user'); renderAdmin();
   toast(`User "${name}" created!`,'success');
 }
+
 function openEditUserModal(userId){
-  const user=state.users.find(u=>u.id===userId); if(!user) return;
-  document.getElementById('edit-user-id').value=userId;
-  document.getElementById('edit-user-name').value=user.name;
-  document.getElementById('edit-user-pin').value='';
-  document.getElementById('edit-user-role').value=user.role;
+  const user = state.users.find(u=>u.id===userId); if(!user) return;
+  document.getElementById('edit-user-id').value = userId;
+  document.getElementById('edit-user-name').value = user.name;
+  document.getElementById('edit-user-email').value = user.email || '';
+  document.getElementById('edit-user-password').value = '';
+  document.getElementById('edit-user-role').value = user.role;
   openModal('modal-edit-user');
 }
-function saveUserEdit(){
-  const userId=document.getElementById('edit-user-id').value;
-  const user=state.users.find(u=>u.id===userId); if(!user) return;
-  const newPin=document.getElementById('edit-user-pin').value.trim();
-  if(newPin&&!/^\d{4}$/.test(newPin)){toast('PIN must be 4 digits','error');return;}
-  user.name=document.getElementById('edit-user-name').value.trim()||user.name;
-  user.role=document.getElementById('edit-user-role').value;
-  user.initials=user.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-  if(newPin) {
-    user.pin=newPin;
-    // Update auth token and current user immediately if changing own PIN
-    if(userId === state.currentUser?.id) {
-      setAuthToken(userId, newPin);
-      state.currentUser.pin = newPin;
-      toast('PIN updated. Your next login will sync it across all devices.','success');
-    }
+
+async function saveUserEdit(){
+  const userId = document.getElementById('edit-user-id').value;
+  const user = state.users.find(u=>u.id===userId); if(!user) return;
+  const newPassword = document.getElementById('edit-user-password').value.trim();
+  const newEmail = document.getElementById('edit-user-email').value.trim();
+  const newName = document.getElementById('edit-user-name').value.trim() || user.name;
+  const newRole = document.getElementById('edit-user-role').value;
+  if(newPassword && newPassword.length < 6){toast('Password must be at least 6 characters','error');return;}
+  const payload = { name: newName, role: newRole };
+  if (newEmail) payload.email = newEmail;
+  if (newPassword) payload.password = newPassword;
+  const updated = await api('PUT', '/api/users/' + userId, payload);
+  if (!updated) { toast('Could not save changes. Check your connection.', 'error'); return; }
+  user.name = newName;
+  user.role = newRole;
+  if (newEmail) user.email = newEmail;
+  user.initials = newName.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  if (newPassword && userId === state.currentUser?.id) {
+    toast('Password updated. Use your new password next time you sign in.', 'success');
+  } else {
+    toast('User updated!', 'success');
   }
-  // Save locally — KV will be updated automatically on next login
-  saveUsers(); closeModal('modal-edit-user'); renderAdmin();
-  if(!newPin) toast('User updated!','success');
+  closeModal('modal-edit-user'); renderAdmin();
 }
-function deleteUserFromModal(){
-  const userId=document.getElementById('edit-user-id').value;
+
+async function deleteUserFromModal(){
+  const userId = document.getElementById('edit-user-id').value;
   if(userId===state.currentUser.id){toast("Can't delete yourself",'error');return;}
-  if(!confirm('Delete this user?')) return;
-  state.users=state.users.filter(u=>u.id!==userId); saveUsers(); closeModal('modal-edit-user'); renderAdmin(); toast('User deleted');
+  if(!confirm('Delete this user and all their data?')) return;
+  const res = await api('DELETE', '/api/users/' + userId);
+  if (!res) { toast('Could not delete user. Check your connection.', 'error'); return; }
+  state.users = state.users.filter(u=>u.id!==userId);
+  closeModal('modal-edit-user'); renderAdmin(); toast('User deleted');
 }
 
 
@@ -3776,7 +4346,8 @@ function renderTripDetailHeader(){
   const infoRow=document.getElementById('detail-info-row');
   if(!infoRow)return;
   const pills=[];
-  if(trip.tripName&&trip.destination) pills.push(`<span class="trip-info-pill">📍 ${trip.destination}</span>`);
+  if(isMultiStop(trip)) pills.push(`<span class="trip-info-pill">📍 ${formatItinerary(trip)}</span>`);
+  else if(trip.tripName&&trip.destination) pills.push(`<span class="trip-info-pill">📍 ${trip.destination}</span>`);
   if(trip.reason) pills.push(`<span class="trip-info-pill">✦ ${trip.reason}</span>`);
   const dates=formatDateRange(trip.startDate,trip.endDate);
   const duration=getTripDuration(trip.startDate,trip.endDate);
@@ -3787,18 +4358,26 @@ function renderTripDetailHeader(){
   if(trip.destination&&(!trip.timezone||!trip.currency)) fetchTripGeoInfo(trip);
 }
 
+const _geoLoading = new Set();
 async function fetchTripGeoInfo(trip){
+  if (_geoLoading.has(trip.id)) return;
+  _geoLoading.add(trip.id);
   try{
-    const cleanName = trip.destination.split(',')[0].trim();
-    const res=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(cleanName)+'&count=1');
-    const data=await res.json();
-    if(!data.results?.length)return;
-    const {timezone,country_code}=data.results[0];
-    if(timezone) trip.timezone=timezone.split('/').pop().replace(/_/g,' ');
     const cm={US:'USD $',GB:'GBP £',FR:'EUR €',DE:'EUR €',IT:'EUR €',ES:'EUR €',PT:'EUR €',NL:'EUR €',GR:'EUR €',AT:'EUR €',BE:'EUR €',JP:'JPY ¥',MX:'MXN $',CA:'CAD $',AU:'AUD $',BR:'BRL R$',IN:'INR ₹',TH:'THB ฿',SG:'SGD $',AE:'AED د.إ',TR:'TRY ₺',ZA:'ZAR R',CH:'CHF Fr',NO:'NOK kr',SE:'SEK kr',DK:'DKK kr',PL:'PLN zł',NZ:'NZD $',HK:'HKD $',KR:'KRW ₩',CN:'CNY ¥',MA:'MAD',CR:'CRC ₡',CO:'COP $',AR:'ARS $',CL:'CLP $',PE:'PEN S/',HU:'HUF Ft',CZ:'CZK Kč',RO:'RON lei',IL:'ILS ₪',SA:'SAR ﷼',VN:'VND ₫',ID:'IDR Rp',PH:'PHP ₱',MY:'MYR RM',TW:'TWD $',EG:'EGP £',RU:'RUB ₽',UA:'UAH ₴'};
-    if(country_code) trip.currency=cm[country_code]||country_code;
-    saveTrips();renderTripDetailHeader();
-  }catch(e){}
+    const tzs=[], curs=[];
+    for (const stop of getTripStops(trip).filter(s=>s.city)) {
+      const res=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(cityOnly(stop.city))+'&count=1');
+      const data=await res.json();
+      if(!data.results?.length) continue;
+      const {timezone,country_code}=data.results[0];
+      if(timezone){ const tz=timezone.split('/').pop().replace(/_/g,' '); if(!tzs.includes(tz)) tzs.push(tz); }
+      if(country_code){ const c=cm[country_code]||country_code; if(!curs.includes(c)) curs.push(c); }
+    }
+    if(tzs.length) trip.timezone=tzs.join(' / ');
+    if(curs.length) trip.currency=curs.join(' / ');
+    _geoLoading.delete(trip.id);
+    if(tzs.length||curs.length){ saveTrips(); if(state.currentTrip===trip) renderTripDetailHeader(); }
+  }catch(e){ _geoLoading.delete(trip.id); }
 }
 
 // ═══════════════════════════════════════════
@@ -3843,5 +4422,6 @@ function renderWeatherIntelligence(recs){
   c.innerHTML=`<div class="weather-intel-panel"><div class="weather-intel-header"><strong style="font-family:var(--font-display);font-size:0.9rem;">🌤 Weather-Smart Recommendations</strong></div>${recs.map(r=>`<div class="intel-item"><span class="intel-icon">${r.icon||'•'}</span><div class="intel-text"><strong>${r.title}</strong> — ${r.text}</div></div>`).join('')}</div>`;
 }
 </script>
-</body>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"34d05d9f678a49ec856c2f22ded92bdd","r":1,"spa":2}' crossorigin="anonymous"></script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a45c4f558a22721f',t:'MTc5MTIwMjA4Nw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
