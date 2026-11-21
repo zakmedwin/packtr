@@ -87,6 +87,8 @@
   [data-theme="dark"] .topnav{background:#060F1E;border-bottom:1px solid rgba(46,125,209,0.2);}
   .topnav-inner{max-width:1100px;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;gap:1rem;height:56px;}
   .topnav-brand{font-family:var(--font-display);font-size:1.3rem;font-weight:700;color:var(--gold);letter-spacing:-0.01em;flex:1;cursor:pointer;}
+  .topnav-brand{display:flex;align-items:center;gap:0.55rem;min-width:0;}
+  .topnav-logo{width:30px;height:30px;border-radius:7px;flex-shrink:0;display:block;box-shadow:0 0 0 1px rgba(240,247,255,0.18);}
   .topnav-brand #nav-username-display{font-style:italic;font-weight:400;color:rgba(240,232,216,0.5);font-size:0.9rem;margin-left:0.5rem;}
   .topnav-nav{display:flex;align-items:center;gap:0.25rem;}
   .nav-btn{padding:0.4rem 0.75rem;background:transparent;border:none;color:rgba(240,232,216,0.7);font-family:var(--font-body);font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;border-radius:var(--radius);transition:all var(--transition);}
@@ -649,7 +651,7 @@
 <div id="screen-app">
   <nav class="topnav">
     <div class="topnav-inner">
-      <div class="topnav-brand" onclick="showDashboard()"><span style="display:inline-flex;font-weight:700;"><span style="color:#3A82E8;">Packt</span><span style="color:#F5C842;">Rite</span></span><span id="nav-username-display" style="color:rgba(240,232,216,0.5);font-size:0.9rem;font-weight:400;font-style:italic;margin-left:0.5rem;"></span></div>
+      <div class="topnav-brand" onclick="showDashboard()"><img class="topnav-logo" src="icons/packtrite-icon-180.png" alt="" aria-hidden="true"><span style="display:inline-flex;font-weight:700;"><span style="color:#3A82E8;">Packt</span><span style="color:#F5C842;">Rite</span></span><span id="nav-username-display" style="color:rgba(240,232,216,0.5);font-size:0.9rem;font-weight:400;font-style:italic;margin-left:0.5rem;"></span></div>
       <div class="topnav-nav">
         <button class="nav-btn active" id="nav-trips" onclick="showDashboard()">Trips</button>
         <button class="nav-btn" id="nav-closet" onclick="showCloset()">Closet</button>
