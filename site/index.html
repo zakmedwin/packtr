@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<link rel="apple-touch-icon" sizes="180x180" href="icons/packtrite-icon-180.png">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/packtrite-icon-32.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/packtrite-icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/packtrite-icon-180.png?v=2">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/packtrite-icon-32.png?v=2">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/packtrite-icon-192.png?v=2">
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -50,6 +50,9 @@
     display:flex;align-items:center;justify-content:center;
     transition:opacity 0.4s ease, transform 0.4s ease;
   }
+  #login-restoring{display:none;text-align:center;color:var(--text-muted);font-size:0.95rem;padding:1.5rem 0 0.5rem;}
+  #screen-login.restoring #login-restoring{display:block;}
+  #screen-login.restoring #login-signin,#screen-login.restoring #login-signup{display:none!important;}
   #screen-login.hidden{
     opacity:0;transform:scale(1.04);pointer-events:none;
   }
@@ -87,7 +90,7 @@
   [data-theme="dark"] .topnav{background:#060F1E;border-bottom:1px solid rgba(46,125,209,0.2);}
   .topnav-inner{max-width:1100px;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;gap:1rem;height:56px;}
   .topnav-brand{font-family:var(--font-display);font-size:1.3rem;font-weight:700;color:var(--gold);letter-spacing:-0.01em;flex:1;cursor:pointer;}
-  .topnav-brand{display:flex;align-items:center;gap:0.55rem;min-width:0;}
+  .topnav-brand{display:flex;align-items:center;gap:0.55rem;flex:1 0 auto;white-space:nowrap;}
   .topnav-logo{width:30px;height:30px;border-radius:7px;flex-shrink:0;display:block;box-shadow:0 0 0 1px rgba(240,247,255,0.18);}
   .topnav-brand #nav-username-display{font-style:italic;font-weight:400;color:rgba(240,232,216,0.5);font-size:0.9rem;margin-left:0.5rem;}
   .topnav-nav{display:flex;align-items:center;gap:0.25rem;}
@@ -433,6 +436,17 @@
   #mobile-nav-drawer{display:none;position:fixed;top:56px;right:0;width:min(280px,85vw);background:#0C2D5A;flex-direction:column;padding:0.5rem;gap:0.1rem;z-index:200;box-shadow:-4px 8px 24px rgba(0,0,0,0.5);border-bottom-left-radius:var(--radius-lg);}
   [data-theme="dark"] #mobile-nav-drawer{background:#060F1E;border:1px solid rgba(46,125,209,0.2);}
   #mobile-nav-overlay{display:none;position:fixed;inset:56px 0 0 0;background:rgba(0,0,0,0.4);z-index:150;}
+  /* Header: use the menu button until the full row of buttons fits */
+  @media(max-width:1024px){
+    .hamburger-btn{display:block;}
+    .topnav-nav{display:none;}
+    .nav-user{display:none;}
+    #mobile-nav-drawer.open{display:flex !important;}
+    #mobile-nav-overlay.open{display:block !important;}
+  }
+  @media(max-width:400px){
+    .topnav-brand #nav-username-display{display:none;}
+  }
   @media(max-width:640px){
     body::before{display:none;}
     .container{padding:0 0.85rem;}
@@ -602,12 +616,15 @@
      LOGIN
 ══════════════════════════════════════════════ -->
 <div id="screen-login">
+  <script>try{if(localStorage.getItem('pr_session')&&!/[?&]share=/.test(location.search))document.currentScript.parentNode.classList.add('restoring');}catch(e){}</script>
   <div class="login-bg"></div>
   <div class="login-card">
     <div class="login-logo">
-      <div class="wordmark"><img src="icons/packtrite-icon-180.png" alt="PacktRite" style="width:80px;height:80px;border-radius:18px;display:block;margin:0 auto 0.75rem;"><span style="display:inline-flex;"><span style="color:#3A82E8;">Packt</span><span style="color:#F5C842;">Rite</span></span></div>
+      <div class="wordmark"><img src="icons/packtrite-icon-180.png?v=2" alt="PacktRite" style="width:80px;height:80px;border-radius:18px;display:block;margin:0 auto 0.75rem;"><span style="display:inline-flex;"><span style="color:#3A82E8;">Packt</span><span style="color:#F5C842;">Rite</span></span></div>
       <div class="tagline">pack smart, travel well</div>
     </div>
+
+    <div id="login-restoring" role="status">Signing you in…</div>
 
     <!-- SIGN IN -->
     <div id="login-signin">
@@ -656,7 +673,7 @@
 <div id="screen-app">
   <nav class="topnav">
     <div class="topnav-inner">
-      <div class="topnav-brand" onclick="showDashboard()"><img class="topnav-logo" src="icons/packtrite-icon-180.png" alt="" aria-hidden="true"><span style="display:inline-flex;font-weight:700;"><span style="color:#3A82E8;">Packt</span><span style="color:#F5C842;">Rite</span></span><span id="nav-username-display" style="color:rgba(240,232,216,0.5);font-size:0.9rem;font-weight:400;font-style:italic;margin-left:0.5rem;"></span></div>
+      <div class="topnav-brand" onclick="showDashboard()"><img class="topnav-logo" src="icons/packtrite-icon-180.png?v=2" alt="" aria-hidden="true"><span style="display:inline-flex;font-weight:700;"><span style="color:#3A82E8;">Packt</span><span style="color:#F5C842;">Rite</span></span><span id="nav-username-display" style="color:rgba(240,232,216,0.5);font-size:0.9rem;font-weight:400;font-style:italic;margin-left:0.5rem;"></span></div>
       <div class="topnav-nav">
         <button class="nav-btn active" id="nav-trips" onclick="showDashboard()">Trips</button>
         <button class="nav-btn" id="nav-closet" onclick="showCloset()">Closet</button>
@@ -675,7 +692,7 @@
   <div id="mobile-nav-drawer">
     <button class="mobile-nav-item" onclick="showDashboard();closeMobileNav();">Trips</button>
     <button class="mobile-nav-item" onclick="showCloset();closeMobileNav();">Closet</button>
-    <button class="mobile-nav-item" onclick="showLibrary();closeMobileNav();">Essentials</button>
+    <button class="mobile-nav-item" onclick="showLibrary();closeMobileNav();">My Items</button>
     <button class="mobile-nav-item" onclick="showTemplates();closeMobileNav();">Templates</button>
     <button class="mobile-nav-item" id="mobile-nav-admin" onclick="showAdmin();closeMobileNav();" style="display:none;">Admin</button>
     <div style="border-top:1px solid rgba(240,232,216,0.12);margin:0.4rem 0;"></div>
@@ -1382,8 +1399,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Pre-fill email if previously signed in
   const savedEmail = localStorage.getItem('pr_auth_email') || '';
   if (savedEmail) { const el = document.getElementById('signin-email'); if(el) el.value = savedEmail; }
-  // Restore a saved session (stay signed in)
+  // Restore a saved session (stay signed in). The form stays hidden while this runs.
   const savedToken = getAuthToken();
+  const stopRestoring = () => { const l = document.getElementById('screen-login'); if (l) l.classList.remove('restoring'); };
+  setTimeout(stopRestoring, 8000);
   if (savedToken) {
     try {
       const res = await fetch(CONFIG.workerUrl + '/api/auth/me', { headers: { 'Authorization': 'Bearer ' + savedToken } });
@@ -1402,6 +1421,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   // Old-style saved password token from previous version: discard it
   try { localStorage.removeItem('pr_auth_token'); } catch(e) {}
+  stopRestoring();
 });
 
 // ═══════════════════════════════════════════════
@@ -2201,7 +2221,7 @@ function renderSharedTripView(trip) {
   document.getElementById('screen-app').innerHTML = `
     <div style="min-height:100vh;background:var(--bg-primary);padding:1.5rem 1rem;max-width:700px;margin:0 auto;">
       <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1.5rem;">
-        <img src="icons/packtrite-icon-32.png" alt="PacktRite" style="width:28px;height:28px;border-radius:6px;">
+        <img src="icons/packtrite-icon-32.png?v=2" alt="PacktRite" style="width:28px;height:28px;border-radius:6px;">
         <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:700;"><span style="color:#3A82E8;">Packt</span><span style="color:#F5C842;">Rite</span></div>
         <div style="font-size:0.75rem;color:var(--text-muted);margin-left:auto;">Read-only view</div>
       </div>
@@ -2252,6 +2272,7 @@ function logout(expired) {
   loginEl.style.opacity = '';
   loginEl.style.transform = '';
   loginEl.classList.remove('hidden');
+  loginEl.classList.remove('restoring');
   document.getElementById('nav-admin').style.display = 'none';
   showSignIn();
   // Pre-fill saved email
