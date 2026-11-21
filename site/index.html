@@ -265,10 +265,18 @@
   .ai-dots span:nth-child(2){animation-delay:0.2s;}
   .ai-dots span:nth-child(3){animation-delay:0.4s;}
   @keyframes dot-pulse{0%,80%,100%{opacity:0.3;transform:scale(0.8);}40%{opacity:1;transform:scale(1);}}
-  .ai-suggestions-list{display:flex;flex-wrap:wrap;gap:0.4rem;}
-  .ai-suggestion-chip{display:inline-flex;align-items:center;gap:0.3rem;padding:0.3rem 0.6rem;background:var(--bg-card);border:1px solid var(--border-strong);border-radius:20px;font-size:0.78rem;color:var(--text-primary);cursor:pointer;transition:all var(--transition);}
-  .ai-suggestion-chip:hover{border-color:var(--gold);background:rgba(201,168,76,0.08);}
-  .ai-suggestion-chip.added{background:rgba(107,140,107,0.15);border-color:var(--sage);color:var(--sage);}
+  .gap-intro{font-size:0.88rem;color:var(--text-secondary);line-height:1.5;margin:0 0 0.85rem;}
+  .gap-error{font-size:0.88rem;color:var(--text-primary);line-height:1.5;margin:0 0 0.85rem;}
+  .gap-run{min-height:44px;width:100%;max-width:340px;justify-content:center;}
+  .gap-list{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:0.85rem;}
+  .gap-row{display:flex;align-items:center;gap:0.75rem;padding:0.65rem 0.75rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);}
+  .gap-row.added{border-color:var(--sage);}
+  .gap-text{flex:1;min-width:0;}
+  .gap-name{font-weight:600;font-size:0.95rem;color:var(--text-primary);overflow-wrap:anywhere;}
+  .gap-reason{font-size:0.82rem;color:var(--text-secondary);margin-top:0.15rem;line-height:1.4;overflow-wrap:anywhere;}
+  .gap-meta{font-size:0.74rem;color:var(--text-muted);margin-top:0.25rem;}
+  .gap-add{min-height:44px;min-width:76px;flex-shrink:0;justify-content:center;}
+  .gap-added{flex-shrink:0;min-width:76px;text-align:center;font-size:0.85rem;font-weight:600;color:var(--sage);}
 
   /* OUTFIT BUILDER — multi-outfit per day */
   .outfit-calendar{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;margin-bottom:1.5rem;}
@@ -891,13 +899,12 @@
         <div class="ai-panel" id="ai-panel">
           <div class="ai-panel-header">
             <span class="ai-icon">✦</span>
-            <h4>AI Packing Suggestions</h4>
+            <h4>What am I forgetting?</h4>
             <div style="margin-left:auto;display:flex;gap:0.35rem;">
-              <button class="btn btn-ghost" id="ai-regen-btn" style="font-size:0.7rem;" onclick="regenerateAI()">Regenerate</button>
               <button class="btn btn-ghost" id="ai-toggle-btn" style="font-size:0.7rem;" onclick="toggleAIPanel()">Hide</button>
             </div>
           </div>
-          <div id="ai-content"><div class="ai-loading"><span>Generating suggestions</span><div class="ai-dots"><span></span><span></span><span></span></div></div></div>
+          <div id="ai-content"></div>
         </div>
         <div id="packing-categories"></div>
       </div>
@@ -2380,7 +2387,7 @@ function showTripDetail(tripId, skipHistory) {
   // Show cached weather immediately, then fetch fresh
   if (trip.weatherCache) renderWeatherTab(trip.weatherCache);
   fetchWeather(trip);
-  generateAISuggestions(trip);
+  resetGapCheck(trip);
   renderOutfitCalendar();
   renderClosetPalette();
   renderShareTab();
@@ -3427,115 +3434,249 @@ function weatherIcon(code){if(code===0)return'☀️';if([1,2].includes(code))re
 function weatherDesc(code){if(code===0)return'Sunny';if([1,2].includes(code))return'Partly cloudy';if(code===3)return'Overcast';if([45,48].includes(code))return'Foggy';if([51,53,55].includes(code))return'Drizzle';if([61,63,65].includes(code))return'Rainy';if([80,81,82].includes(code))return'Showers';if([71,73,75,77].includes(code))return'Snowy';if([95,96,99].includes(code))return'Thunderstorm';return'Mixed';}
 
 // ═══════════════════════════════════════════════
-// AI SUGGESTIONS
+// GAP CHECK — "What am I forgetting?"
+// One tap reads this trip's list, planned outfits, closet, My Items and forecast,
+// and suggests only what's missing, each with a reason and the category it belongs in.
+// Runs only when tapped. If the AI can't be reached it says so, with Retry (no stand-in list).
 // ═══════════════════════════════════════════════
-async function generateAISuggestions(trip) {
-  document.getElementById('ai-content').innerHTML = '<div class="ai-loading"><span>Generating smart suggestions for ' + (trip.destination||'your trip') + '</span><div class="ai-dots"><span></span><span></span><span></span></div></div>';
-
-  // Build rich weather context from actual forecast
-  let weatherSummary = '';
-  let weatherDetail = '';
-  if (state.weather && state.weather.daily.length) {
-    const days = state.weather.daily;
-    const avgHigh = Math.round(days.reduce((s,d)=>s+d.tempMax,0)/days.length);
-    const avgLow = Math.round(days.reduce((s,d)=>s+d.tempMin,0)/days.length);
-    const hasRain = days.some(d=>[51,53,55,61,63,65,80,81,82].includes(d.code));
-    const hasThunder = days.some(d=>[95,96,99].includes(d.code));
-    const hasSnow = days.some(d=>[71,73,75,77,85,86].includes(d.code));
-    const hasFog = days.some(d=>[45,48].includes(d.code));
-    const rainDays = days.filter(d=>[51,53,55,61,63,65,80,81,82,95,96,99].includes(d.code)).length;
-    const hotDays = days.filter(d=>d.tempMax>85).length;
-    const coldDays = days.filter(d=>d.tempMin<45).length;
-    const tripDays = days.length;
-    weatherSummary = 'Avg high: ' + avgHigh + 'F, avg low: ' + avgLow + 'F over ' + tripDays + ' days.';
-    weatherDetail = [
-      rainDays > 0 ? rainDays + ' rainy day' + (rainDays>1?'s':'') : '',
-      hasThunder ? 'thunderstorms possible' : '',
-      hasSnow ? 'snow possible' : '',
-      hasFog ? 'fog expected' : '',
-      hotDays > 0 ? hotDays + ' day' + (hotDays>1?'s':'')+' above 85F' : '',
-      coldDays > 0 ? coldDays + ' night' + (coldDays>1?'s':'')+' below 45F' : '',
-    ].filter(Boolean).join(', ');
-  }
-
-  const tripDuration = (trip.startDate && trip.endDate)
-    ? Math.round((new Date(trip.endDate)-new Date(trip.startDate))/86400000)+1
-    : null;
-
-  const typeDescriptions = {
-    business: 'professional business travel — meetings, presentations, corporate dinners',
-    leisure: 'leisure vacation — sightseeing, dining, relaxation',
-    adventure: 'outdoor/adventure travel — hiking, active exploration, nature',
-    international: 'international travel — crossing borders, cultural experiences, longer flights',
+// ── GAP CHECK: shared code (the app and the worker carry identical copies) ──
+// cleanGapData caps every field, buildGapPrompt writes the prompt, parseGapItems
+// turns the AI's reply into at most 8 safe {item, category, reason, source} rows.
+function gapClip(v, n) { return String(v == null ? '' : v).replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n); }
+function gapList(a, maxItems, maxLen) { return (Array.isArray(a) ? a : []).map(x => gapClip(x, maxLen)).filter(Boolean).slice(0, maxItems); }
+function cleanGapData(b) {
+  b = (b && typeof b === 'object') ? b : {};
+  const cats = gapList(b.categories, 24, 40);
+  if (!cats.some(c => c.toLowerCase() === 'misc')) cats.push('Misc');
+  return {
+    destination: gapClip(b.destination, 120),
+    itinerary: gapList(b.itinerary, 10, 120),
+    type: gapClip(b.type, 40),
+    reason: gapClip(b.reason, 200),
+    dates: gapClip(b.dates, 80),
+    days: Math.max(0, Math.min(90, parseInt(b.days, 10) || 0)),
+    weather: gapList(b.weather, 20, 80),
+    categories: cats,
+    packing: (Array.isArray(b.packing) ? b.packing : []).slice(0, 24)
+      .map(c => ({ category: gapClip(c && c.category, 40), items: gapList(c && c.items, 100, 70) }))
+      .filter(c => c.category),
+    outfits: gapList(b.outfits, 40, 160),
+    myItems: gapList(b.myItems, 80, 70),
+    closet: gapList(b.closet, 150, 70),
   };
-
-  const prompt = 'You are a precise travel packing expert. Generate exactly 14 packing suggestions tailored specifically to this trip.' +
-    '\n\nDESTINATION: ' + (trip.destination||'Unknown') +
-    (isMultiStop(trip) ? '\nITINERARY (multi-city — pack for every stop, one bag): ' + formatItinerary(trip) : '') +
-    '\nTRIP TYPE: ' + (typeDescriptions[trip.type]||trip.type||'leisure') +
-    (trip.reason ? '\nREASON: ' + trip.reason : '') +
-    (tripDuration ? '\nDURATION: ' + tripDuration + ' days' : '') +
-    (trip.startDate ? '\nDATES: ' + formatDateRange(trip.startDate, trip.endDate) : '') +
-    (weatherSummary ? '\n\nWEATHER: ' + weatherSummary : '') +
-    (weatherDetail ? '\nWEATHER DETAILS: ' + weatherDetail : '') +
-    '\n\nRULES:' +
-    '\n- Be SPECIFIC (e.g. "Waterproof hiking boots" not just "shoes")' +
-    '\n- Include quantities where relevant (e.g. "3 dress shirts", "sunscreen SPF 50+")' +
-    '\n- Prioritize items driven by the WEATHER and TRIP TYPE' +
-    '\n- If rain expected, include rain gear' +
-    '\n- If hot, focus on breathable/lightweight items' +
-    '\n- If cold nights, include layers' +
-    '\n- Match trip type: business trips need formal wear, adventure needs gear, leisure is casual' +
-    '\n\nReturn ONLY a JSON array of 14 strings. No preamble, no markdown, no explanation.';
-
-  try {
-    // Route through worker proxy (API key stays server-side)
-    const result = await api('POST', '/api/ai/suggest', {
-      destination: trip.destination,
-      startDate: trip.startDate,
-      endDate: trip.endDate,
-      type: trip.type,
-      reason: trip.reason || '',
-      weatherSummary: weatherSummary + (weatherDetail ? ' ' + weatherDetail : ''),
-      prompt, // pass full prompt so worker uses it
-    });
-    let suggestions = [];
-    if (result && result.result) {
-      try { suggestions = JSON.parse(result.result.replace(/```json|```/g,'').trim()); } catch{}
-    }
-    if (!suggestions.length) throw new Error('empty');
-    renderAISuggestions(suggestions);
-  } catch(e) {
-    // Smart fallback based on trip type and weather
-    const hasRainFallback = state.weather?.daily.some(d=>[61,63,65,80,81,82].includes(d.code));
-    const isHot = state.weather?.daily.some(d=>d.tempMax>82);
-    const isCold = state.weather?.daily.some(d=>d.tempMin<50);
-    let fallback = [];
-    if (trip.type === 'business') {
-      fallback = ['Dress shirts (x3)','Dress pants (x2)','Blazer','Black dress shoes','Business cards','Laptop & charger','Noise-canceling headphones','Portable phone charger','Wrinkle-release spray','Travel umbrella','Dress socks (x4)','Belt','Cologne/Perfume','Universal power adapter'];
-    } else if (trip.type === 'adventure') {
-      fallback = ['Waterproof hiking boots','Moisture-wicking shirts (x3)','Hiking pants (x2)','Rain jacket','Sunscreen SPF 50+','Insect repellent','First aid kit','Headlamp + batteries','Trekking poles','Reusable water bottle','Snacks/trail mix','Blister prevention socks','Dry bag','Portable battery pack'];
-    } else {
-      fallback = ['Comfortable walking shoes','T-shirts (x4)','Casual pants/shorts (x3)','Light jacket','Sunscreen SPF 50+','Sunglasses','Day backpack','Reusable water bottle','Universal adapter','Phone charger','Travel-size toiletries','Packing cubes','Portable umbrella','Offline maps downloaded'];
-    }
-    if (hasRainFallback && !fallback.includes('Portable umbrella') && !fallback.includes('Rain jacket')) {
-      fallback.splice(3, 0, 'Compact waterproof rain jacket');
-    }
-    if (isCold) fallback.splice(2, 0, 'Warm base layer / thermal shirt');
-    if (isHot) fallback = fallback.map(i => i === 'Light jacket' ? 'Breathable linen shirt' : i);
-    renderAISuggestions(fallback.slice(0, 14));
+}
+function gapFit(lines, budget, sep) {
+  // Keep whole lines until the budget runs out, then say how many were left out.
+  const out = []; let used = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i];
+    if (used + l.length + sep.length > budget) { out.push('(+' + (lines.length - i) + ' more)'); break; }
+    out.push(l); used += l.length + sep.length;
   }
+  return out.join(sep);
 }
-function renderAISuggestions(suggestions) {
-  if(!suggestions.length){document.getElementById('ai-content').innerHTML='<p class="italic text-muted">No suggestions generated.</p>';return;}
-  document.getElementById('ai-content').innerHTML=`<div class="ai-suggestions-list">${suggestions.map(s=>`<div class="ai-suggestion-chip" onclick="addAISuggestion(this,${jsArg(s)})"><span>+</span> ${esc(s)}</div>`).join('')}</div>`;
+function buildGapPrompt(d, maxChars) {
+  const rules =
+    'You check a traveler\'s packing list and find what they are forgetting for this specific trip.\n\n' +
+    'RULES\n' +
+    '- Suggest only things that are missing AND that this trip actually needs. At most 8; fewer is better. If nothing important is missing, return [].\n' +
+    '- Never suggest anything already on the packing list or in the planned outfits, even in other words, or when something listed already covers the same need.\n' +
+    '- Check MY ITEMS first: things the traveler usually packs that fit this trip but are not on the list are the likeliest misses.\n' +
+    '- When a clothing piece is missing, pick one from CLOSET and use its exact name.\n' +
+    '- Flag a quantity shortfall only when it is clear (for example 2 shirts for 7 days), as an item like "3 more shirts".\n' +
+    '- Think about the forecast, the purpose and planned outfits, travel documents, chargers and adapters, and toiletries.\n' +
+    '- "category" must be exactly one of: ' + d.categories.join(', ') + '.\n' +
+    '- "reason" is one short phrase under 12 words tied to this trip, like "Rain forecast Tuesday and Wednesday".\n' +
+    '- "source" is "my-items" if from MY ITEMS, "closet" if from CLOSET, otherwise "new".\n\n';
+  const tail = '\n\nAnswer with ONLY a JSON array and no other text: [{"item":"...","category":"...","reason":"...","source":"new"}]';
+  const room = Math.max(1200, (maxChars || 12000) - rules.length - tail.length - 400);
+  const trip = [
+    'Destination: ' + (d.destination || 'unknown'),
+    d.itinerary.length > 1 ? 'Itinerary: ' + d.itinerary.join('; ') : '',
+    'Trip type: ' + (d.type || 'leisure'),
+    d.reason ? 'Purpose: ' + d.reason : '',
+    d.dates ? 'Dates: ' + d.dates + (d.days ? ' (' + d.days + ' days)' : '') : (d.days ? 'Length: ' + d.days + ' days' : ''),
+  ].filter(Boolean).join('\n');
+  const packLines = d.packing.map(c => c.category + ': ' + (c.items.length ? c.items.join(', ') : '(empty)'));
+  return rules +
+    'TRIP\n' + trip + '\n\n' +
+    'FORECAST (daily high/low in °F)\n' + (d.weather.length ? gapFit(d.weather, Math.floor(room * 0.10), '\n') : 'No forecast yet.') + '\n\n' +
+    'ALREADY ON THE PACKING LIST\n' + (packLines.length ? gapFit(packLines, Math.floor(room * 0.42), '\n') : '(nothing yet)') + '\n\n' +
+    'ALREADY PLANNED IN OUTFITS (count as packed)\n' + (d.outfits.length ? gapFit(d.outfits, Math.floor(room * 0.12), '\n') : '(none)') + '\n\n' +
+    'MY ITEMS (things this traveler usually packs)\n' + (d.myItems.length ? gapFit(d.myItems, Math.floor(room * 0.12), '; ') : '(none saved)') + '\n\n' +
+    'CLOSET (clothes this traveler owns)\n' + (d.closet.length ? gapFit(d.closet, Math.floor(room * 0.22), '; ') : '(none saved)') +
+    tail;
 }
-function addAISuggestion(chip, itemName) {
-  if(chip.classList.contains('added')) return;
-  if(!state.currentTrip.categories['Misc']) state.currentTrip.categories['Misc']=[];
-  state.currentTrip.categories['Misc'].push({id:uid(),name:itemName,description:'',notes:'',qty:1,checked:false,essential:false});
-  saveTrips(); chip.classList.add('added'); chip.innerHTML='✓ Added'; updateProgressRing();
-  toast(`Added: ${itemName}`,'success');
+function parseGapItems(text, categories) {
+  if (typeof text !== 'string') return null;
+  const a = text.indexOf('['), z = text.lastIndexOf(']');
+  if (a < 0 || z < a) return null;
+  let arr;
+  try { arr = JSON.parse(text.slice(a, z + 1)); } catch (e) { return null; }
+  if (!Array.isArray(arr)) return null;
+  const cats = Array.isArray(categories) && categories.length ? categories : ['Misc'];
+  const seen = {};
+  const out = [];
+  for (const r of arr) {
+    if (!r || typeof r !== 'object') continue;
+    const item = gapClip(r.item, 60);
+    if (!item) continue;
+    const key = item.toLowerCase();
+    if (seen[key]) continue;
+    seen[key] = 1;
+    const want = gapClip(r.category, 40).toLowerCase();
+    const category = cats.find(c => c.toLowerCase() === want) || cats.find(c => c.toLowerCase() === 'misc') || 'Misc';
+    const source = ['my-items', 'closet', 'new'].includes(r.source) ? r.source : 'new';
+    out.push({ item, category, reason: gapClip(r.reason, 120), source });
+    if (out.length >= 8) break;
+  }
+  return out;
+}
+// ── end of shared gap-check code ──
+const gapState = { tripId: null, status: 'idle', items: [], added: {}, error: '', seq: 0 };
+
+function resetGapCheck(trip) {
+  if (!trip || gapState.tripId !== trip.id) {
+    gapState.tripId = trip ? trip.id : null;
+    gapState.status = 'idle'; gapState.items = []; gapState.added = {}; gapState.error = '';
+    gapState.seq++;
+  }
+  renderGapCheck();
+}
+
+function gapNorm(s) {
+  return String(s || '').toLowerCase().replace(/\(.*?\)/g, ' ').replace(/^\s*(\d+|x\d+)\s*(more\s+)?/, '').replace(/[^a-z0-9]+/g, ' ').trim().replace(/s\b/g, '');
+}
+function gapAlreadyListed(trip, name) {
+  const n = gapNorm(name); if (!n) return true;
+  if (/^\d|\bmore\b/i.test(String(name).trim())) return false; // "3 more shirts" is a quantity note, not a duplicate
+  return Object.values(trip.categories || {}).some(items => (items || []).some(i => gapNorm(i.name) === n));
+}
+
+function gapShortDate(iso) {
+  try { return new Date(iso + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); } catch (e) { return iso; }
+}
+
+function collectGapData(trip) {
+  const showPC = !!state.currentUser.showPersonalCare;
+  const visible = c => showPC || c !== 'Personal Care';
+  const stops = getTripStops(trip).filter(s => s.city);
+  const daily = (state.currentTrip === trip && state.weather && state.weather.daily && state.weather.daily.length)
+    ? state.weather.daily : ((trip.weatherCache && trip.weatherCache.daily) || []);
+  const multi = stops.length > 1;
+  const weather = daily.map(d => gapShortDate(d.date) + (multi && d.city ? ' ' + d.city : '') + ': ' +
+    Math.round(d.tempMax) + '/' + Math.round(d.tempMin) + ', ' + weatherDesc(d.code).toLowerCase());
+  const tripCats = Object.keys(trip.categories || {}).filter(visible);
+  const categories = [...new Set([...getAllCategories(), ...tripCats])].filter(c => visible(c) && c !== 'Imported' && c !== 'Outfits');
+  const packing = tripCats.map(c => ({
+    category: c,
+    items: (trip.categories[c] || []).map(i => (i.name || '') + ((i.qty || 1) > 1 ? ' x' + i.qty : '')),
+  }));
+  const outfits = [];
+  const mine = (trip.outfits || {})[state.currentUser.id] || {};
+  Object.keys(mine).sort().forEach(dateKey => {
+    const list = Array.isArray(mine[dateKey]) ? mine[dateKey] : [mine[dateKey]];
+    list.forEach(o => {
+      if (!o) return;
+      const pieces = ['top', 'bottom', 'shoes', 'outer', 'accessories', 'bag'].map(p => o[p]).filter(Boolean);
+      if (!pieces.length) return;
+      const what = o.event || o.occasion || '';
+      outfits.push(gapShortDate(dateKey) + (what ? ' ' + what : '') + ': ' + pieces.join(', '));
+    });
+  });
+  const myItems = getLibrary().map(i => (i.name || '') + (i.cat ? ' [' + i.cat + ']' : ''));
+  const closet = getCloset().map(i => {
+    const color = i.color && !String(i.name || '').toLowerCase().includes(String(i.color).toLowerCase()) ? i.color + ' ' : '';
+    return color + (i.name || '') + (i.cat ? ' [' + i.cat + ']' : '');
+  });
+  const days = (trip.startDate && trip.endDate) ? Math.round((new Date(trip.endDate) - new Date(trip.startDate)) / 86400000) + 1 : 0;
+  return {
+    tripId: trip.id,
+    destination: trip.destination || stopsToDestination(stops),
+    itinerary: stops.map(s => cityOnly(s.city) + ((s.startDate || s.endDate) ? ' (' + formatDateRange(s.startDate, s.endDate) + ')' : '')),
+    type: trip.type || 'leisure',
+    reason: trip.reason || '',
+    dates: trip.startDate ? formatDateRange(trip.startDate, trip.endDate) : '',
+    days,
+    weather, categories, packing, outfits, myItems, closet,
+  };
+}
+
+async function runGapCheck() {
+  const trip = state.currentTrip; if (!trip) return;
+  if (gapState.status === 'loading' && gapState.tripId === trip.id) return;
+  const seq = ++gapState.seq;
+  gapState.tripId = trip.id; gapState.status = 'loading'; gapState.items = []; gapState.added = {}; gapState.error = '';
+  renderGapCheck();
+  const data = collectGapData(trip);
+  const clean = cleanGapData(data);
+  let items = null, offline = false;
+  try {
+    let r = await apiCall('POST', '/api/ai/gaps', data);
+    if (r.status === 404) {
+      // The worker hasn't been updated yet: send the same check through the older AI address.
+      r = await apiCall('POST', '/api/ai/suggest', { prompt: buildGapPrompt(clean, 5800) });
+      if (r.ok && r.data && typeof r.data.result === 'string') items = parseGapItems(r.data.result, clean.categories);
+    } else if (r.ok && r.data && Array.isArray(r.data.items)) {
+      items = parseGapItems(JSON.stringify(r.data.items), clean.categories);
+    }
+    offline = r.status === 0;
+  } catch (e) { items = null; }
+  if (seq !== gapState.seq || state.currentTrip !== trip) return; // moved on meanwhile
+  if (items === null) {
+    gapState.status = 'error';
+    gapState.error = offline ? "You seem to be offline, so I couldn't check your list." : "Couldn't check your list just now. Nothing was changed.";
+  } else {
+    gapState.status = 'done';
+    gapState.items = items.filter(s => !gapAlreadyListed(trip, s.item));
+  }
+  renderGapCheck();
+}
+
+function addGapItem(idx) {
+  const trip = state.currentTrip; const s = gapState.items[idx];
+  if (!trip || !s || gapState.added[idx] || gapState.tripId !== trip.id) return;
+  let cat = Object.keys(trip.categories).find(k => k.toLowerCase() === s.category.toLowerCase());
+  if (!cat) { cat = s.category; trip.categories[cat] = []; }
+  trip.categories[cat].push({ id: uid(), name: s.item, description: '', notes: '', qty: 1, checked: false, essential: false });
+  gapState.added[idx] = cat;
+  saveTrips(); renderPackingList(); renderGapCheck();
+  toast('Added to ' + cat + ': ' + s.item, 'success');
+}
+
+function renderGapCheck() {
+  const box = document.getElementById('ai-content'); if (!box) return;
+  const trip = state.currentTrip;
+  if (!trip) { box.innerHTML = ''; return; }
+  const st = gapState.tripId === trip.id ? gapState.status : 'idle';
+  if (st === 'loading') {
+    box.innerHTML = '<div class="ai-loading"><span>Checking your list</span><div class="ai-dots"><span></span><span></span><span></span></div></div>';
+    return;
+  }
+  if (st === 'error') {
+    box.innerHTML = '<p class="gap-error">' + esc(gapState.error) + '</p><button class="btn btn-primary gap-run" onclick="runGapCheck()">Retry</button>';
+    return;
+  }
+  if (st === 'done') {
+    const rows = gapState.items.map((s, i) => {
+      const added = gapState.added[i];
+      const from = s.source === 'closet' ? ' · from your closet' : s.source === 'my-items' ? ' · from My Items' : '';
+      return '<div class="gap-row' + (added ? ' added' : '') + '">' +
+        '<div class="gap-text"><div class="gap-name">' + esc(s.item) + '</div>' +
+        (s.reason ? '<div class="gap-reason">' + esc(s.reason) + '</div>' : '') +
+        '<div class="gap-meta">' + (CATEGORY_ICONS[added || s.category] || '📦') + ' ' + esc(added || s.category) + esc(from) + '</div></div>' +
+        (added ? '<span class="gap-added">✓ Added</span>'
+               : '<button class="btn btn-secondary gap-add" onclick="addGapItem(' + i + ')">+ Add</button>') +
+        '</div>';
+    }).join('');
+    box.innerHTML = (gapState.items.length
+      ? '<div class="gap-list">' + rows + '</div>'
+      : '<p class="gap-intro">Nothing obvious missing. Your list looks complete for this trip.</p>') +
+      '<button class="btn btn-secondary gap-run" onclick="runGapCheck()">Check again</button>';
+    return;
+  }
+  box.innerHTML = '<p class="gap-intro">Checks this list against your closet, My Items, outfits and forecast, and suggests only what\'s missing.</p>' +
+    '<button class="btn btn-primary gap-run" onclick="runGapCheck()">Check my list</button>';
 }
 
 // ═══════════════════════════════════════════
@@ -3546,13 +3687,9 @@ function toggleAIPanel() {
   aiPanelHidden = !aiPanelHidden;
   const aiContent = document.getElementById('ai-content');
   const btn = document.getElementById('ai-toggle-btn');
-  const regenBtn = document.getElementById('ai-regen-btn');
   if (aiContent) aiContent.style.display = aiPanelHidden ? 'none' : '';
   if (btn) btn.textContent = aiPanelHidden ? 'Show' : 'Hide';
-  if (regenBtn) regenBtn.style.display = aiPanelHidden ? 'none' : '';
 }
-
-function regenerateAI(){if(state.currentTrip) generateAISuggestions(state.currentTrip);}
 
 // ═══════════════════════════════════════════════
 // OUTFIT BUILDER — multi-outfit per day
