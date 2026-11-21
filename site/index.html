@@ -87,7 +87,7 @@
   [data-theme="dark"] .topnav{background:#060F1E;border-bottom:1px solid rgba(46,125,209,0.2);}
   .topnav-inner{max-width:1100px;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;gap:1rem;height:56px;}
   .topnav-brand{font-family:var(--font-display);font-size:1.3rem;font-weight:700;color:var(--gold);letter-spacing:-0.01em;flex:1;cursor:pointer;}
-  .topnav-brand span{font-style:italic;font-weight:400;color:rgba(240,232,216,0.5);font-size:0.9rem;margin-left:0.5rem;}
+  .topnav-brand #nav-username-display{font-style:italic;font-weight:400;color:rgba(240,232,216,0.5);font-size:0.9rem;margin-left:0.5rem;}
   .topnav-nav{display:flex;align-items:center;gap:0.25rem;}
   .nav-btn{padding:0.4rem 0.75rem;background:transparent;border:none;color:rgba(240,232,216,0.7);font-family:var(--font-body);font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;border-radius:var(--radius);transition:all var(--transition);}
   .nav-btn:hover,.nav-btn.active{color:var(--gold);background:rgba(201,168,76,0.1);}
@@ -397,6 +397,14 @@
   @keyframes slideIn{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
   @keyframes fadeOut{from{opacity:1;}to{opacity:0;pointer-events:none;}}
 
+  /* SAVE BANNER */
+  .save-banner{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(1rem + env(safe-area-inset-bottom));z-index:10000;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:0.5rem 0.6rem;width:max-content;max-width:calc(100vw - 32px);padding:0.6rem 0.75rem 0.6rem 1rem;border-radius:12px;background:var(--espresso);color:var(--cream);border:1px solid var(--burgundy);box-shadow:0 6px 24px var(--shadow-deep);font-size:0.85rem;line-height:1.35;}
+  .save-banner button{font:inherit;font-size:0.82rem;font-weight:600;min-height:40px;padding:0.4rem 0.9rem;border-radius:8px;border:0;cursor:pointer;}
+  .save-banner .sb-primary{background:var(--gold);color:var(--espresso);}
+  .save-banner .sb-secondary{background:rgba(255,255,255,0.14);color:var(--cream);}
+  .version-row{display:flex;align-items:center;justify-content:space-between;gap:0.75rem;padding:0.5rem 0;border-bottom:1px solid var(--border);font-size:0.85rem;}
+  .version-row .btn{font-size:0.72rem;flex-shrink:0;}
+
   /* UTIL */
   .flex{display:flex;} .flex-between{display:flex;justify-content:space-between;align-items:center;}
   .gap-sm{gap:0.5rem;} .gap-md{gap:1rem;} .mt-1{margin-top:0.5rem;} .mt-2{margin-top:1rem;} .mt-3{margin-top:1.5rem;}
@@ -578,6 +586,7 @@
 <body>
 
 <div id="toast-container"></div>
+<div id="save-banner" class="save-banner" role="status" aria-live="polite" style="display:none;"></div>
 
 <!-- ══════════════════════════════════════════════
      LOGIN
@@ -707,6 +716,18 @@
         </div>
         <button class="btn btn-secondary" onclick="changePassword()">Update Password</button>
         <div id="profile-pw-msg" style="font-size:0.78rem;margin-top:0.5rem;display:none;"></div>
+      </div>
+    </div>
+    <div class="card mb-2">
+      <div class="card-header"><h3>Recently Deleted Trips</h3></div>
+      <div class="card-body">
+        <p class="text-muted" style="font-size:0.82rem;margin-bottom:0.75rem;">Deleted trips can be restored for 90 days.</p>
+        <button class="btn btn-secondary" onclick="showDeletedTrips()">Show deleted trips</button>
+        <div id="deleted-trips-list" style="margin-top:0.75rem;"></div>
+        <div id="admin-backup-row" style="display:none;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);">
+          <p class="text-muted" style="font-size:0.82rem;margin-bottom:0.75rem;">Admin: download everyone's trips, closets and settings as one file (no passwords).</p>
+          <button class="btn btn-secondary" onclick="downloadFullBackup()">Download full backup</button>
+        </div>
       </div>
     </div>
     <div class="card" style="border-color:var(--burgundy);">
@@ -997,6 +1018,14 @@
           <div class="card-header"><h3>Trip Actions</h3></div>
           <div class="card-body" style="display:flex;gap:0.75rem;flex-wrap:wrap;">
             <button class="btn btn-secondary" onclick="duplicateTrip()">⊕ Duplicate Trip</button>
+          </div>
+        </div>
+        <div class="card mb-2">
+          <div class="card-header"><h3>Earlier Versions</h3></div>
+          <div class="card-body">
+            <p class="text-muted" style="font-size:0.82rem;margin-bottom:0.75rem;">A copy of this trip is kept as you edit (the last 30, for 60 days). Restore one if something goes missing.</p>
+            <button class="btn btn-secondary" onclick="showTripVersions()">Show saved versions</button>
+            <div id="trip-versions-list" style="margin-top:0.75rem;"></div>
           </div>
         </div>
         <div class="card">
@@ -1354,7 +1383,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else if (res.status === 401) {
         clearAuthToken();
       }
-    } catch(e) { /* offline — stay on sign-in screen */ }
+    } catch(e) {
+      // No connection: open with the trips saved on this device; changes sync when back online.
+      let last = null;
+      try { last = JSON.parse(localStorage.getItem('pr_last_user') || 'null'); } catch(_) {}
+      if (last && last.id) { await completeLogin(last, null, true); toast("You're offline. Showing the copy saved on this device."); return; }
+    }
   }
   // Old-style saved password token from previous version: discard it
   try { localStorage.removeItem('pr_auth_token'); } catch(e) {}
@@ -1415,34 +1449,446 @@ async function loadTrips() {
   const cloud = await api('GET', '/api/trips');
   if (cloud && Array.isArray(cloud)) {
     state.trips = cloud;
-    try { localStorage.setItem('pr_trips', JSON.stringify(cloud)); } catch(e) {}
+  } else {
+    // Can't reach the cloud: use this device's copy
+    try { const t = JSON.parse(localStorage.getItem('pr_trips') || '[]'); if (Array.isArray(t)) state.trips = t; } catch(e) {}
+  }
+  restoreUnsavedTrips();
+}
+
+// ── SAVING ──
+// Every change is kept on this phone first, then sent to the cloud about a second after the
+// last tap (one request at a time per item). If a save fails, a banner says so and it retries.
+const _saveQ = {};
+let _retryTimer = null, _retryDelay = 4000, _saveConflict = null, _hiddenAt = 0;
+
+async function apiCall(method, path, body, opts) {
+  opts = opts || {};
+  const token = getAuthToken();
+  if (!token) return { ok: false, status: 0, data: null };
+  try {
+    const init = { method, headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token } };
+    if (body !== undefined) init.body = JSON.stringify(body);
+    if (opts.keepalive && init.body && init.body.length < 60000) init.keepalive = true;
+    const res = await fetch(WORKER + path, init);
+    const data = await res.json().catch(() => null);
+    if (res.status === 401) handleSessionExpired();
+    return { ok: res.ok, status: res.status, data };
+  } catch (e) {
+    return { ok: false, status: 0, data: null };
+  }
+}
+
+function queueSave(key, run, delay) {
+  const q = _saveQ[key] || (_saveQ[key] = { timer: null, running: null, dirty: false, failed: false });
+  q.run = run; q.dirty = true;
+  clearTimeout(q.timer);
+  q.timer = setTimeout(() => flushSave(key), delay == null ? 800 : delay);
+}
+
+function flushSave(key, opts) {
+  const q = _saveQ[key];
+  if (!q) return Promise.resolve();
+  clearTimeout(q.timer); q.timer = null;
+  if (q.running) return q.running;          // it checks for newer changes when it finishes
+  if (!q.dirty) return Promise.resolve();
+  q.dirty = false;
+  q.running = (async () => {
+    let result;
+    try { result = await q.run(opts || {}); } catch (e) { console.warn('Save failed:', key, e); result = 'fail'; }
+    q.running = null;
+    if (_saveQ[key] !== q) return;          // cancelled (e.g. trip deleted) while saving
+    q.failed = result === 'fail';
+    if (q.failed) q.dirty = true;
+    else if (q.dirty && result === 'ok') flushSave(key);   // more changes came in while saving
+    if (result === 'gone') delete _saveQ[key];
+    updateSaveBanner();
+  })();
+  return q.running;
+}
+
+function cancelSave(key) {
+  const q = _saveQ[key];
+  if (!q) return null;
+  clearTimeout(q.timer);
+  delete _saveQ[key];
+  return q.running;
+}
+
+function flushAllSaves(opts) {
+  return Promise.all(Object.keys(_saveQ).map(k => _saveQ[k].dirty ? flushSave(k, opts) : _saveQ[k].running));
+}
+
+function hasPendingSaves() {
+  return !!_saveConflict || Object.values(_saveQ).some(q => q.dirty || q.running);
+}
+
+function retrySaves() {
+  Object.keys(_saveQ).forEach(k => { const q = _saveQ[k]; if (q.failed && q.dirty && !q.running) flushSave(k); });
+}
+
+function retrySavesNow() {
+  _retryDelay = 4000;
+  if (_retryTimer) { clearTimeout(_retryTimer); _retryTimer = null; }
+  retrySaves();
+}
+
+function scheduleRetry() {
+  if (_retryTimer) return;
+  _retryTimer = setTimeout(() => { _retryTimer = null; retrySaves(); }, _retryDelay);
+  _retryDelay = Math.min(_retryDelay * 2, 60000);
+}
+
+function updateSaveBanner() {
+  const el = document.getElementById('save-banner');
+  if (!el) return;
+  if (_saveConflict) {
+    el.className = 'save-banner error';
+    el.innerHTML = '<span>This trip was changed on another device.</span>' +
+      '<button class="sb-primary" onclick="resolveSaveConflict(\'theirs\')">Load latest</button>' +
+      '<button class="sb-secondary" onclick="resolveSaveConflict(\'mine\')">Keep mine</button>';
+    el.style.display = 'flex';
     return;
   }
-  // Fallback to localStorage
-  try { const t = JSON.parse(localStorage.getItem('pr_trips') || '[]'); if (Array.isArray(t)) state.trips = t; } catch(e) {}
+  const failed = Object.values(_saveQ).some(q => q.failed && q.dirty);
+  if (failed && state.currentUser) {
+    el.className = 'save-banner error';
+    el.innerHTML = '<span>' + (navigator.onLine === false ? "You're offline. " : 'Not saved yet. ') +
+      'Your changes are kept on this device.</span><button class="sb-primary" onclick="retrySavesNow()">Retry</button>';
+    el.style.display = 'flex';
+    scheduleRetry();
+    return;
+  }
+  el.style.display = 'none';
+  _retryDelay = 4000;
+  if (_retryTimer) { clearTimeout(_retryTimer); _retryTimer = null; }
+}
+
+// Unsaved trip copies, kept per user so nothing is lost if the app closes or goes offline.
+function dirtyKey() { return state.currentUser ? 'pr_dirty_' + state.currentUser.id : null; }
+function readDirty() {
+  const k = dirtyKey(); if (!k) return {};
+  try { return JSON.parse(localStorage.getItem(k) || '{}') || {}; } catch (e) { return {}; }
+}
+function writeDirty(d) {
+  const k = dirtyKey(); if (!k) return;
+  try { if (Object.keys(d).length) localStorage.setItem(k, JSON.stringify(d)); else localStorage.removeItem(k); } catch (e) {}
+}
+function markTripDirty(trip, isNew) {
+  const d = readDirty();
+  d[trip.id] = { trip, isNew: !!(isNew || (d[trip.id] && d[trip.id].isNew)) };
+  writeDirty(d);
+}
+function persistTripsLocal() {
+  try { localStorage.setItem('pr_trips', JSON.stringify(state.trips)); } catch (e) {}
+}
+
+function saveTripSoon(trip, delay) {
+  if (!trip || !trip.id || !state.currentUser) return;
+  markTripDirty(trip);
+  queueSave('trip:' + trip.id, opts => pushTrip(trip.id, opts), delay);
+}
+
+function applyServerMeta(trip, data) {
+  if (!data) return;
+  if (data.updatedAt) trip.updatedAt = data.updatedAt;
+  if (data.createdAt && !trip.createdAt) trip.createdAt = data.createdAt;
+  if (data.ownerId && !trip.ownerId) trip.ownerId = data.ownerId;
+  if (state.currentUser && data.ownerId && data.ownerId !== state.currentUser.id) {
+    // Only the owner decides sharing; take the server's word for it.
+    trip.sharedWith = data.sharedWith || [];
+    if (data.shareToken) trip.shareToken = data.shareToken; else delete trip.shareToken;
+  }
+}
+
+async function pushTrip(id, opts) {
+  opts = opts || {};
+  const trip = state.trips.find(t => t.id === id);
+  if (!trip) return 'gone';
+  if (!state.currentUser || !getAuthToken()) return 'fail';
+  const entry = readDirty()[id];
+  let r;
+  if (entry && entry.isNew) {
+    r = await apiCall('POST', '/api/trips', trip, opts);
+    if (!r.ok || !r.data || !r.data.id) return 'fail';
+    if (r.status === 201) {
+      applyServerMeta(trip, r.data);
+      if (r.data.id !== id) { trip.id = r.data.id; }
+      finishTripSave(id, trip);
+      return 'ok';
+    }
+    // 200: it was already created (an earlier try got through). Send the latest copy over it.
+    const d = readDirty(); if (d[id]) { d[id].isNew = false; writeDirty(d); }
+    trip.updatedAt = r.data.updatedAt;
+  }
+  const body = Object.assign({}, trip);
+  if (trip.updatedAt && !opts.force) body._baseUpdatedAt = trip.updatedAt;
+  r = await apiCall('PUT', '/api/trips/' + id, body, opts);
+  if (r.ok && r.data) {
+    applyServerMeta(trip, r.data);
+    finishTripSave(id, trip);
+    return 'ok';
+  }
+  if (r.status === 409) {
+    const server = r.data && r.data.trip;
+    // The cloud copy we were shown is older than the version we last saved: a slow cache, not a clash.
+    if (server && server.updatedAt && trip.updatedAt && server.updatedAt < trip.updatedAt && !opts.retried) {
+      return pushTrip(id, Object.assign({}, opts, { force: true, retried: true }));
+    }
+    _saveConflict = { id, server };
+    return 'conflict';
+  }
+  if (r.status === 404 && !opts.retried && (!trip.ownerId || trip.ownerId === state.currentUser.id)) {
+    // Not in the cloud (never arrived, or removed elsewhere): create it so these changes aren't lost.
+    markTripDirty(trip, true);
+    return pushTrip(id, Object.assign({}, opts, { retried: true }));
+  }
+  if (r.status === 403 || r.status === 404) {
+    toast('This trip is no longer shared with you, so changes can\'t be saved.', 'error');
+    const d = readDirty(); delete d[id]; writeDirty(d);
+    return 'gone';
+  }
+  return 'fail';
+}
+
+function finishTripSave(oldId, trip) {
+  const q = _saveQ['trip:' + oldId];
+  const d = readDirty();
+  delete d[oldId];
+  if (q && q.dirty) d[trip.id] = { trip, isNew: false };   // newer changes still on their way
+  writeDirty(d);
+  persistTripsLocal();
+}
+
+function resolveSaveConflict(choice) {
+  const c = _saveConflict;
+  if (!c) return;
+  _saveConflict = null;
+  const trip = state.trips.find(t => t.id === c.id);
+  if (choice === 'theirs' && c.server) {
+    cancelSave('trip:' + c.id);
+    const d = readDirty(); delete d[c.id]; writeDirty(d);
+    if (trip) { Object.keys(trip).forEach(k => delete trip[k]); Object.assign(trip, c.server); }
+    persistTripsLocal();
+    rerenderAfterTripChange(c.id);
+    toast('Loaded the latest version');
+  } else if (trip) {
+    // Keep this device's version: save it over the other one (the other one is kept in backups).
+    if (c.server && c.server.updatedAt) trip.updatedAt = c.server.updatedAt;
+    saveTripSoon(trip, 0);
+  }
+  updateSaveBanner();
+}
+
+function rerenderAfterTripChange(id) {
+  try {
+    if (state.currentTrip && state.currentTrip.id === id && document.getElementById('view-trip-detail').style.display !== 'none') {
+      renderTripDetailHeader(); renderPackingList(); updateProgressRing(); renderOutfitCalendar();
+    } else if (document.getElementById('view-dashboard').style.display !== 'none') {
+      renderDashboard();
+    }
+  } catch (e) { console.warn(e); }
 }
 
 async function saveTrips() {
-  try { localStorage.setItem('pr_trips', JSON.stringify(state.trips)); } catch(e) {}
-  if (!state.currentUser || !getAuthToken()) return;
-  // Push current trip to cloud if we have one
-  if (state.currentTrip) {
-    await api('PUT', '/api/trips/' + state.currentTrip.id, state.currentTrip);
-  }
+  persistTripsLocal();
+  if (state.currentTrip && state.trips.includes(state.currentTrip)) saveTripSoon(state.currentTrip);
 }
 
-async function createTripInCloud(trip) {
-  const cloud = await api('POST', '/api/trips', trip);
-  if (cloud && cloud.id) {
-    // Update local trip id if cloud assigned one
-    const idx = state.trips.findIndex(t => t.id === trip.id);
-    if (idx >= 0) state.trips[idx] = { ...state.trips[idx], ...cloud };
-    try { localStorage.setItem('pr_trips', JSON.stringify(state.trips)); } catch(e) {}
-  }
+function createTripInCloud(trip) {
+  if (!state.currentUser) return;
+  markTripDirty(trip, true);
+  queueSave('trip:' + trip.id, opts => pushTrip(trip.id, opts), 0);
 }
 
 async function deleteTripInCloud(tripId) {
-  await api('DELETE', '/api/trips/' + tripId);
+  const running = cancelSave('trip:' + tripId);
+  const d = readDirty();
+  const neverSent = d[tripId] && d[tripId].isNew && !running;
+  delete d[tripId]; writeDirty(d);
+  if (neverSent) { updateSaveBanner(); return; }
+  if (running) await running;
+  queueSave('delete:' + tripId, async opts => {
+    const r = await apiCall('DELETE', '/api/trips/' + tripId, undefined, opts);
+    if (r.ok || r.status === 404) return 'ok';
+    if (r.status === 403) { toast('Only the trip\'s owner can delete it for everyone.', 'error'); return 'gone'; }
+    return 'fail';
+  }, 0);
+}
+
+// Put back unsaved trips from this device after the cloud list loads.
+function restoreUnsavedTrips() {
+  const d = readDirty();
+  Object.keys(d).forEach(id => {
+    const e = d[id];
+    if (!e || !e.trip) return;
+    const idx = state.trips.findIndex(t => t.id === id);
+    if (idx >= 0) state.trips[idx] = e.trip;
+    else if (e.isNew && (!e.trip.ownerId || e.trip.ownerId === state.currentUser.id)) state.trips.push(e.trip);
+    else { delete d[id]; return; }
+    queueSave('trip:' + id, opts => pushTrip(id, opts), 0);
+  });
+  writeDirty(d);
+  persistTripsLocal();
+}
+
+// When the app comes back after a while, pick up changes made on other devices.
+async function refreshTripsFromCloud() {
+  if (!state.currentUser || hasPendingSaves() || document.querySelector('.modal-overlay.open, .modal.open')) return;
+  const r = await apiCall('GET', '/api/trips');
+  if (!r.ok || !Array.isArray(r.data) || hasPendingSaves()) return;
+  let changedCurrent = false, changedAny = false;
+  const byId = {};
+  r.data.forEach(t => { byId[t.id] = t; });
+  r.data.forEach(cloud => {
+    const local = state.trips.find(t => t.id === cloud.id);
+    if (!local) { state.trips.push(cloud); changedAny = true; return; }
+    if (cloud.updatedAt && cloud.updatedAt !== local.updatedAt) {
+      Object.keys(local).forEach(k => delete local[k]); Object.assign(local, cloud);
+      changedAny = true;
+      if (state.currentTrip === local) changedCurrent = true;
+    }
+  });
+  const before = state.trips.length;
+  state.trips = state.trips.filter(t => byId[t.id] || t === state.currentTrip);
+  if (state.trips.length !== before) changedAny = true;
+  if (!changedAny) return;
+  persistTripsLocal();
+  if (changedCurrent) rerenderAfterTripChange(state.currentTrip.id);
+  else if (document.getElementById('view-dashboard').style.display !== 'none') renderDashboard();
+}
+
+// ── Closet, My Items (library) and profile: same queue, one record each ──
+function queueUserRecord(kind) {
+  if (!state.currentUser) return;
+  const uidNow = state.currentUser.id;
+  queueSave(kind, async opts => {
+    if (!state.currentUser || state.currentUser.id !== uidNow) return 'gone';
+    let r;
+    if (kind === 'closet') r = await apiCall('PUT', '/api/closet/' + uidNow, getCloset(), opts);
+    else if (kind === 'library') r = await apiCall('PUT', '/api/library/' + uidNow, getLibrary(), opts);
+    else r = await apiCall('PUT', '/api/profile', getUserProfile(), opts);
+    if (r.ok) { try { localStorage.setItem('pr_synced_' + kind + '_' + uidNow, '1'); } catch (e) {} return 'ok'; }
+    return 'fail';
+  });
+}
+
+async function loadUserRecord(kind) {
+  if (!state.currentUser) return;
+  const uidNow = state.currentUser.id;
+  const path = kind === 'profile' ? '/api/profile' : '/api/' + kind + '/' + uidNow;
+  const r = await apiCall('GET', path);
+  if (!r.ok || r.data == null || !state.currentUser || state.currentUser.id !== uidNow) return;
+  const localKey = 'pr_' + kind + '_' + uidNow;
+  const syncedKey = 'pr_synced_' + kind + '_' + uidNow;
+  const cloudEmpty = kind === 'profile' ? !Object.keys(r.data).length : !(Array.isArray(r.data) && r.data.length);
+  let local = null;
+  try { local = JSON.parse(localStorage.getItem(localKey) || 'null'); } catch (e) {}
+  const localHas = local && (Array.isArray(local) ? local.length : Object.keys(local).length);
+  if (_saveQ[kind] && (_saveQ[kind].dirty || _saveQ[kind].running)) return;   // local edit in progress wins
+  if (localHas && !localStorage.getItem(syncedKey)) {
+    // First time on this device: never let the cloud copy replace what's here.
+    // Keep everything on this device and add anything only the cloud has, then send the result up.
+    let merged = local;
+    if (!cloudEmpty) {
+      if (kind === 'profile') merged = Object.assign({}, r.data, local);
+      else if (Array.isArray(local) && Array.isArray(r.data)) {
+        const ids = new Set(local.map(i => i && i.id));
+        merged = local.concat(r.data.filter(i => i && !ids.has(i.id)));
+      }
+    }
+    try { localStorage.setItem(localKey, JSON.stringify(merged)); } catch (e) {}
+    queueUserRecord(kind);          // marks this device synced once the cloud has it
+    return;
+  }
+  if (kind !== 'profile' && !Array.isArray(r.data)) return;
+  try { localStorage.setItem(localKey, JSON.stringify(r.data)); localStorage.setItem(syncedKey, '1'); } catch (e) {}
+}
+
+window.addEventListener('online', () => { _retryDelay = 4000; retrySaves(); updateSaveBanner(); });
+window.addEventListener('offline', () => updateSaveBanner());
+window.addEventListener('pagehide', () => { flushAllSaves({ keepalive: true }); });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    _hiddenAt = Date.now();
+    flushAllSaves({ keepalive: true });
+  } else {
+    retrySaves();
+    if (_hiddenAt && Date.now() - _hiddenAt > 120000) refreshTripsFromCloud();
+  }
+});
+
+// ── Earlier versions and recently deleted trips ──
+function fmtSavedAt(iso) {
+  const d = new Date(iso);
+  return isNaN(d) ? iso : d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+
+async function showTripVersions() {
+  const box = document.getElementById('trip-versions-list');
+  const trip = state.currentTrip;
+  if (!box || !trip) return;
+  box.innerHTML = '<p class="text-muted" style="font-size:0.82rem;">Loading…</p>';
+  await flushAllSaves();
+  const r = await apiCall('GET', '/api/backups?kind=trip&id=' + encodeURIComponent(trip.id));
+  if (!r.ok || !Array.isArray(r.data)) { box.innerHTML = '<p class="text-muted" style="font-size:0.82rem;">Couldn\'t load saved versions. Check your connection and try again.</p>'; return; }
+  if (!r.data.length) { box.innerHTML = '<p class="text-muted" style="font-size:0.82rem;">No earlier versions yet. One is kept at most every 15 minutes while you edit.</p>'; return; }
+  box.innerHTML = r.data.slice(0, 30).map((b, i) =>
+    '<div class="version-row"><span>' + esc(fmtSavedAt(b.savedAt)) + '</span>' +
+    '<button class="btn btn-secondary version-restore" data-i="' + i + '">Restore</button></div>').join('');
+  box.querySelectorAll('.version-restore').forEach(btn => btn.addEventListener('click', () => restoreTripVersion(r.data[+btn.dataset.i])));
+}
+
+async function restoreTripVersion(b) {
+  const trip = state.currentTrip;
+  if (!trip || !b) return;
+  if (!confirm('Put this trip back to how it was on ' + fmtSavedAt(b.savedAt) + '? The current version is kept as a backup too.')) return;
+  await flushAllSaves();
+  const r = await apiCall('POST', '/api/backups/restore', { key: b.key });
+  if (!r.ok || !r.data || !r.data.id) { toast((r.data && r.data.error) || 'Couldn\'t restore. Try again.', 'error'); return; }
+  cancelSave('trip:' + trip.id);
+  const d = readDirty(); delete d[trip.id]; writeDirty(d);
+  Object.keys(trip).forEach(k => delete trip[k]); Object.assign(trip, r.data);
+  persistTripsLocal();
+  showTripDetail(trip.id, true);
+  toast('Trip restored', 'success');
+}
+
+async function showDeletedTrips() {
+  const box = document.getElementById('deleted-trips-list');
+  if (!box) return;
+  box.innerHTML = '<p class="text-muted" style="font-size:0.82rem;">Loading…</p>';
+  const r = await apiCall('GET', '/api/backups?kind=deleted');
+  if (!r.ok || !Array.isArray(r.data)) { box.innerHTML = '<p class="text-muted" style="font-size:0.82rem;">Couldn\'t load deleted trips. Check your connection and try again.</p>'; return; }
+  if (!r.data.length) { box.innerHTML = '<p class="text-muted" style="font-size:0.82rem;">No trips deleted in the last 90 days.</p>'; return; }
+  box.innerHTML = r.data.map((b, i) =>
+    '<div class="version-row"><span><strong>' + esc(b.name) + '</strong> · deleted ' + esc(fmtSavedAt(b.savedAt)) + '</span>' +
+    '<button class="btn btn-secondary deleted-restore" data-i="' + i + '">Restore</button></div>').join('');
+  box.querySelectorAll('.deleted-restore').forEach(btn => btn.addEventListener('click', () => restoreDeletedTrip(r.data[+btn.dataset.i], btn)));
+}
+
+async function restoreDeletedTrip(b, btn) {
+  if (!b) return;
+  if (btn) btn.disabled = true;
+  const r = await apiCall('POST', '/api/backups/restore', { key: b.key });
+  if (!r.ok || !r.data || !r.data.id) { if (btn) btn.disabled = false; toast((r.data && r.data.error) || 'Couldn\'t restore. Try again.', 'error'); return; }
+  const idx = state.trips.findIndex(t => t.id === r.data.id);
+  if (idx >= 0) state.trips[idx] = r.data; else state.trips.push(r.data);
+  persistTripsLocal();
+  toast('"' + (r.data.tripName || r.data.destination || 'Trip') + '" restored', 'success');
+  showDeletedTrips();
+}
+
+async function downloadFullBackup() {
+  const r = await apiCall('GET', '/api/admin/export');
+  if (!r.ok || !r.data) { toast('Couldn\'t download the backup. Try again.', 'error'); return; }
+  const blob = new Blob([JSON.stringify(r.data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'packtrite-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  toast('Backup downloaded', 'success');
 }
 
 // ── TEMPLATES ──
@@ -1466,34 +1912,12 @@ function saveTemplates() {
 }
 
 // ── CLOSET ──
-async function loadClosetFromCloud() {
-  if (!state.currentUser) return;
-  const cloud = await api('GET', '/api/closet/' + state.currentUser.id);
-  if (cloud && Array.isArray(cloud)) {
-    localStorage.setItem('pr_closet_' + state.currentUser.id, JSON.stringify(cloud));
-  }
-}
-
-async function saveClosetToCloud() {
-  if (!state.currentUser) return;
-  const items = getCloset();
-  await api('PUT', '/api/closet/' + state.currentUser.id, items);
-}
+async function loadClosetFromCloud() { return loadUserRecord('closet'); }
+function saveClosetToCloud() { queueUserRecord('closet'); }
 
 // ── PROFILE ──
-async function loadProfileFromCloud() {
-  if (!state.currentUser) return;
-  const cloud = await api('GET', '/api/profile');
-  if (cloud && typeof cloud === 'object' && Object.keys(cloud).length > 0) {
-    localStorage.setItem('pr_profile_' + state.currentUser.id, JSON.stringify(cloud));
-  }
-}
-
-async function saveProfileToCloud() {
-  if (!state.currentUser) return;
-  const profile = getUserProfile();
-  await api('PUT', '/api/profile', profile);
-}
+async function loadProfileFromCloud() { return loadUserRecord('profile'); }
+function saveProfileToCloud() { queueUserRecord('profile'); }
 
 function getDefaultTemplates() {
   return [
@@ -1614,6 +2038,7 @@ async function completeLogin(user, token, quiet) {
   state.currentUser = user;
   if (token) setAuthToken(token);
   try { localStorage.setItem('pr_auth_email', user.email || ''); } catch(e) {}
+  try { localStorage.setItem('pr_last_user', JSON.stringify({ id: user.id, name: user.name, email: user.email, role: user.role, initials: user.initials, showPersonalCare: user.showPersonalCare })); } catch(e) {}
   document.getElementById('nav-username-display').textContent = '/ ' + user.name;
   if (user.role === 'admin') document.getElementById('nav-admin').style.display = 'inline-flex';
   if (document.getElementById('mobile-nav-admin')) {
@@ -1623,7 +2048,9 @@ async function completeLogin(user, token, quiet) {
   loadTemplates();
   loadClosetFromCloud();
   loadProfileFromCloud();
+  loadUserRecord('library');
   await loadTrips();
+  updateSaveBanner();
   showDashboard();
   renderDashboard();
   const loginEl = document.getElementById('screen-login');
@@ -1664,10 +2091,10 @@ function renderSharedTripView(trip) {
   Object.entries(trip.categories||{}).forEach(([cat, items]) => {
     if (!items.length) return;
     categoriesHtml += `<div style="margin-bottom:1.5rem;">
-      <h3 style="font-family:var(--font-display);font-size:0.9rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--gold);border-bottom:1px solid var(--border);padding-bottom:0.3rem;margin-bottom:0.75rem;">${cat}</h3>
+      <h3 style="font-family:var(--font-display);font-size:0.9rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--gold);border-bottom:1px solid var(--border);padding-bottom:0.3rem;margin-bottom:0.75rem;">${esc(cat)}</h3>
       ${items.map(item => `<div style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;border-bottom:1px solid rgba(255,255,255,0.04);">
         <span style="color:${item.checked?'var(--gold)':'var(--text-muted)'};font-size:1rem;">${item.checked?'☑':'☐'}</span>
-        <span style="font-size:0.88rem;${item.checked?'text-decoration:line-through;color:var(--text-muted)':''}">${item.name}${item.qty>1?` ×${item.qty}`:''}</span>
+        <span style="font-size:0.88rem;${item.checked?'text-decoration:line-through;color:var(--text-muted)':''}">${esc(item.name)}${item.qty>1?` ×${item.qty}`:''}</span>
         ${item.essential?'<span style="color:var(--gold);font-size:0.7rem;">★</span>':''}
       </div>`).join('')}
     </div>`;
@@ -1679,8 +2106,8 @@ function renderSharedTripView(trip) {
         <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:700;"><span style="color:#3A82E8;">Packt</span><span style="color:#F5C842;">Rite</span></div>
         <div style="font-size:0.75rem;color:var(--text-muted);margin-left:auto;">Read-only view</div>
       </div>
-      <h1 style="font-family:var(--font-display);font-size:1.8rem;color:var(--text-primary);margin-bottom:0.25rem;">${trip.tripName||trip.destination}</h1>
-      ${trip.destination&&trip.tripName?`<div style="color:var(--text-muted);font-size:0.85rem;margin-bottom:0.25rem;">📍 ${trip.destination}</div>`:''}
+      <h1 style="font-family:var(--font-display);font-size:1.8rem;color:var(--text-primary);margin-bottom:0.25rem;">${esc(trip.tripName||trip.destination)}</h1>
+      ${trip.destination&&trip.tripName?`<div style="color:var(--text-muted);font-size:0.85rem;margin-bottom:0.25rem;">📍 ${esc(trip.destination)}</div>`:''}
       <div style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1.25rem;">📅 ${formatDateRange(trip.startDate,trip.endDate)}</div>
       <div style="background:var(--bg-card);border-radius:var(--radius);padding:0.75rem 1rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem;">
         <div style="flex:1;height:6px;background:var(--border);border-radius:99px;overflow:hidden;">
@@ -1708,6 +2135,11 @@ async function loadUsersForLogin() {
 
 
 function logout(expired) {
+  if (!expired) flushAllSaves({ keepalive: true });
+  Object.keys(_saveQ).forEach(k => cancelSave(k));
+  _saveConflict = null;
+  updateSaveBanner();
+  if (!expired) { try { localStorage.removeItem('pr_last_user'); } catch(e) {} }
   const token = getAuthToken();
   if (token && !expired) {
     fetch(CONFIG.workerUrl + '/api/auth/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } }).catch(()=>{});
@@ -1761,6 +2193,8 @@ function showProfile() {
   document.getElementById('profile-pw-msg').style.display = 'none';
   document.getElementById('profile-new-password').value = '';
   document.getElementById('profile-confirm-password').value = '';
+  const dl = document.getElementById('deleted-trips-list'); if (dl) dl.innerHTML = '';
+  const ab = document.getElementById('admin-backup-row'); if (ab) ab.style.display = u.role === 'admin' ? 'block' : 'none';
 }
 
 async function saveProfile() {
@@ -1841,6 +2275,7 @@ function showTripDetail(tripId, skipHistory) {
     document.getElementById('settings-include-personal-care').checked = trip.includePersonalCare || false;
   } else { pcPanel.style.display='none'; }
 
+  const vl = document.getElementById('trip-versions-list'); if (vl) vl.innerHTML = '';
   showTab('packing');
   renderPackingList();
   // Show cached weather immediately, then fetch fresh
@@ -1871,7 +2306,7 @@ function showTab(tabName) {
 function getUserProfile() {
   try { return JSON.parse(localStorage.getItem(`pr_profile_${state.currentUser.id}`) || '{}'); } catch { return {}; }
 }
-function saveUserProfile(data) { localStorage.setItem(`pr_profile_${state.currentUser.id}`, JSON.stringify(data)); }
+function saveUserProfile(data) { localStorage.setItem(`pr_profile_${state.currentUser.id}`, JSON.stringify(data)); queueUserRecord('profile'); }
 function saveCycleSettings() {
   const profile = getUserProfile();
   profile.cycleStart = document.getElementById('settings-cycle-start').value;
@@ -1937,10 +2372,10 @@ function buildTripCard(trip, archived) {
   card.innerHTML = `
     <div class="trip-card-top">
       ${archived ? '<div class="archived-badge">Past Trip</div>' : ''}
-      <div class="trip-type-badge ${badgeClass}">${isShared?'Shared':trip.type||'Leisure'}</div>
-      <div class="trip-name">${displayName}</div>
-      ${showDest ? `<div class="trip-destination-sub">📍 ${trip.destination}</div>` : ''}
-      ${trip.reason ? `<div class="trip-reason-sub" style="font-size:0.73rem;color:var(--text-muted);">✦ ${trip.reason}</div>` : ''}
+      <div class="trip-type-badge ${badgeClass}">${esc(isShared?'Shared':trip.type||'Leisure')}</div>
+      <div class="trip-name">${esc(displayName)}</div>
+      ${showDest ? `<div class="trip-destination-sub">📍 ${esc(trip.destination)}</div>` : ''}
+      ${trip.reason ? `<div class="trip-reason-sub" style="font-size:0.73rem;color:var(--text-muted);">✦ ${esc(trip.reason)}</div>` : ''}
       <div class="trip-dates">${formatDateRange(trip.startDate, trip.endDate)}</div>
     </div>
     ${weatherHtml ? `<div class="trip-weather-strip">${weatherHtml}</div>` : ''}
@@ -2042,7 +2477,7 @@ function renderWeatherStrip(weather) {
 function renderSharedAvatars(trip) {
   if(!trip.sharedWith||trip.sharedWith.length===0) return '';
   const users=[trip.ownerId,...trip.sharedWith].map(id=>state.users.find(u=>u.id===id)).filter(Boolean);
-  return `<div class="shared-avatars">${users.map(u=>`<div class="shared-avatar-mini" title="${u.name}">${u.initials||u.name[0]}</div>`).join('')}</div>`;
+  return `<div class="shared-avatars">${users.map(u=>`<div class="shared-avatar-mini" title="${esc(u.name)}">${esc(u.initials||u.name[0])}</div>`).join('')}</div>`;
 }
 function getTripProgress(trip) {
   let packed=0,total=0;
@@ -2116,6 +2551,10 @@ function applyStopsToTrip(trip, stops) {
 // ── Stops editor (used in New Trip modal and Trip Settings) ──
 const _stopsDraft = {};
 function escAttr(v) { return String(v || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+// Escape text before it goes into the page (names, notes and categories can come from shared trips).
+function esc(v) { return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+// A safe argument for an onclick="..." handler.
+function jsArg(v) { return esc(JSON.stringify(String(v == null ? '' : v))); }
 function renderStopsEditor(cid, stops, live) {
   _stopsDraft[cid] = { stops: stops.map(s => ({ ...s })), live: !!live };
   drawStopsEditor(cid);
@@ -2129,15 +2568,15 @@ function drawStopsEditor(cid, errorMsg) {
   el.innerHTML = stops.map((s, i) => `
     <div class="stop-row">
       <div class="form-group stop-city"><label>${multi ? 'Stop ' + (i + 1) + ' city' : 'Destination (City, Country)'}</label>
-        <input type="text" value="${escAttr(s.city)}" placeholder="${i === 0 ? 'e.g. Rome, Italy' : 'e.g. Florence, Italy'}" oninput="stopEdit('${cid}',${i},'city',this.value)"${save}></div>
+        <input type="text" value="${escAttr(s.city)}" placeholder="${i === 0 ? 'e.g. Rome, Italy' : 'e.g. Florence, Italy'}" oninput="stopEdit(${jsArg(cid)},${i},'city',this.value)"${save}></div>
       <div class="form-group"><label>${multi ? 'Arrive' : 'Start Date'}</label>
-        <input type="date" value="${escAttr(s.startDate)}" oninput="stopEdit('${cid}',${i},'startDate',this.value)"${save}></div>
+        <input type="date" value="${escAttr(s.startDate)}" oninput="stopEdit(${jsArg(cid)},${i},'startDate',this.value)"${save}></div>
       <div class="form-group"><label>${multi ? 'Leave' : 'End Date'}</label>
-        <input type="date" value="${escAttr(s.endDate)}" oninput="stopEdit('${cid}',${i},'endDate',this.value)"${save}></div>
-      ${multi ? `<button type="button" class="stop-remove" title="Remove this stop" onclick="removeStop('${cid}',${i})"><span class="stop-remove-x">×</span><span class="stop-remove-txt">Remove ${s.city ? cityOnly(s.city) : 'this stop'}</span></button>` : ''}
+        <input type="date" value="${escAttr(s.endDate)}" oninput="stopEdit(${jsArg(cid)},${i},'endDate',this.value)"${save}></div>
+      ${multi ? `<button type="button" class="stop-remove" title="Remove this stop" onclick="removeStop(${jsArg(cid)},${i})"><span class="stop-remove-x">×</span><span class="stop-remove-txt">Remove ${s.city ? cityOnly(s.city) : 'this stop'}</span></button>` : ''}
     </div>`).join('') +
     `<div class="stops-error" id="${cid}-error">${errorMsg || ''}</div>
-     <button type="button" class="btn btn-ghost stop-add" onclick="addStop('${cid}')">+ Add another stop</button>`;
+     <button type="button" class="btn btn-ghost stop-add" onclick="addStop(${jsArg(cid)})">+ Add another stop</button>`;
 }
 function stopEdit(cid, i, field, value) { _stopsDraft[cid].stops[i][field] = value; }
 function readStops(cid) {
@@ -2167,7 +2606,7 @@ function removeStop(cid, i) {
 function openNewTripModal() {
   const sel=document.getElementById('new-trip-template');
   sel.innerHTML='<option value="">Blank list</option>';
-  state.templates.forEach(t=>{ sel.innerHTML+=`<option value="${t.id}">${t.name}</option>`; });
+  state.templates.forEach(t=>{ sel.innerHTML+=`<option value="${esc(t.id)}">${esc(t.name)}</option>`; });
   renderStopsEditor('new-trip-stops', [{ id: uid(), city: '', startDate: new Date().toISOString().split('T')[0], endDate: '' }], false);
   document.getElementById('new-trip-name').value='';
   // Show personal care toggle only for eligible users
@@ -2285,14 +2724,14 @@ function renderPackingList() {
     section.innerHTML = `
       <div class="category-header">
         <div class="category-title-wrap">
-          <span class="drag-handle" draggable="true" onmousedown="initCatDrag(event,'${catName}')">⠿</span>
+          <span class="drag-handle" draggable="true" onmousedown="initCatDrag(event,${jsArg(catName)})">⠿</span>
           <span class="category-icon">${CATEGORY_ICONS[catName]||'📦'}</span>
-          <span class="category-name">${catName}</span>
+          <span class="category-name">${esc(catName)}</span>
           <span class="category-count">${packed}/${items.length}</span>
         </div>
         <div style="display:flex;align-items:center;gap:0.5rem;">
-          <button class="btn btn-ghost" style="font-size:0.62rem;padding:0.15rem 0.4rem;opacity:0.7;" onclick="checkAllInCategory('${catName}',true)" title="Check all">✓ All</button>
-          <button class="btn btn-ghost" style="font-size:0.62rem;padding:0.15rem 0.4rem;opacity:0.7;" onclick="checkAllInCategory('${catName}',false)" title="Uncheck all">○ None</button>
+          <button class="btn btn-ghost" style="font-size:0.62rem;padding:0.15rem 0.4rem;opacity:0.7;" onclick="checkAllInCategory(${jsArg(catName)},true)" title="Check all">✓ All</button>
+          <button class="btn btn-ghost" style="font-size:0.62rem;padding:0.15rem 0.4rem;opacity:0.7;" onclick="checkAllInCategory(${jsArg(catName)},false)" title="Uncheck all">○ None</button>
           <div class="mini-bar"><div class="mini-bar-fill" style="width:${pct}%"></div></div>
           <span class="label-small">${pct}%</span>
         </div>
@@ -2302,8 +2741,8 @@ function renderPackingList() {
       </div>
       <div class="add-item-form">
         <div style="display:flex;gap:0.5rem;align-items:center;">
-          <input type="text" placeholder="Item name" id="add-name-${sanitize(catName)}" onkeydown="if(event.key==='Enter')addItem('${catName}')" style="flex:1;">
-          <button class="btn btn-secondary" style="font-size:0.72rem;padding:0.35rem 0.75rem;flex-shrink:0;" onclick="addItem('${catName}')">+ Add</button>
+          <input type="text" placeholder="Item name" id="add-name-${sanitize(catName)}" onkeydown="if(event.key==='Enter')addItem(${jsArg(catName)})" style="flex:1;">
+          <button class="btn btn-secondary" style="font-size:0.72rem;padding:0.35rem 0.75rem;flex-shrink:0;" onclick="addItem(${jsArg(catName)})">+ Add</button>
         </div>
       </div>`;
     container.appendChild(section);
@@ -2318,25 +2757,25 @@ function renderPackingItem(catName, item, outfitMap) {
   const outfitUses = findOutfitUses(item, outfitMap);
   const isInOutfit = outfitUses.length > 0;
   const outfitBadges = isInOutfit
-    ? `<span class="item-in-use-badge">👗 In Outfit</span> <span class="item-outfit-badge" title="${outfitUses.join(', ')}">${outfitUses[0]}${outfitUses.length>1?` +${outfitUses.length-1}`:''}</span>`
+    ? `<span class="item-in-use-badge">👗 In Outfit</span> <span class="item-outfit-badge" title="${esc(outfitUses.join(', '))}">${esc(outfitUses[0])}${outfitUses.length>1?` +${outfitUses.length-1}`:''}</span>`
     : '';
   return `
-    <div class="packing-item" id="item-${item.id}">
-      <div class="item-check ${item.checked?'checked':''}" onclick="toggleItem('${catName}','${item.id}')"></div>
+    <div class="packing-item" id="item-${esc(item.id)}">
+      <div class="item-check ${item.checked?'checked':''}" onclick="toggleItem(${jsArg(catName)},${jsArg(item.id)})"></div>
       <div class="item-info">
-        <div class="item-name ${item.checked?'checked':''}" onclick="openEditItem('${catName}','${item.id}')" title="Edit item">${item.name}${item.essential?' <span class="item-essential">★</span>':''}</div>
-        ${item.notes?`<div class="item-description" style="color:var(--text-muted);">📝 ${item.notes}</div>`:''}
+        <div class="item-name ${item.checked?'checked':''}" onclick="openEditItem(${jsArg(catName)},${jsArg(item.id)})" title="Edit item">${esc(item.name)}${item.essential?' <span class="item-essential">★</span>':''}</div>
+        ${item.notes?`<div class="item-description" style="color:var(--text-muted);">📝 ${esc(item.notes)}</div>`:''}
         ${outfitBadges?`<div class="item-meta-row">${outfitBadges}</div>`:''}
       </div>
       <div class="item-actions">
-        <button class="btn btn-ghost" style="font-size:0.7rem;padding:0.15rem 0.35rem;" onclick="openEditItem('${catName}','${item.id}')" title="Edit">✎</button>
-        <button class="btn btn-ghost" style="font-size:0.7rem;padding:0.15rem 0.35rem;" onclick="openMoveItem('${catName}','${item.id}')" title="Move">⇄</button>
-        <button class="btn btn-ghost" style="font-size:0.7rem;padding:0.15rem 0.35rem;color:var(--burgundy);" onclick="removeItem('${catName}','${item.id}')">×</button>
+        <button class="btn btn-ghost" style="font-size:0.7rem;padding:0.15rem 0.35rem;" onclick="openEditItem(${jsArg(catName)},${jsArg(item.id)})" title="Edit">✎</button>
+        <button class="btn btn-ghost" style="font-size:0.7rem;padding:0.15rem 0.35rem;" onclick="openMoveItem(${jsArg(catName)},${jsArg(item.id)})" title="Move">⇄</button>
+        <button class="btn btn-ghost" style="font-size:0.7rem;padding:0.15rem 0.35rem;color:var(--burgundy);" onclick="removeItem(${jsArg(catName)},${jsArg(item.id)})">×</button>
       </div>
       <div class="qty-control">
-        <button class="qty-btn" onclick="changeQty('${catName}','${item.id}',-1)">−</button>
-        <input class="qty-value" type="number" min="1" value="${item.qty||1}" onchange="setQty('${catName}','${item.id}',this.value)" onblur="setQty('${catName}','${item.id}',this.value)">
-        <button class="qty-btn" onclick="changeQty('${catName}','${item.id}',1)">+</button>
+        <button class="qty-btn" onclick="changeQty(${jsArg(catName)},${jsArg(item.id)},-1)">−</button>
+        <input class="qty-value" type="number" min="1" value="${item.qty||1}" onchange="setQty(${jsArg(catName)},${jsArg(item.id)},this.value)" onblur="setQty(${jsArg(catName)},${jsArg(item.id)},this.value)">
+        <button class="qty-btn" onclick="changeQty(${jsArg(catName)},${jsArg(item.id)},1)">+</button>
       </div>
     </div>`;
 }
@@ -2513,7 +2952,7 @@ function exportListHTML(mode = 'both') {
   const trip = state.currentTrip;
   const user = state.currentUser;
   const weather = trip.weatherCache || state.weather || null;
-  const tripTitle = trip.tripName || trip.destination;
+  const tripTitle = esc(trip.tripName || trip.destination);
   const dateRange = formatDateRange(trip.startDate, trip.endDate);
   const packedCount = Object.values(trip.categories).flat().filter(i => i.checked).length;
   const totalCount = Object.values(trip.categories).flat().length;
@@ -2533,7 +2972,7 @@ function exportListHTML(mode = 'both') {
     if (hasSnow) notes.push('Snow possible — waterproof boots and heavy winter gear recommended.');
     const dayCards = weather.daily.map(d => `
       <div class="wx-day">
-        <div class="wx-date">${parseLocalDate(d.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}${weather.multi && d.city ? '<br>' + d.city : ''}</div>
+        <div class="wx-date">${parseLocalDate(d.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}${weather.multi && d.city ? '<br>' + esc(d.city) : ''}</div>
         <div class="wx-icon">${weatherIcon(d.code)}</div>
         <div class="wx-desc">${weatherDesc(d.code)}</div>
         <div class="wx-temps">
@@ -2543,7 +2982,7 @@ function exportListHTML(mode = 'both') {
       </div>`).join('');
     weatherHTML = `
       <section class="section">
-        <h2 class="section-title">Weather <span class="section-loc">${weather.location}</span></h2>
+        <h2 class="section-title">Weather <span class="section-loc">${esc(weather.location)}</span></h2>
         <div class="wx-strip">${dayCards}</div>
         <div class="wx-notes">${notes.join(' ')}</div>
       </section>`;
@@ -2565,19 +3004,19 @@ function exportListHTML(mode = 'both') {
         const dayOutfits = userOutfits[dateKey] || [];
         const outfitRows = dayOutfits.map(o => {
           const pieces = [
-            o.top        && `<div class="piece"><span class="piece-label">Top</span> ${o.top}</div>`,
-            o.bottom     && `<div class="piece"><span class="piece-label">Bottom</span> ${o.bottom}</div>`,
-            o.undergarment && `<div class="piece"><span class="piece-label">Under</span> ${o.undergarment}</div>`,
-            o.shoes      && `<div class="piece"><span class="piece-label">Shoes</span> ${o.shoes}</div>`,
-            o.outer      && `<div class="piece"><span class="piece-label">Outer</span> ${o.outer}</div>`,
-            o.accessories && `<div class="piece"><span class="piece-label">Accessories</span> ${o.accessories}</div>`,
-            o.bag        && `<div class="piece"><span class="piece-label">Bag</span> ${o.bag}</div>`,
+            o.top        && `<div class="piece"><span class="piece-label">Top</span> ${esc(o.top)}</div>`,
+            o.bottom     && `<div class="piece"><span class="piece-label">Bottom</span> ${esc(o.bottom)}</div>`,
+            o.undergarment && `<div class="piece"><span class="piece-label">Under</span> ${esc(o.undergarment)}</div>`,
+            o.shoes      && `<div class="piece"><span class="piece-label">Shoes</span> ${esc(o.shoes)}</div>`,
+            o.outer      && `<div class="piece"><span class="piece-label">Outer</span> ${esc(o.outer)}</div>`,
+            o.accessories && `<div class="piece"><span class="piece-label">Accessories</span> ${esc(o.accessories)}</div>`,
+            o.bag        && `<div class="piece"><span class="piece-label">Bag</span> ${esc(o.bag)}</div>`,
           ].filter(Boolean).join('');
           return `
             <div class="outfit-block">
-              <div class="outfit-slot-label">${TIME_LABELS[o.timeslot] || o.timeslot}${o.occasion ? ` — ${o.occasion}` : ''}${o.event ? ` <em>(${o.event})</em>` : ''}</div>
+              <div class="outfit-slot-label">${esc(TIME_LABELS[o.timeslot] || o.timeslot)}${o.occasion ? ` — ${esc(o.occasion)}` : ''}${o.event ? ` <em>(${esc(o.event)})</em>` : ''}</div>
               <div class="pieces-grid">${pieces}</div>
-              ${o.notes ? `<div class="outfit-notes">📝 ${o.notes}</div>` : ''}
+              ${o.notes ? `<div class="outfit-notes">📝 ${esc(o.notes)}</div>` : ''}
             </div>`;
         }).join('');
         return `
@@ -2603,12 +3042,12 @@ function exportListHTML(mode = 'both') {
       const rows = items.map(item => `
         <tr class="${item.checked ? 'checked-row' : ''}">
           <td class="check-cell">${item.checked ? '☑' : '☐'}</td>
-          <td class="item-name">${item.name}${item.essential ? ' <span class="star">★</span>' : ''}${item.qty > 1 ? ` <span class="qty">×${item.qty}</span>` : ''}</td>
-          <td class="item-notes">${item.description ? item.description : ''}${item.notes ? (item.description ? ' · ' : '') + item.notes : ''}</td>
+          <td class="item-name">${esc(item.name)}${item.essential ? ' <span class="star">★</span>' : ''}${item.qty > 1 ? ` <span class="qty">×${item.qty}</span>` : ''}</td>
+          <td class="item-notes">${esc(item.description || '')}${item.notes ? (item.description ? ' · ' : '') + esc(item.notes) : ''}</td>
         </tr>`).join('');
       packingHTML += `
         <div class="category-block">
-          <h3 class="cat-title">${cat}</h3>
+          <h3 class="cat-title">${esc(cat)}</h3>
           <table class="pack-table"><tbody>${rows}</tbody></table>
         </div>`;
     });
@@ -2730,10 +3169,10 @@ function exportListHTML(mode = 'both') {
       </div>
       <div class="trip-title">${tripTitle}</div>
       <div class="trip-meta">
-        ${isMultiStop(trip) ? `<span>📍 ${formatItinerary(trip)}</span>` : (trip.destination && trip.tripName ? `<span>📍 ${trip.destination}</span>` : '')}
+        ${isMultiStop(trip) ? `<span>📍 ${esc(formatItinerary(trip))}</span>` : (trip.destination && trip.tripName ? `<span>📍 ${esc(trip.destination)}</span>` : '')}
         <span>📅 ${dateRange}</span>
-        ${trip.type ? `<span>🧳 ${trip.type}</span>` : ''}
-        ${trip.reason ? `<span>✦ ${trip.reason}</span>` : ''}
+        ${trip.type ? `<span>🧳 ${esc(trip.type)}</span>` : ''}
+        ${trip.reason ? `<span>✦ ${esc(trip.reason)}</span>` : ''}
       </div>
     </div>
     <div class="header-right">
@@ -2867,7 +3306,7 @@ function renderWeatherTab(weather) {
   document.getElementById('weather-days-full').innerHTML=weather.daily.map(d=>`
     <div class="weather-day">
       <div class="wd-date">${parseLocalDate(d.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</div>
-      ${weather.multi && d.city ? `<div class="wd-city">${d.city}</div>` : ''}
+      ${weather.multi && d.city ? `<div class="wd-city">${esc(d.city)}</div>` : ''}
       <div class="wd-icon">${weatherIcon(d.code)}</div>
       <div class="wd-temps"><span class="high">${Math.round(d.tempMax)}°</span><span class="low"> / ${Math.round(d.tempMin)}°</span></div>
       <div class="wd-desc">${weatherDesc(d.code)}</div>
@@ -2991,7 +3430,7 @@ async function generateAISuggestions(trip) {
 }
 function renderAISuggestions(suggestions) {
   if(!suggestions.length){document.getElementById('ai-content').innerHTML='<p class="italic text-muted">No suggestions generated.</p>';return;}
-  document.getElementById('ai-content').innerHTML=`<div class="ai-suggestions-list">${suggestions.map(s=>`<div class="ai-suggestion-chip" onclick="addAISuggestion(this,'${s.replace(/'/g,"\\'")}')"><span>+</span> ${s}</div>`).join('')}</div>`;
+  document.getElementById('ai-content').innerHTML=`<div class="ai-suggestions-list">${suggestions.map(s=>`<div class="ai-suggestion-chip" onclick="addAISuggestion(this,${jsArg(s)})"><span>+</span> ${esc(s)}</div>`).join('')}</div>`;
 }
 function addAISuggestion(chip, itemName) {
   if(chip.classList.contains('added')) return;
@@ -3072,14 +3511,14 @@ function renderOutfitCalendar() {
     const card = document.createElement('div');
     card.className = 'outfit-day-card';
     const slotsHtml = outfits.length === 0
-      ? `<div class="outfit-add-slot" onclick="openOutfitDayModal('${dateKey}')">+ Plan first outfit</div>`
+      ? `<div class="outfit-add-slot" onclick="openOutfitDayModal(${jsArg(dateKey)})">+ Plan first outfit</div>`
       : outfits.sort((a,b) => TIME_SLOTS.indexOf(a.timeslot)-TIME_SLOTS.indexOf(b.timeslot))
           .map(o => renderOutfitSlot(o, dateKey)).join('') +
-        `<div class="outfit-add-slot" onclick="openOutfitDayModal('${dateKey}')">+ Add another outfit</div>`;
+        `<div class="outfit-add-slot" onclick="openOutfitDayModal(${jsArg(dateKey)})">+ Add another outfit</div>`;
     const dayCity = isMultiStop(trip) ? cityLabelForDate(trip, dateKey) : '';
     card.innerHTML = `
       <div class="outfit-day-header">
-        <div><span class="outfit-day-date">${day.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</span>${dayCity ? `<span class="outfit-day-city">📍 ${dayCity}</span>` : ''}</div>
+        <div><span class="outfit-day-date">${day.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</span>${dayCity ? `<span class="outfit-day-city">📍 ${esc(dayCity)}</span>` : ''}</div>
         ${weatherDay ? `
         <div class="outfit-wx-pill">
           <span style="font-size:1rem;line-height:1;">${weatherIcon(weatherDay.code)}</span>
@@ -3100,19 +3539,19 @@ function renderOutfitSlot(outfit, dateKey) {
   return `
     <div class="outfit-slot">
       <div class="outfit-slot-header">
-        <span class="outfit-slot-time ${outfit.timeslot}">${TIME_LABELS[outfit.timeslot]||outfit.timeslot}</span>
+        <span class="outfit-slot-time ${esc(outfit.timeslot)}">${esc(TIME_LABELS[outfit.timeslot]||outfit.timeslot)}</span>
         <div class="outfit-slot-actions">
-          <button class="btn btn-ghost" style="font-size:0.68rem;padding:0.15rem 0.35rem;" title="Save as Look" onclick="saveOutfitSlotAsLook('${outfit.id}','${dateKey}')">💾</button>
-          <button class="btn btn-ghost" style="font-size:0.68rem;padding:0.15rem 0.35rem;" onclick="openOutfitDayModal('${dateKey}','${outfit.id}')">✎</button>
-          <button class="btn btn-ghost" style="font-size:0.68rem;padding:0.15rem 0.35rem;color:var(--burgundy);" onclick="deleteOutfitSlot('${dateKey}','${outfit.id}')">×</button>
+          <button class="btn btn-ghost" style="font-size:0.68rem;padding:0.15rem 0.35rem;" title="Save as Look" onclick="saveOutfitSlotAsLook(${jsArg(outfit.id)},${jsArg(dateKey)})">💾</button>
+          <button class="btn btn-ghost" style="font-size:0.68rem;padding:0.15rem 0.35rem;" onclick="openOutfitDayModal(${jsArg(dateKey)},${jsArg(outfit.id)})">✎</button>
+          <button class="btn btn-ghost" style="font-size:0.68rem;padding:0.15rem 0.35rem;color:var(--burgundy);" onclick="deleteOutfitSlot(${jsArg(dateKey)},${jsArg(outfit.id)})">×</button>
         </div>
       </div>
-      ${outfit.occasion?`<div class="outfit-occasion-label">${outfit.occasion}</div>`:''}
-      ${outfit.event?`<div class="outfit-event">📅 ${outfit.event}</div>`:''}
+      ${outfit.occasion?`<div class="outfit-occasion-label">${esc(outfit.occasion)}</div>`:''}
+      ${outfit.event?`<div class="outfit-event">📅 ${esc(outfit.event)}</div>`:''}
       <div class="outfit-pieces">
-        ${pieces.map(([label,value])=>`<div class="outfit-piece"><span class="outfit-piece-label">${label}</span><span>${value}</span></div>`).join('')}
+        ${pieces.map(([label,value])=>`<div class="outfit-piece"><span class="outfit-piece-label">${label}</span><span>${esc(value)}</span></div>`).join('')}
       </div>
-      ${outfit.notes?`<div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.3rem;font-style:italic;">📝 ${outfit.notes}</div>`:''}
+      ${outfit.notes?`<div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.3rem;font-style:italic;">📝 ${esc(outfit.notes)}</div>`:''}
     </div>`;
 }
 
@@ -3146,7 +3585,7 @@ function renderClosetPalette() {
 
     // Left col: label + selected item name
     const selectedDisplay = sel
-      ? '<span class="slot-selected-v2">' + sel.name + (sel.color ? ' · ' + sel.color : '') + '</span>'
+      ? '<span class="slot-selected-v2">' + esc(sel.name) + (sel.color ? ' · ' + esc(sel.color) : '') + '</span>'
       : '<span class="slot-selected-v2 empty">None</span>';
 
     // Right col: all items as chips + filter if 5+
@@ -3161,11 +3600,11 @@ function renderClosetPalette() {
       const chips = slotItems.map(item => {
         const isActive = sel && sel.id === item.id;
         return '<div class="slot-chip-v2' + (isActive ? ' active' : '') + '"' +
-          ' data-slot="' + sk + '" data-id="' + item.id + '"' +
-          ' data-name="' + item.name.replace(/"/g,'&quot;') + '" data-color="' + (item.color||'') + '"' +
+          ' data-slot="' + sk + '" data-id="' + esc(item.id) + '"' +
+          ' data-name="' + esc(item.name) + '" data-color="' + esc(item.color||'') + '"' +
           ' onclick="selectSlotItem(this)">' +
-          (isActive ? '\u2713 ' : '') + item.name +
-          (item.color ? '<span class="chip-color-v2">' + item.color + '</span>' : '') +
+          (isActive ? '\u2713 ' : '') + esc(item.name) +
+          (item.color ? '<span class="chip-color-v2">' + esc(item.color) + '</span>' : '') +
           '</div>';
       }).join('');
       rightCol = filterBox + chips;
@@ -3277,7 +3716,7 @@ function renderOutfitStep2Preview() {
     .filter(([,v]) => v);
   const preview = document.getElementById('outfit-step2-preview');
   if (!preview) return;
-  preview.innerHTML = `<strong>Outfit summary</strong>${pieces.map(([l,v])=>`<span style="display:block;"><span style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);min-width:70px;display:inline-block;">${l}</span>${v}</span>`).join('')}`;
+  preview.innerHTML = `<strong>Outfit summary</strong>${pieces.map(([l,v])=>`<span style="display:block;"><span style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);min-width:70px;display:inline-block;">${l}</span>${esc(v)}</span>`).join('')}`;
 }
 
 // Populate datalists in the outfit modal from the user's closet
@@ -3297,7 +3736,7 @@ function populateOutfitDataLists() {
     if (!dl) return;
     const items = closet.filter(i => cats.includes(i.cat));
     dl.innerHTML = items.map(i =>
-      `<option value="${i.name.replace(/"/g,'&quot;')}">${i.name}${i.color ? ' — ' + i.color : ''}</option>`
+      `<option value="${esc(i.name)}">${esc(i.name)}${i.color ? ' — ' + esc(i.color) : ''}</option>`
     ).join('');
   });
 }
@@ -3365,7 +3804,7 @@ function saveOutfitDay() {
   if (Object.keys(builderSelections).length) syncBuilderSelectionsToCloset();
   saveTrips(); closeModal('modal-outfit-day');
   renderOutfitCalendar(); renderPackingList();
-  clearPaletteSelection();
+  clearBuilderSelections();
   toast('Outfit saved!','success');
 }
 
@@ -3443,12 +3882,12 @@ function renderShareTab() {
       const label = user ? user.name : uid;
       const sub = user ? (user.email || 'PacktRite user') : 'Unknown user';
       return `<div class="admin-user-row">
-        <div class="admin-avatar">${user ? (user.initials || user.name[0]) : '?'}</div>
+        <div class="admin-avatar">${esc(user ? (user.initials || user.name[0]) : '?')}</div>
         <div class="admin-user-info">
-          <div class="admin-user-name">${label}</div>
-          <div class="admin-user-role">${sub} · Can view & edit</div>
+          <div class="admin-user-name">${esc(label)}</div>
+          <div class="admin-user-role">${esc(sub)} · Can view &amp; edit</div>
         </div>
-        <button class="btn btn-ghost" style="color:var(--burgundy);font-size:0.75rem;" onclick="revokeShare('${uid}')">Revoke</button>
+        <button class="btn btn-ghost" style="color:var(--burgundy);font-size:0.75rem;" onclick="revokeShare(${jsArg(uid)})">Revoke</button>
       </div>`;
     }).join('');
   }
@@ -3510,8 +3949,8 @@ function renderShareLinkUI(token) {
   const url = `${window.location.origin}${window.location.pathname}?share=${token}`;
   document.getElementById('share-link-area').innerHTML = `
     <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
-      <input type="text" value="${url}" readonly style="flex:1;font-size:0.75rem;color:var(--text-secondary);" onclick="this.select()">
-      <button class="btn btn-secondary" onclick="copyShareLink('${url}')">Copy</button>
+      <input type="text" value="${esc(url)}" readonly style="flex:1;font-size:0.75rem;color:var(--text-secondary);" onclick="this.select()">
+      <button class="btn btn-secondary" onclick="copyShareLink(${jsArg(url)})">Copy</button>
       <button class="btn btn-ghost" style="color:var(--burgundy);font-size:0.75rem;" onclick="revokeShareLink()">Revoke</button>
     </div>
     <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.4rem;">Anyone with this link can view but not edit.</div>`;
@@ -3609,13 +4048,13 @@ function renderTemplates(){
   if(!state.templates.length){grid.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><p>No templates yet.</p></div>';return;}
   grid.innerHTML=state.templates.map(t=>`
     <div class="template-card">
-      <div class="template-icon">${t.icon}</div>
-      <div class="template-name">${t.name}</div>
+      <div class="template-icon">${esc(t.icon)}</div>
+      <div class="template-name">${esc(t.name)}</div>
       <div class="template-count">${Object.values(t.categories).flat().length} items · ${Object.keys(t.categories).length} categories</div>
       <div style="margin-top:1rem;display:flex;gap:0.4rem;flex-wrap:wrap;">
-        <button class="btn btn-primary" style="font-size:0.72rem;" onclick="useTemplate('${t.id}')">Use</button>
-        <button class="btn btn-secondary" style="font-size:0.72rem;" onclick="openEditTemplate('${t.id}')">Edit</button>
-        ${!['tpl-business','tpl-leisure'].includes(t.id)?`<button class="btn btn-ghost" style="color:var(--burgundy);font-size:0.72rem;" onclick="deleteTemplate('${t.id}')">Delete</button>`:''}
+        <button class="btn btn-primary" style="font-size:0.72rem;" onclick="useTemplate(${jsArg(t.id)})">Use</button>
+        <button class="btn btn-secondary" style="font-size:0.72rem;" onclick="openEditTemplate(${jsArg(t.id)})">Edit</button>
+        ${!['tpl-business','tpl-leisure'].includes(t.id)?`<button class="btn btn-ghost" style="color:var(--burgundy);font-size:0.72rem;" onclick="deleteTemplate(${jsArg(t.id)})">Delete</button>`:''}
       </div>
     </div>`).join('');
 }
@@ -3639,17 +4078,17 @@ function renderTemplateEditor(templateId) {
   body.innerHTML = Object.entries(template.categories).map(([cat, items]) => `
     <div style="margin-bottom:1.25rem;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;padding-bottom:0.35rem;border-bottom:1px solid var(--border);">
-        <span style="font-family:var(--font-display);font-size:0.95rem;font-weight:600;">${CATEGORY_ICONS[cat]||'📦'} ${cat}</span>
-        <button class="btn btn-ghost" style="font-size:0.68rem;" onclick="addTemplateCategory('${templateId}')">+ Category</button>
+        <span style="font-family:var(--font-display);font-size:0.95rem;font-weight:600;">${CATEGORY_ICONS[cat]||'📦'} ${esc(cat)}</span>
+        <button class="btn btn-ghost" style="font-size:0.68rem;" onclick="addTemplateCategory(${jsArg(templateId)})">+ Category</button>
       </div>
       ${items.map((item, idx) => `
         <div style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;border-bottom:1px solid var(--border);">
-          <span style="flex:1;font-size:0.85rem;">${item}</span>
-          <button class="btn btn-ghost" style="font-size:0.68rem;color:var(--burgundy);padding:0.1rem 0.3rem;" onclick="removeTemplateItem('${templateId}','${cat}',${idx})">×</button>
+          <span style="flex:1;font-size:0.85rem;">${esc(item)}</span>
+          <button class="btn btn-ghost" style="font-size:0.68rem;color:var(--burgundy);padding:0.1rem 0.3rem;" onclick="removeTemplateItem(${jsArg(templateId)},${jsArg(cat)},${idx})">×</button>
         </div>`).join('')}
       <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
-        <input type="text" id="tpl-add-${sanitize(cat)}" placeholder="Add item..." style="flex:1;font-size:0.8rem;padding:0.35rem 0.6rem;" onkeydown="if(event.key==='Enter')addTemplateItem('${templateId}','${cat}')">
-        <button class="btn btn-secondary" style="font-size:0.7rem;padding:0.3rem 0.65rem;" onclick="addTemplateItem('${templateId}','${cat}')">+ Add</button>
+        <input type="text" id="tpl-add-${sanitize(cat)}" placeholder="Add item..." style="flex:1;font-size:0.8rem;padding:0.35rem 0.6rem;" onkeydown="if(event.key==='Enter')addTemplateItem(${jsArg(templateId)},${jsArg(cat)})">
+        <button class="btn btn-secondary" style="font-size:0.7rem;padding:0.3rem 0.65rem;" onclick="addTemplateItem(${jsArg(templateId)},${jsArg(cat)})">+ Add</button>
       </div>
     </div>`).join('');
 }
@@ -3698,12 +4137,12 @@ function deleteTemplate(templateId){if(!confirm('Delete this template?')) return
 function renderAdmin(){
   document.getElementById('admin-user-list').innerHTML = state.users.map(u => `
     <div class="admin-user-row">
-      <div class="admin-avatar">${u.initials||u.name[0].toUpperCase()}</div>
+      <div class="admin-avatar">${esc(u.initials||u.name[0].toUpperCase())}</div>
       <div class="admin-user-info">
-        <div class="admin-user-name">${u.name} ${u.id===state.currentUser.id?'<span style="color:var(--gold);font-size:0.7rem;">(you)</span>':''}</div>
-        <div class="admin-user-role">${u.role} · ${u.email||'no email'} ${u.showPersonalCare?'· 🌸':''}</div>
+        <div class="admin-user-name">${esc(u.name)} ${u.id===state.currentUser.id?'<span style="color:var(--gold);font-size:0.7rem;">(you)</span>':''}</div>
+        <div class="admin-user-role">${esc(u.role)} · ${esc(u.email||'no email')} ${u.showPersonalCare?'· 🌸':''}</div>
       </div>
-      <button class="btn btn-secondary" style="font-size:0.72rem;" onclick="openEditUserModal('${u.id}')">Edit</button>
+      <button class="btn btn-secondary" style="font-size:0.72rem;" onclick="openEditUserModal(${jsArg(u.id)})">Edit</button>
     </div>`).join('');
 }
 
@@ -3852,13 +4291,13 @@ function renderOutfitSummary() {
     const date = parseLocalDate(o.dateKey).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
     return `<div class="outfit-summary-row">
       <div class="outfit-summary-date">${date}</div>
-      <div class="outfit-summary-slot ${o.timeslot}">${TIME_LABELS[o.timeslot]||o.timeslot}</div>
+      <div class="outfit-summary-slot ${esc(o.timeslot)}">${esc(TIME_LABELS[o.timeslot]||o.timeslot)}</div>
       <div class="outfit-summary-details">
-        ${o.event ? `<div class="outfit-summary-event">📅 ${o.event}</div>` : ''}
-        ${o.occasion ? `<div class="outfit-summary-occasion">${o.occasion}</div>` : ''}
-        <div class="outfit-summary-pieces">${pieces.map(([l,v])=>`<span><strong>${l}</strong> ${v}</span>`).join(' · ')}</div>
+        ${o.event ? `<div class="outfit-summary-event">📅 ${esc(o.event)}</div>` : ''}
+        ${o.occasion ? `<div class="outfit-summary-occasion">${esc(o.occasion)}</div>` : ''}
+        <div class="outfit-summary-pieces">${pieces.map(([l,v])=>`<span><strong>${l}</strong> ${esc(v)}</span>`).join(' · ')}</div>
       </div>
-      <button class="btn btn-ghost" style="font-size:0.68rem;flex-shrink:0;" onclick="openOutfitDayModal('${o.dateKey}','${o.id}')">✎</button>
+      <button class="btn btn-ghost" style="font-size:0.68rem;flex-shrink:0;" onclick="openOutfitDayModal(${jsArg(o.dateKey)},${jsArg(o.id)})">✎</button>
     </div>`;
   }).join('') + '</div>';
 }
@@ -3867,7 +4306,7 @@ function renderOutfitSummary() {
 // #17 — PERSONAL ITEM LIBRARY
 // ═══════════════════════════════════════════
 function getLibrary() { try { return JSON.parse(localStorage.getItem('pr_library_' + state.currentUser.id) || '[]'); } catch(e) { return []; } }
-function saveLibrary(items) { try { localStorage.setItem('pr_library_' + state.currentUser.id, JSON.stringify(items)); } catch(e) {} }
+function saveLibrary(items) { try { localStorage.setItem('pr_library_' + state.currentUser.id, JSON.stringify(items)); } catch(e) {} queueUserRecord('library'); }
 
 function showLibrary(skipHistory) {
   hideAllViews();
@@ -3892,7 +4331,7 @@ function renderLibrary(searchQuery) {
     return;
   }
   if (q && !items.length) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><p>No items match "' + q + '"</p></div>';
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><p>No items match "' + esc(q) + '"</p></div>';
     return;
   }
   // Group by category
@@ -3900,15 +4339,15 @@ function renderLibrary(searchQuery) {
   items.forEach(i => { if (!cats[i.cat]) cats[i.cat]=[]; cats[i.cat].push(i); });
   container.innerHTML = Object.entries(cats).map(([cat, catItems]) => `
     <div class="closet-cat-section">
-      <div class="closet-cat-title">${CATEGORY_ICONS[cat]||'📦'} ${cat} <span style="font-size:0.68rem;font-weight:400;color:var(--text-muted);font-family:var(--font-body);">${catItems.length} item${catItems.length!==1?'s':''}</span></div>
+      <div class="closet-cat-title">${CATEGORY_ICONS[cat]||'📦'} ${esc(cat)} <span style="font-size:0.68rem;font-weight:400;color:var(--text-muted);font-family:var(--font-body);">${catItems.length} item${catItems.length!==1?'s':''}</span></div>
       <div class="closet-list">
         ${catItems.map(item => `
           <div class="closet-list-row">
-            <span class="closet-list-name">${item.name}</span>
-            ${item.desc ? '<span class="closet-list-desc">' + item.desc + '</span>' : ''}
+            <span class="closet-list-name">${esc(item.name)}</span>
+            ${item.desc ? '<span class="closet-list-desc">' + esc(item.desc) + '</span>' : ''}
             <div style="margin-left:auto;display:flex;gap:0.3rem;flex-shrink:0;">
-              <button class="btn btn-secondary" style="font-size:0.65rem;padding:0.18rem 0.5rem;" onclick="addLibraryItemToTrip('${item.id}')">+ Add to Trip</button>
-              <button class="btn btn-ghost" style="font-size:0.68rem;" onclick="openEditLibraryItem('${item.id}')">✎</button>
+              <button class="btn btn-secondary" style="font-size:0.65rem;padding:0.18rem 0.5rem;" onclick="addLibraryItemToTrip(${jsArg(item.id)})">+ Add to Trip</button>
+              <button class="btn btn-ghost" style="font-size:0.68rem;" onclick="openEditLibraryItem(${jsArg(item.id)})">✎</button>
             </div>
           </div>`).join('')}
       </div>
@@ -4064,13 +4503,14 @@ function openMoveItem(catName, itemId) {
   const cats = Object.keys(state.currentTrip.categories).filter(c => c !== catName && c !== 'Personal Care');
   if (!cats.length) { toast('No other categories to move to', 'error'); return; }
   const list = document.getElementById('move-item-cat-list');
-  list.innerHTML = cats.map(cat => {
-    return '<div onclick="moveItemToCategory(\"' + catName + '\",\"' + itemId + '\",\"' + cat.replace(/"/g,'&quot;') + '\")" style="display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.25rem;border-bottom:1px solid var(--border);font-size:0.88rem;cursor:pointer;color:var(--text-primary);">' + (CATEGORY_ICONS[cat] || '📦') + ' ' + cat + '</div>';
-  }).join('');
+  list.innerHTML = cats.map((cat, i) =>
+    '<div class="move-cat-row" data-i="' + i + '" role="button" style="display:flex;align-items:center;gap:0.5rem;padding:0.85rem 1.25rem;min-height:44px;border-bottom:1px solid var(--border);font-size:0.88rem;cursor:pointer;color:var(--text-primary);">' + (CATEGORY_ICONS[cat] || '📦') + ' ' + esc(cat) + '</div>'
+  ).join('');
+  list.querySelectorAll('.move-cat-row').forEach(el => el.addEventListener('click', () => moveItemToCategory(catName, itemId, cats[+el.dataset.i])));
   openModal('modal-move-item');
 }
 
-function moveItemToCategory(fromCat, itemId, toCat) { fromCat=fromCat.replace(/&quot;/g,'"'); toCat=toCat.replace(/&quot;/g,'"');
+function moveItemToCategory(fromCat, itemId, toCat) {
   const item = state.currentTrip.categories[fromCat]?.find(i => i.id === itemId);
   if (!item) return;
   state.currentTrip.categories[fromCat] = state.currentTrip.categories[fromCat].filter(i => i.id !== itemId);
@@ -4117,12 +4557,14 @@ function duplicateTrip() {
   newTrip.outfits = {};
   newTrip.outfitCombos = [];
   newTrip.weatherCache = null;
+  delete newTrip.shareToken; delete newTrip.updatedAt; delete newTrip.restoredFrom;
   // Reset all items to unchecked
   Object.values(newTrip.categories).forEach(items => items.forEach(i => { i.checked = false; i.id = uid(); }));
   // Clear personal care - user can re-enable
   delete newTrip.categories['Personal Care'];
   state.trips.push(newTrip);
-  saveTrips();
+  persistTripsLocal();
+  createTripInCloud(newTrip);
   toast(`"${name.trim()}" created!`,'success');
   showTripDetail(newTrip.id);
 }
@@ -4273,16 +4715,16 @@ function renderSavedLooks() {
   const isCollapsed = closetCollapsed['Outfits'];
   const lookRows = looks.length ? looks.map(look => {
     const pieces = Object.entries(look.pieces).map(([k,p]) =>
-      '<span style="font-size:0.73rem;color:var(--text-secondary);"><span style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-right:0.25rem;">' + (SLOT_LABELS[k]||k) + '</span>' + p.name + (p.color ? ' · ' + p.color : '') + '</span>'
+      '<span style="font-size:0.73rem;color:var(--text-secondary);"><span style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-right:0.25rem;">' + (SLOT_LABELS[k]||k) + '</span>' + esc(p.name) + (p.color ? ' · ' + esc(p.color) : '') + '</span>'
     ).join('<span style="color:var(--border-strong);margin:0 0.35rem;">·</span>');
     return '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;padding:0.55rem 0;border-bottom:1px solid var(--border);">' +
       '<div style="flex:1;min-width:0;">' +
-      '<div style="font-weight:600;font-size:0.85rem;margin-bottom:0.2rem;">' + look.name + '</div>' +
+      '<div style="font-weight:600;font-size:0.85rem;margin-bottom:0.2rem;">' + esc(look.name) + '</div>' +
       '<div style="display:flex;flex-wrap:wrap;gap:0.2rem 0;">' + pieces + '</div>' +
       '</div>' +
       '<div style="display:flex;gap:0.3rem;flex-shrink:0;">' +
-      '<button class="btn btn-secondary" style="font-size:0.65rem;padding:0.2rem 0.5rem;" onclick="applyLookToBuilder(\'' + look.id + '\')">Use</button>' +
-      '<button class="btn btn-ghost" style="font-size:0.65rem;padding:0.2rem 0.4rem;color:var(--burgundy);" onclick="deleteSavedLook(\'' + look.id + '\')">×</button>' +
+      '<button class="btn btn-secondary" style="font-size:0.65rem;padding:0.2rem 0.5rem;" onclick="applyLookToBuilder(' + jsArg(look.id) + ')">Use</button>' +
+      '<button class="btn btn-ghost" style="font-size:0.65rem;padding:0.2rem 0.4rem;color:var(--burgundy);" onclick="deleteSavedLook(' + jsArg(look.id) + ')">×</button>' +
       '</div></div>';
   }).join('') : '<div style="padding:0.5rem 0;font-size:0.82rem;color:var(--text-muted);font-style:italic;">No saved looks yet. Build an outfit and tap 💾 Save Look.</div>';
 
@@ -4297,7 +4739,7 @@ function renderSavedLooks() {
 }
 
 function getCloset(){try{return JSON.parse(localStorage.getItem(`pr_closet_${state.currentUser.id}`)||'[]');}catch{return[];}}
-function saveCloset(items){localStorage.setItem(`pr_closet_${state.currentUser.id}`,JSON.stringify(items));}
+function saveCloset(items){localStorage.setItem(`pr_closet_${state.currentUser.id}`,JSON.stringify(items));queueUserRecord('closet');}
 
 function showCloset(skipHistory){
   hideAllViews();
@@ -4327,7 +4769,7 @@ function renderCloset(searchQuery=''){
     return;
   }
   if (q && !items.length) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><p>No items match "${q}"</p></div>`;
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><p>No items match "${esc(q)}"</p></div>`;
     return;
   }
 
@@ -4338,17 +4780,17 @@ function renderCloset(searchQuery=''){
     const collapsed = closetCollapsed[cat] && !q;
     return `
     <div class="closet-cat-section">
-      <div class="closet-cat-title" onclick="toggleClosetCat('${cat}')" style="cursor:pointer;">
-        ${CLOSET_CAT_ICONS[cat]||'👔'} ${cat}
+      <div class="closet-cat-title" onclick="toggleClosetCat(${jsArg(cat)})" style="cursor:pointer;">
+        ${CLOSET_CAT_ICONS[cat]||'👔'} ${esc(cat)}
         <span style="font-size:0.68rem;font-weight:400;color:var(--text-muted);font-family:var(--font-body);margin-left:0.3rem;">${catItems.length} item${catItems.length!==1?'s':''}</span>
         <span style="margin-left:auto;font-size:0.68rem;color:var(--text-muted);">${collapsed?'▼':'▲'}</span>
       </div>
       ${collapsed ? '' : `<div class="closet-list">
         ${catItems.map(item => `
-          <div class="closet-list-row" onclick="openEditClosetItem('${item.id}')">
-            <span class="closet-list-name">${item.name}</span>
-            ${item.color ? `<span class="closet-list-color">${item.color}</span>` : ''}
-            ${item.desc ? `<span class="closet-list-desc">${item.desc}</span>` : ''}
+          <div class="closet-list-row" onclick="openEditClosetItem(${jsArg(item.id)})">
+            <span class="closet-list-name">${esc(item.name)}</span>
+            ${item.color ? `<span class="closet-list-color">${esc(item.color)}</span>` : ''}
+            ${item.desc ? `<span class="closet-list-desc">${esc(item.desc)}</span>` : ''}
             <span class="closet-list-edit">✎</span>
           </div>`).join('')}
       </div>`}
@@ -4413,7 +4855,7 @@ function toggleClosetPicker(){
 function renderClosetPicker(){
   const items=getCloset();const grid=document.getElementById('outfit-closet-grid');if(!grid)return;
   if(!items.length){grid.innerHTML='<span style="font-size:0.78rem;color:var(--text-muted);font-style:italic;">No closet items yet.</span>';return;}
-  grid.innerHTML=items.map(item=>`<div class="closet-item-card" style="padding:0.45rem 0.6rem;min-width:110px;cursor:pointer;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-card);" data-id="${item.id}" data-cat="${item.cat}" data-name="${item.name}${item.color?' ('+item.color+')':''}" onclick="this.style.borderColor=this.dataset.sel?'var(--border)':'var(--sage)';this.dataset.sel=this.dataset.sel?'':'1';"><div style="font-size:0.58rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);">${item.cat}</div><div style="font-size:0.78rem;font-weight:600;">${item.name}</div>${item.color?`<div style="font-size:0.68rem;color:var(--text-muted);">${item.color}</div>`:''}</div>`).join('');
+  grid.innerHTML=items.map(item=>`<div class="closet-item-card" style="padding:0.45rem 0.6rem;min-width:110px;cursor:pointer;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-card);" data-id="${esc(item.id)}" data-cat="${esc(item.cat)}" data-name="${esc(item.name+(item.color?' ('+item.color+')':''))}" onclick="this.style.borderColor=this.dataset.sel?'var(--border)':'var(--sage)';this.dataset.sel=this.dataset.sel?'':'1';"><div style="font-size:0.58rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);">${esc(item.cat)}</div><div style="font-size:0.78rem;font-weight:600;">${esc(item.name)}</div>${item.color?`<div style="font-size:0.68rem;color:var(--text-muted);">${esc(item.color)}</div>`:''}</div>`).join('');
 }
 function applyClosetSelectionsToForm(){
   document.querySelectorAll('#outfit-closet-grid [data-sel="1"]').forEach(el=>{
@@ -4433,14 +4875,14 @@ function renderTripDetailHeader(){
   const infoRow=document.getElementById('detail-info-row');
   if(!infoRow)return;
   const pills=[];
-  if(isMultiStop(trip)) pills.push(`<span class="trip-info-pill">📍 ${formatItinerary(trip)}</span>`);
-  else if(trip.tripName&&trip.destination) pills.push(`<span class="trip-info-pill">📍 ${trip.destination}</span>`);
-  if(trip.reason) pills.push(`<span class="trip-info-pill">✦ ${trip.reason}</span>`);
+  if(isMultiStop(trip)) pills.push(`<span class="trip-info-pill">📍 ${esc(formatItinerary(trip))}</span>`);
+  else if(trip.tripName&&trip.destination) pills.push(`<span class="trip-info-pill">📍 ${esc(trip.destination)}</span>`);
+  if(trip.reason) pills.push(`<span class="trip-info-pill">✦ ${esc(trip.reason)}</span>`);
   const dates=formatDateRange(trip.startDate,trip.endDate);
   const duration=getTripDuration(trip.startDate,trip.endDate);
   if(dates!=='Dates TBD') pills.push('<span class="trip-info-pill">📅 ' + dates + (duration ? ' · ' + duration : '') + '</span>');
-  if(trip.timezone) pills.push(`<span class="trip-info-tz">🕐 ${trip.timezone}</span>`);
-  if(trip.currency) pills.push(`<span class="trip-info-currency">💱 ${trip.currency}</span>`);
+  if(trip.timezone) pills.push(`<span class="trip-info-tz">🕐 ${esc(trip.timezone)}</span>`);
+  if(trip.currency) pills.push(`<span class="trip-info-currency">💱 ${esc(trip.currency)}</span>`);
   infoRow.innerHTML=pills.join('');
   if(trip.destination&&(!trip.timezone||!trip.currency)) fetchTripGeoInfo(trip);
 }
@@ -4506,7 +4948,7 @@ function renderWeatherIntelligence(recs){
   const c=document.getElementById('weather-intel-container');
   if(!c)return;
   if(!recs.length){c.innerHTML='';return;}
-  c.innerHTML=`<div class="weather-intel-panel"><div class="weather-intel-header"><strong style="font-family:var(--font-display);font-size:0.9rem;">🌤 Weather-Smart Recommendations</strong></div>${recs.map(r=>`<div class="intel-item"><span class="intel-icon">${r.icon||'•'}</span><div class="intel-text"><strong>${r.title}</strong> — ${r.text}</div></div>`).join('')}</div>`;
+  c.innerHTML=`<div class="weather-intel-panel"><div class="weather-intel-header"><strong style="font-family:var(--font-display);font-size:0.9rem;">🌤 Weather-Smart Recommendations</strong></div>${recs.map(r=>`<div class="intel-item"><span class="intel-icon">${esc(r.icon||'•')}</span><div class="intel-text"><strong>${esc(r.title)}</strong> — ${esc(r.text)}</div></div>`).join('')}</div>`;
 }
 </script>
 </body>
