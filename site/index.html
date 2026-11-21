@@ -579,6 +579,36 @@
   .outfit-day-date{font-size:1rem;}
   .trip-info-pill{font-size:0.88rem;}
 
+  /* ── PACKING LIST, phone-first (Nov 2026): one card per category, big rows, easy ticks ── */
+  .category-section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:1rem;overflow:hidden;}
+  .category-header{display:flex;align-items:center;gap:0.65rem;margin:0;padding:0.9rem 1rem 0.55rem;border-bottom:none;}
+  .category-icon{font-size:1.35rem;line-height:1;flex-shrink:0;}
+  .cat-titles{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .category-name{font-family:var(--font-display);font-size:1.15rem;font-weight:600;line-height:1.25;overflow-wrap:anywhere;}
+  .category-count{font-family:var(--font-body);font-size:0.85rem;color:var(--text-muted);margin-top:0.1rem;}
+  .cat-all-btn{flex-shrink:0;min-height:36px;padding:0.35rem 0.85rem;border-radius:999px;border:1px solid var(--border-strong);background:transparent;color:var(--text-secondary);font-family:var(--font-body);font-size:0.82rem;font-weight:600;cursor:pointer;white-space:nowrap;}
+  .cat-bar{height:4px;background:var(--border);margin:0 1rem 0.3rem;border-radius:2px;overflow:hidden;}
+  .cat-bar-fill{height:100%;background:var(--gold);transition:width 0.4s ease;}
+  .packing-item{gap:0.4rem;min-height:56px;padding:0.4rem 0.75rem 0.4rem 0.2rem;border-radius:0;border-bottom:1px solid var(--border);}
+  .packing-items .packing-item:last-child{border-bottom:none;}
+  .item-check-hit{width:48px;height:48px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:none;border:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+  .item-check{width:28px;height:28px;}
+  .item-check.checked::after{font-size:0.95rem;}
+  .item-name{font-size:1.05rem;font-weight:500;line-height:1.35;white-space:normal;overflow-wrap:anywhere;}
+  .item-description{font-family:var(--font-body);font-style:normal;font-size:0.88rem;line-height:1.4;white-space:normal;margin-top:0.15rem;}
+  .item-in-use-badge,.item-outfit-badge{font-size:0.72rem;letter-spacing:0.02em;text-transform:none;padding:0.15rem 0.5rem;}
+  .qty-control{border-radius:999px;border-color:var(--border);}
+  .qty-btn{width:34px;height:34px;font-size:1.1rem;background:transparent;}
+  .qty-value{width:30px;height:34px;font-size:1rem;border:none;background:transparent;}
+  .add-item-row{padding:0.25rem 1rem 0.6rem;}
+  .add-item-toggle{min-height:44px;padding:0 0.25rem;background:none;border:none;color:var(--text-secondary);font-family:var(--font-body);font-size:0.95rem;font-weight:600;cursor:pointer;}
+  .category-section .add-item-form{display:none;margin:0.25rem 0 0;gap:0.5rem;align-items:center;flex-wrap:wrap;padding:0.6rem;}
+  .category-section.adding .add-item-form{display:flex;}
+  .category-section.adding .add-item-toggle{display:none;}
+  .add-item-form input{flex:1;min-width:0;font-size:1rem;padding:0.65rem 0.8rem;}
+  .add-item-form .btn{min-height:44px;font-size:0.9rem;}
+  @media(hover:none){.drag-handle{display:none;}}
+
   /* Outfit builder: tucked away until needed */
   .outfit-builder-panel.collapsed .outfit-slots-grid,
   .outfit-builder-panel.collapsed .outfit-builder-footer,
@@ -2373,6 +2403,7 @@ async function deleteAccount() {
 }
 
 function showTripDetail(tripId, skipHistory) {
+  state._addingCat = null;
   const trip = state.trips.find(t=>t.id===tripId);
   if (!trip) return;
   state.currentTrip = trip;
@@ -2841,32 +2872,36 @@ function renderPackingList() {
     section.addEventListener('dragover', e => { e.preventDefault(); section.classList.add('drag-over'); });
     section.addEventListener('dragleave', () => section.classList.remove('drag-over'));
     section.addEventListener('drop', e => { e.preventDefault(); section.classList.remove('drag-over'); const from=e.dataTransfer.getData('text/plain'); reorderCategory(from, catName); });
+    if (state._addingCat === catName) section.classList.add('adding');
+    const allPacked = items.length > 0 && packed === items.length;
     section.innerHTML = `
       <div class="category-header">
-        <div class="category-title-wrap">
-          <span class="drag-handle" draggable="true" onmousedown="initCatDrag(event,${jsArg(catName)})">⠿</span>
-          <span class="category-icon">${CATEGORY_ICONS[catName]||'📦'}</span>
+        <span class="drag-handle" draggable="true" onmousedown="initCatDrag(event,${jsArg(catName)})">⠿</span>
+        <span class="category-icon" aria-hidden="true">${CATEGORY_ICONS[catName]||'📦'}</span>
+        <div class="cat-titles">
           <span class="category-name">${esc(catName)}</span>
-          <span class="category-count">${packed}/${items.length}</span>
+          <span class="category-count">${packed} of ${items.length} packed</span>
         </div>
-        <div style="display:flex;align-items:center;gap:0.5rem;">
-          <button class="btn btn-ghost" style="font-size:0.62rem;padding:0.15rem 0.4rem;opacity:0.7;" onclick="checkAllInCategory(${jsArg(catName)},true)" title="Check all">✓ All</button>
-          <button class="btn btn-ghost" style="font-size:0.62rem;padding:0.15rem 0.4rem;opacity:0.7;" onclick="checkAllInCategory(${jsArg(catName)},false)" title="Uncheck all">○ None</button>
-          <div class="mini-bar"><div class="mini-bar-fill" style="width:${pct}%"></div></div>
-          <span class="label-small">${pct}%</span>
-        </div>
+        ${items.length ? `<button class="cat-all-btn" onclick="checkAllInCategory(${jsArg(catName)},${allPacked?'false':'true'})">${allPacked?'Unpack all':'Pack all'}</button>` : ''}
       </div>
+      <div class="cat-bar"><div class="cat-bar-fill" style="width:${pct}%"></div></div>
       <div class="packing-items" id="cat-${sanitize(catName)}">
         ${items.map(item=>renderPackingItem(catName,item,outfitMap)).join('')}
       </div>
-      <div class="add-item-form">
-        <div style="display:flex;gap:0.5rem;align-items:center;">
-          <input type="text" placeholder="Item name" id="add-name-${sanitize(catName)}" onkeydown="if(event.key==='Enter')addItem(${jsArg(catName)})" style="flex:1;">
-          <button class="btn btn-secondary" style="font-size:0.72rem;padding:0.35rem 0.75rem;flex-shrink:0;" onclick="addItem(${jsArg(catName)})">+ Add</button>
+      <div class="add-item-row">
+        <button class="add-item-toggle" onclick="openAddItem(${jsArg(catName)})">+ Add item</button>
+        <div class="add-item-form">
+          <input type="text" placeholder="Item name" enterkeyhint="done" id="add-name-${sanitize(catName)}" onkeydown="if(event.key==='Enter')addItem(${jsArg(catName)})">
+          <button class="btn btn-primary" onclick="addItem(${jsArg(catName)})">Add</button>
+          <button class="btn btn-ghost" onclick="closeAddItem()">Done</button>
         </div>
       </div>`;
     container.appendChild(section);
   });
+  if (state._addingCat) {
+    const addInput = document.getElementById('add-name-' + sanitize(state._addingCat));
+    if (addInput && addInput.focus) addInput.focus();
+  }
 
   const addCat = document.createElement('div');
   addCat.innerHTML=`<button class="btn btn-ghost mt-2" onclick="addCategory()">+ Add Category</button>`;
@@ -2881,7 +2916,7 @@ function renderPackingItem(catName, item, outfitMap) {
     : '';
   return `
     <div class="packing-item" id="item-${esc(item.id)}">
-      <div class="item-check ${item.checked?'checked':''}" onclick="toggleItem(${jsArg(catName)},${jsArg(item.id)})"></div>
+      <button class="item-check-hit" aria-label="${item.checked?'Packed':'Not packed'}: ${esc(item.name)}" onclick="toggleItem(${jsArg(catName)},${jsArg(item.id)})"><span class="item-check ${item.checked?'checked':''}"></span></button>
       <div class="item-info">
         <div class="item-name ${item.checked?'checked':''}" onclick="openEditItem(${jsArg(catName)},${jsArg(item.id)})" title="Edit item">${esc(item.name)}${item.essential?' <span class="item-essential">★</span>':''}</div>
         ${item.notes?`<div class="item-description" style="color:var(--text-muted);">📝 ${esc(item.notes)}</div>`:''}
@@ -2921,6 +2956,9 @@ function toggleItem(catName, itemId) {
   const nameEl = document.querySelector('#item-' + itemId + ' .item-name');
   if (checkEl) checkEl.className = 'item-check' + (item.checked ? ' checked' : '');
   if (nameEl) nameEl.className = 'item-name' + (item.checked ? ' checked' : '');
+  const hitEl = checkEl && checkEl.parentNode;
+  if (hitEl && hitEl.setAttribute) hitEl.setAttribute('aria-label', (item.checked ? 'Packed' : 'Not packed') + ': ' + item.name);
+  updateCategoryProgress(catName, checkEl);
   // Update progress ring without full re-render
   updateProgressRing();
 }
@@ -2949,6 +2987,35 @@ function removeItem(catName, itemId) {
   }
   state.currentTrip.categories[catName]=state.currentTrip.categories[catName].filter(i=>i.id!==itemId);
   saveTrips(); renderPackingList();
+}
+
+function openAddItem(catName) {
+  state._addingCat = catName;
+  document.querySelectorAll('.category-section.adding').forEach(s => s.classList.remove('adding'));
+  const input = document.getElementById('add-name-' + sanitize(catName));
+  const sec = input && input.closest ? input.closest('.category-section') : null;
+  if (sec) sec.classList.add('adding');
+  if (input && input.focus) input.focus();
+}
+function closeAddItem() {
+  state._addingCat = null;
+  document.querySelectorAll('.category-section.adding').forEach(s => s.classList.remove('adding'));
+}
+// Refresh one category's "x of y packed", bar and Pack all button without re-rendering the list
+function updateCategoryProgress(catName, fromEl) {
+  const items = (state.currentTrip && state.currentTrip.categories[catName]) || [];
+  const sec = fromEl && fromEl.closest ? fromEl.closest('.category-section') : null;
+  if (!sec) return;
+  const packed = items.filter(i => i.checked).length;
+  const pct = items.length ? Math.round(packed / items.length * 100) : 0;
+  const countEl = sec.querySelector('.category-count'); if (countEl) countEl.textContent = packed + ' of ' + items.length + ' packed';
+  const barEl = sec.querySelector('.cat-bar-fill'); if (barEl) barEl.style.width = pct + '%';
+  const btn = sec.querySelector('.cat-all-btn');
+  if (btn) {
+    const all = items.length > 0 && packed === items.length;
+    btn.textContent = all ? 'Unpack all' : 'Pack all';
+    btn.setAttribute('onclick', 'checkAllInCategory(' + JSON.stringify(String(catName)) + ',' + (all ? 'false' : 'true') + ')');
+  }
 }
 
 function addItem(catName) {
