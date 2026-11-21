@@ -13,6 +13,9 @@
  *     itself and returns {items:[{item, category, reason, source}]} (at most 8).
  *   - /api/ai/suggest no longer accepts a free-form prompt from the app. It still answers the
  *     older app with 14 suggestions, but writes that prompt itself from the trip fields.
+ *   - AI answers get more room (max_tokens 1000 -> 2000, gap check 4000). Claude Haiku 5.5 thinks
+ *     before answering and that counts toward the limit, so 1000 could run out before any answer.
+ *     An empty reply now says whether it ran out of room, and the reason is logged.
  *
  * v4 changes (same API as v3, so the current app keeps working):
  *   - Each trip is stored in its own KV record (trip:<id>) instead of one shared "trips" record,
@@ -822,7 +825,7 @@ async function handleAISuggest(request, env) {
 async function handleAIGaps(request, env) {
   await authenticate(request, env);
   const d = cleanGapData(await request.json().catch(() => ({})));
-  const text = await askAI(env, buildGapPrompt(d, GAP_PROMPT_CHARS), 3000, GAP_PROMPT_CHARS);
+  const text = await askAI(env, buildGapPrompt(d, GAP_PROMPT_CHARS), 4000, GAP_PROMPT_CHARS);
   const items = parseGapItems(text, d.categories);
   if (!items) throw new HttpError(502, 'The check came back unreadable. Please try again.');
   return json({ items });
@@ -848,17 +851,21 @@ async function askAI(env, prompt, maxTokens, maxChars) {
   }
   const data = await res.json();
   const text = data.content?.map(c => c.text || '').join('') || '';
-  if (!text) throw new HttpError(502, 'AI returned no suggestions.');
+  if (!text) {
+    console.error('AI empty reply', data.stop_reason, JSON.stringify(data.usage || {}));
+    throw new HttpError(502, data.stop_reason === 'max_tokens' ? 'AI ran out of room before answering.' : 'AI returned no suggestions.');
+  }
   return text;
 }
 
 async function callAI(env, prompt) {
-  return json({ result: await askAI(env, prompt, 1000, MAX_PROMPT_CHARS) });
+  // 2000, not 1000: the model thinks before it answers, and that thinking counts toward this limit.
+  return json({ result: await askAI(env, prompt, 2000, MAX_PROMPT_CHARS) });
 }
 
 // ── GAP CHECK: shared code (the app and the worker carry identical copies) ──
 // cleanGapData caps every field, buildGapPrompt writes the prompt, parseGapItems
-// turns the AI's reply into at most 8 safe {item, category, reason, source} rows.
+// turns the AI's reply into at most 6 safe {item, category, reason, source} rows.
 function gapClip(v, n) { return String(v == null ? '' : v).replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n); }
 function gapList(a, maxItems, maxLen) { return (Array.isArray(a) ? a : []).map(x => gapClip(x, maxLen)).filter(Boolean).slice(0, maxItems); }
 function cleanGapData(b) {
@@ -896,17 +903,21 @@ function buildGapPrompt(d, maxChars) {
   const rules =
     'You check a traveler\'s packing list and find what they are forgetting for this specific trip.\n\n' +
     'RULES\n' +
-    '- Suggest only things that are missing AND that this trip actually needs. At most 8; fewer is better. If nothing important is missing, return [].\n' +
+    '- Suggest only things that are missing AND that this trip actually needs. At most 6; fewer is better. If nothing important is missing, return [].\n' +
+    '- Read the FORECAST day by day: rain, storms, snow, heat and cold nights should drive suggestions (umbrella, rain shell, warm layer, sun protection), unless the list already covers them.\n' +
     '- Never suggest anything already on the packing list or in the planned outfits, even in other words, or when something listed already covers the same need.\n' +
     '- Check MY ITEMS first: things the traveler usually packs that fit this trip but are not on the list are the likeliest misses.\n' +
     '- When a clothing piece is missing, pick one from CLOSET and use its exact name.\n' +
     '- Flag a quantity shortfall only when it is clear (for example 2 shirts for 7 days), as an item like "3 more shirts".\n' +
     '- Think about the forecast, the purpose and planned outfits, travel documents, chargers and adapters, and toiletries.\n' +
     '- "category" must be exactly one of: ' + d.categories.join(', ') + '.\n' +
-    '- "reason" is one short phrase under 12 words tied to this trip, like "Rain forecast Tuesday and Wednesday".\n' +
-    '- "source" is "my-items" if from MY ITEMS, "closet" if from CLOSET, otherwise "new".\n\n';
+    '- "reason" is one short phrase under 12 words tied to this trip. When the suggestion is because of the weather, the reason must name the weather and the days or city, like "Rain Tue and Wed" or "Lows near 40°F in Paris".\n' +
+    '- "source" is "my-items" if from MY ITEMS, "closet" if from CLOSET, otherwise "new".\n' +
+    '- Decide quickly and keep any reasoning brief; the answer must be short.\n\n';
   const tail = '\n\nAnswer with ONLY a JSON array and no other text: [{"item":"...","category":"...","reason":"...","source":"new"}]';
-  const room = Math.max(1200, (maxChars || 12000) - rules.length - tail.length - 400);
+  // The forecast is always sent in full (at most 20 short lines); the rest shares what's left.
+  const forecast = d.weather.length ? d.weather.join('\n') : 'No forecast yet (forecasts only cover the next 16 days).';
+  const room = Math.max(1200, (maxChars || 12000) - rules.length - tail.length - forecast.length - 450);
   const trip = [
     'Destination: ' + (d.destination || 'unknown'),
     d.itinerary.length > 1 ? 'Itinerary: ' + d.itinerary.join('; ') : '',
@@ -917,20 +928,25 @@ function buildGapPrompt(d, maxChars) {
   const packLines = d.packing.map(c => c.category + ': ' + (c.items.length ? c.items.join(', ') : '(empty)'));
   return rules +
     'TRIP\n' + trip + '\n\n' +
-    'FORECAST (daily high/low in °F)\n' + (d.weather.length ? gapFit(d.weather, Math.floor(room * 0.10), '\n') : 'No forecast yet.') + '\n\n' +
-    'ALREADY ON THE PACKING LIST\n' + (packLines.length ? gapFit(packLines, Math.floor(room * 0.42), '\n') : '(nothing yet)') + '\n\n' +
+    'FORECAST (day, city, high/low in °F, conditions)\n' + forecast + '\n\n' +
+    'ALREADY ON THE PACKING LIST\n' + (packLines.length ? gapFit(packLines, Math.floor(room * 0.46), '\n') : '(nothing yet)') + '\n\n' +
     'ALREADY PLANNED IN OUTFITS (count as packed)\n' + (d.outfits.length ? gapFit(d.outfits, Math.floor(room * 0.12), '\n') : '(none)') + '\n\n' +
-    'MY ITEMS (things this traveler usually packs)\n' + (d.myItems.length ? gapFit(d.myItems, Math.floor(room * 0.12), '; ') : '(none saved)') + '\n\n' +
-    'CLOSET (clothes this traveler owns)\n' + (d.closet.length ? gapFit(d.closet, Math.floor(room * 0.22), '; ') : '(none saved)') +
+    'MY ITEMS (things this traveler usually packs)\n' + (d.myItems.length ? gapFit(d.myItems, Math.floor(room * 0.14), '; ') : '(none saved)') + '\n\n' +
+    'CLOSET (clothes this traveler owns)\n' + (d.closet.length ? gapFit(d.closet, Math.floor(room * 0.24), '; ') : '(none saved)') +
     tail;
 }
 function parseGapItems(text, categories) {
   if (typeof text !== 'string') return null;
   const a = text.indexOf('['), z = text.lastIndexOf(']');
-  if (a < 0 || z < a) return null;
-  let arr;
-  try { arr = JSON.parse(text.slice(a, z + 1)); } catch (e) { return null; }
-  if (!Array.isArray(arr)) return null;
+  if (a < 0) return null;
+  let arr = null;
+  if (z > a) { try { arr = JSON.parse(text.slice(a, z + 1)); } catch (e) { arr = null; } }
+  if (!Array.isArray(arr)) {
+    // A reply cut off part-way: keep every complete {...} row that came before the cut.
+    arr = [];
+    for (const m of text.slice(a).match(/\{[^{}]*\}/g) || []) { try { arr.push(JSON.parse(m)); } catch (e) {} }
+    if (!arr.length) return null;
+  }
   const cats = Array.isArray(categories) && categories.length ? categories : ['Misc'];
   const seen = {};
   const out = [];
@@ -945,7 +961,7 @@ function parseGapItems(text, categories) {
     const category = cats.find(c => c.toLowerCase() === want) || cats.find(c => c.toLowerCase() === 'misc') || 'Misc';
     const source = ['my-items', 'closet', 'new'].includes(r.source) ? r.source : 'new';
     out.push({ item, category, reason: gapClip(r.reason, 120), source });
-    if (out.length >= 8) break;
+    if (out.length >= 6) break;
   }
   return out;
 }
