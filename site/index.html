@@ -644,6 +644,18 @@
     .item-actions{display:none;}
   }
   .item-name{cursor:pointer;}
+
+  /* ── SMART START + packing mode (Nov 2026) ── */
+  .activity-chips{display:flex;flex-wrap:wrap;gap:0.5rem;}
+  .activity-chip{min-height:40px;padding:0.4rem 0.85rem;border-radius:999px;border:1px solid var(--border-strong);background:transparent;color:var(--text-secondary);font-family:var(--font-body);font-size:0.9rem;font-weight:500;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background var(--transition),color var(--transition),border-color var(--transition);}
+  .activity-chip.on{background:var(--gold);border-color:var(--gold);color:#0C2D5A;font-weight:600;}
+  .field-hint{font-size:0.82rem;color:var(--text-muted);margin-top:0.4rem;line-height:1.4;}
+  .list-tools{display:flex;justify-content:flex-end;margin:0 0 0.75rem;}
+  .hide-packed-toggle{display:inline-flex;align-items:center;gap:0.5rem;min-height:40px;padding:0.35rem 0.9rem;border-radius:999px;border:1px solid var(--border-strong);background:transparent;color:var(--text-secondary);font-family:var(--font-body);font-size:0.88rem;font-weight:600;cursor:pointer;}
+  .hide-packed-toggle.on{background:var(--gold);border-color:var(--gold);color:#0C2D5A;}
+  .cat-all-done{padding:0.2rem 1rem 0.7rem;font-size:0.9rem;color:var(--text-muted);}
+  .packing-item.leaving{opacity:0;transition:opacity 0.3s ease;}
+  .every-trip-badge{display:inline-block;margin-left:0.4rem;padding:0.05rem 0.45rem;border-radius:999px;background:rgba(201,168,76,0.18);color:var(--text-secondary);font-size:0.68rem;font-weight:700;letter-spacing:0.02em;vertical-align:middle;}
 </style>
 </head>
 <body>
@@ -881,9 +893,9 @@
   <!-- PERSONAL ITEM LIBRARY -->
   <div id="view-library" class="container" style="display:none;">
     <div class="dashboard-header">
-      <div class="dashboard-greeting">Frequently packed items — add to any trip's packing list</div>
+      <div class="dashboard-greeting">Things you pack often. Mark one "Every trip" and new trips include it automatically.</div>
       <div class="dashboard-title-row">
-        <h1 class="display-title">Essentials</h1>
+        <h1 class="display-title">My Items</h1>
         <button class="btn btn-primary" onclick="openAddLibraryItem()">+ Add Item</button>
       </div>
       <div style="margin-top:0.75rem;">
@@ -954,6 +966,7 @@
           </div>
           <div id="ai-content"></div>
         </div>
+        <div class="list-tools"><button class="hide-packed-toggle" id="hide-packed-btn" aria-pressed="false" onclick="toggleHidePacked()">Show only what's left</button></div>
         <div id="packing-categories"></div>
       </div>
 
@@ -1123,8 +1136,12 @@
           <option value="international">International</option>
         </select>
       </div>
-      <div class="form-group"><label>Start from Template (optional)</label>
-        <select id="new-trip-template"><option value="">Blank list</option></select>
+      <div class="form-group"><label>What will you do? (optional)</label>
+        <div class="activity-chips" id="new-trip-activities"></div>
+      </div>
+      <div class="form-group"><label>Start with</label>
+        <select id="new-trip-template" onchange="updateSmartHint()"><option value="__smart">Smart list (recommended)</option><option value="">Blank list</option></select>
+        <div class="field-hint" id="new-trip-smart-hint">Built from your trip type, dates, activities, My Items and the forecast. Just remove what you don't need.</div>
       </div>
       <div id="personal-care-toggle-wrap" style="display:none;margin-top:0.5rem;">
         <div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem;background:rgba(139,26,26,0.05);border-radius:var(--radius);border:1px solid rgba(139,26,26,0.15);">
@@ -1135,7 +1152,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modal-new-trip')">Cancel</button>
-      <button class="btn btn-primary" onclick="createTrip()">Create Trip</button>
+      <button class="btn btn-primary" id="new-trip-create-btn" onclick="createTrip()">Build my list</button>
     </div>
   </div>
 </div>
@@ -1293,6 +1310,10 @@
           <option>Clothing</option><option>Undergarments</option><option>Toiletries</option><option>Documents</option>
           <option>Tech</option><option>Accessories</option><option>Gear</option><option>Health</option><option>Misc</option><option>Other</option>
         </select>
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:0.75rem;">
+        <input type="checkbox" id="library-item-always" style="width:auto;">
+        <label for="library-item-always" style="margin:0;font-size:0.9rem;text-transform:none;letter-spacing:0;color:var(--text-primary);">Every trip: add it to new trips automatically</label>
       </div>
       <div class="form-group"><label>Description (optional)</label><input type="text" id="library-item-desc" placeholder="e.g. SPF 50, 3oz travel size"></div>
       <div class="form-group"><label>Notes (optional)</label><textarea id="library-item-notes" placeholder="Brand, where to buy, packing tips..."></textarea></div>
@@ -2079,22 +2100,29 @@ function saveProfileToCloud() { queueUserRecord('profile'); }
 function getDefaultTemplates() {
   return [
     { id:'tpl-business', name:'Business Travel', icon:'💼', categories:{
-      'Clothing':['Dress shirts (x3)','Dress pants (x2)','Blazer','Socks (x5)','Dress shoes','Belt','Tie','Casual outfit (evenings)'],
-      'Undergarments':['Boxer briefs / underwear (x5)','Undershirts (x3)','Undershirt (sleeveless, x2)'],
-      'Toiletries':['Toothbrush & toothpaste','Deodorant','Razor & shaving cream','Cologne/Perfume','Face wash & moisturizer','Hair products'],
-      'Documents':['Passport / ID','Business cards','Travel itinerary','Hotel confirmation','Flight tickets'],
-      'Tech':['Laptop & charger','Phone charger','Headphones','Power bank','Universal adapter'],
-      'Accessories':['Watch','Sunglasses','Belt','Tie clip','Cufflinks'],
-      'Misc':['Notebook & pen','Pain relievers','Snacks','Reusable water bottle'],
+      'Essentials':['Phone','Wallet','Keys','ID / driver\'s license','Business cards','Travel confirmations'],
+      'Clothing':['Dress shirts','Dress pants','Blazer / suit jacket','Tie','Casual outfit for evenings'],
+      'Underwear & Sleep':['Underwear','Socks','Undershirts','Sleepwear'],
+      'Shoes':['Dress shoes','Casual shoes'],
+      'Accessories':['Watch','Belt','Sunglasses','Cufflinks / tie clip'],
+      'Toiletries':['Toothbrush & toothpaste','Deodorant','Razor & shaving kit','Fragrance','Face wash & moisturizer','Hair products'],
+      'Health & Meds':['Prescription meds','Pain reliever'],
+      'Tech':['Laptop & charger','Phone charger & cable','Headphones / AirPods','Power bank'],
+      'Travel Day':['Notebook & pen','Water bottle','Snacks'],
+      'Before You Leave':['Check in online','Charge phone & headphones'],
     }},
     { id:'tpl-leisure', name:'Leisure Vacation', icon:'🌴', categories:{
-      'Clothing':['T-shirts (x4)','Shorts/Casual pants (x3)','Swimsuit (x2)','Sundress/Casual dress','Light jacket/Cardigan','Comfortable shoes','Sandals'],
-      'Undergarments':['Underwear (x5)','Socks (x5)','Sports bra / bralette (x2)'],
-      'Toiletries':['Toothbrush & toothpaste','Deodorant','Sunscreen SPF 50+','After-sun lotion','Shampoo & conditioner','Face care routine'],
-      'Documents':['Passport / ID','Travel insurance docs','Hotel confirmation','Flight tickets','Emergency contacts'],
-      'Tech':['Phone & charger','Camera','Power bank','Universal adapter','Headphones'],
-      'Accessories':['Sunglasses','Watch','Hat / Sun hat','Jewelry','Beach bag'],
-      'Misc':['Snacks','Reusable water bottle','Guidebook / Maps','First aid kit','Portable umbrella'],
+      'Essentials':['Phone','Wallet','Keys','ID / driver\'s license','Travel confirmations'],
+      'Clothing':['Tops / T-shirts','Shorts or casual pants','Swimsuit','Light jacket or sweater','Casual evening outfit'],
+      'Underwear & Sleep':['Underwear','Socks','Sleepwear'],
+      'Shoes':['Comfortable walking shoes','Sandals'],
+      'Accessories':['Sunglasses','Watch','Hat'],
+      'Toiletries':['Toothbrush & toothpaste','Deodorant','Sunscreen','Shampoo & conditioner','Face wash & moisturizer'],
+      'Health & Meds':['Prescription meds','Pain reliever','Small first aid kit'],
+      'Tech':['Phone charger & cable','Power bank','Headphones / AirPods'],
+      'Travel Day':['Water bottle','Snacks'],
+      'Bags & Laundry':['Day bag / tote','Laundry bag'],
+      'Before You Leave':['Check in online','Charge phone & headphones','Lock up and set the thermostat'],
     }},
   ];
 }
@@ -2762,10 +2790,14 @@ function removeStop(cid, i) {
 // ═══════════════════════════════════════════════
 // TRIP CREATION
 // ═══════════════════════════════════════════════
-function openNewTripModal() {
+function openNewTripModal(templateId) {
   const sel=document.getElementById('new-trip-template');
-  sel.innerHTML='<option value="">Blank list</option>';
+  sel.innerHTML='<option value="__smart">Smart list (recommended)</option><option value="">Blank list</option>';
   state.templates.forEach(t=>{ sel.innerHTML+=`<option value="${esc(t.id)}">${esc(t.name)}</option>`; });
+  sel.value = (typeof templateId === 'string') ? templateId : '__smart';
+  state._newTripActivities = new Set();
+  renderActivityChips();
+  updateSmartHint();
   renderStopsEditor('new-trip-stops', [{ id: uid(), city: '', startDate: new Date().toISOString().split('T')[0], endDate: '' }], false);
   document.getElementById('new-trip-name').value='';
   // Show personal care toggle only for eligible users
@@ -2784,21 +2816,28 @@ function createTrip() {
   const dest = stopInfo.destination;
   const templateId=document.getElementById('new-trip-template').value;
   const template=state.templates.find(t=>t.id===templateId);
+  const tripType = document.getElementById('new-trip-type').value;
+  const activities = [...(state._newTripActivities || [])];
+  const smart = templateId === '__smart';
   let categories={};
-  if (template) {
+  if (smart) {
+    categories = buildSmartList({ type: tripType, days: smartTripDays(stopInfo.startDate, stopInfo.endDate), activities, library: getLibrary() });
+  } else if (template) {
     Object.entries(template.categories).forEach(([cat,items])=>{
       categories[cat]=items.map(name=>({id:uid(),name,description:'',notes:'',qty:1,checked:false,essential:false}));
     });
   } else {
-    ['Clothing','Undergarments','Toiletries','Documents','Tech','Accessories','Misc'].forEach(c=>{categories[c]=[];});
+    BLANK_CATEGORIES.forEach(c=>{categories[c]=[];});
   }
   const includePC = state.currentUser.showPersonalCare && document.getElementById('new-trip-personal-care').checked;
   const trip = {
     id:uid(), destination:dest, tripName, reason:document.getElementById('new-trip-reason').value.trim(),
     startDate:stopInfo.startDate,
-    endDate:stopInfo.endDate, ...(stopInfo.stops ? { stops: stopInfo.stops } : {}), type:document.getElementById('new-trip-type').value,
+    endDate:stopInfo.endDate, ...(stopInfo.stops ? { stops: stopInfo.stops } : {}), type:tripType,
     ownerId:state.currentUser.id, sharedWith:[], categories, outfits:{}, outfitCombos:[],
     includePersonalCare:includePC, createdAt:new Date().toISOString(),
+    ...(activities.length ? { activities } : {}),
+    ...(smart ? { smartWeatherPending: true } : {}),
   };
   // Auto-detect personal care
   if (shouldIncludePersonalCare(trip) || includePC) {
@@ -2808,14 +2847,218 @@ function createTrip() {
   saveTrips();
   createTripInCloud(trip);
   closeModal('modal-new-trip');
-  toast((tripName ? '"'+tripName+'"' : 'Trip') + ' created!','success');
+  if (smart) {
+    const n = Object.values(categories).reduce((a, items) => a + items.length, 0);
+    toast(n + ' items ready. Remove anything you don\'t need.', 'success');
+  } else {
+    toast((tripName ? '"'+tripName+'"' : 'Trip') + ' created!','success');
+  }
   showTripDetail(trip.id);
+}
+
+// ═══════════════════════════════════════════════
+// SMART START (Nov 2026): a new trip starts from a draft built from its
+// type, length, activities, My Items marked "Every trip" and the forecast.
+// Only trips created with "Smart list" use this; existing trips keep
+// exactly the categories and items they already have.
+// ═══════════════════════════════════════════════
+const CATEGORY_ORDER = ['Essentials','Clothing','Underwear & Sleep','Shoes','Accessories','Toiletries','Health & Meds','Tech','Travel Day','Bags & Laundry','Activities','Before You Leave'];
+const BLANK_CATEGORIES = ['Essentials','Clothing','Underwear & Sleep','Shoes','Accessories','Toiletries','Health & Meds','Tech'];
+// Older category names (My Items, older templates) and where they live now
+const LEGACY_CATEGORY_MAP = { 'Documents':'Essentials', 'Undergarments':'Underwear & Sleep', 'Health':'Health & Meds', 'Gear':'Activities', 'Misc':'Other' };
+
+const TRIP_ACTIVITIES = [
+  { id:'beach', label:'Beach / pool', icon:'🏖️' },
+  { id:'gym', label:'Workouts', icon:'🏋️' },
+  { id:'golf', label:'Golf', icon:'⛳' },
+  { id:'dinner', label:'Nice dinners', icon:'🍷' },
+  { id:'hiking', label:'Hiking', icon:'🥾' },
+  { id:'meetings', label:'Meetings', icon:'💼' },
+  { id:'walking', label:'Lots of walking', icon:'🚶' },
+  { id:'snow', label:'Snow / ski', icon:'❄️' },
+  { id:'family', label:'Visiting family', icon:'🎁' },
+];
+
+// [category, item, quantity] — quantity is a number or a rule:
+// days = one per day (max 7), n1 = nights + 1 (max 8), half = every other day (max 4), third = every third day (max 3)
+const SMART_BASE = [
+  ['Essentials','Phone'],['Essentials','Wallet'],['Essentials','Keys'],['Essentials','ID / driver\'s license'],
+  ['Essentials','Credit cards'],['Essentials','Cash'],['Essentials','Travel confirmations'],
+  ['Underwear & Sleep','Underwear','n1'],['Underwear & Sleep','Socks','n1'],['Underwear & Sleep','Sleepwear'],
+  ['Accessories','Watch'],['Accessories','Sunglasses'],
+  ['Toiletries','Toothbrush & toothpaste'],['Toiletries','Deodorant'],['Toiletries','Shampoo & conditioner'],
+  ['Toiletries','Face wash & moisturizer'],['Toiletries','Razor & shaving kit'],['Toiletries','Hair products'],['Toiletries','Lip balm'],
+  ['Health & Meds','Prescription meds'],['Health & Meds','Vitamins / supplements'],['Health & Meds','Pain reliever'],['Health & Meds','Hand sanitizer'],
+  ['Tech','Phone charger & cable'],['Tech','Power bank'],['Tech','Headphones / AirPods'],
+  ['Travel Day','Water bottle'],['Travel Day','Snacks'],
+  ['Before You Leave','Check in online'],['Before You Leave','Charge phone & headphones'],['Before You Leave','Lock up and set the thermostat'],
+];
+const SMART_TYPES = {
+  leisure: [
+    ['Clothing','Tops / T-shirts','days'],['Clothing','Shorts or casual pants','half'],['Clothing','Light jacket or sweater'],['Clothing','Casual evening outfit','third'],
+    ['Shoes','Comfortable walking shoes'],['Shoes','Sandals'],
+    ['Accessories','Belt'],['Accessories','Hat'],
+    ['Bags & Laundry','Day bag / tote'],
+  ],
+  business: [
+    ['Essentials','Business cards'],
+    ['Clothing','Dress shirts','days'],['Clothing','Dress pants','half'],['Clothing','Blazer / suit jacket'],['Clothing','Tie'],['Clothing','Casual outfit for evenings'],
+    ['Underwear & Sleep','Undershirts','days'],
+    ['Shoes','Dress shoes'],['Shoes','Casual shoes'],
+    ['Accessories','Belt'],['Accessories','Cufflinks / tie clip'],
+    ['Tech','Laptop & charger'],
+    ['Travel Day','Notebook & pen'],
+    ['Bags & Laundry','Laptop bag'],
+  ],
+  adventure: [
+    ['Clothing','Quick-dry shirts','days'],['Clothing','Hiking pants / shorts','half'],['Clothing','Fleece or mid layer'],['Clothing','Rain shell'],
+    ['Shoes','Hiking boots / trail shoes'],['Shoes','Camp sandals'],
+    ['Accessories','Sun hat'],
+    ['Toiletries','Sunscreen'],
+    ['Health & Meds','First aid kit'],['Health & Meds','Bug spray'],['Health & Meds','Blister care'],
+    ['Activities','Daypack'],['Activities','Headlamp'],
+  ],
+  international: [
+    ['Essentials','Passport'],['Essentials','Photo of passport on your phone'],['Essentials','Visa / entry documents'],['Essentials','Some local currency'],
+    ['Tech','Plug adapter'],
+    ['Travel Day','Pen for customs forms'],['Travel Day','Travel pillow'],['Travel Day','Eye mask & earplugs'],
+    ['Before You Leave','Check passport is valid 6+ months'],['Before You Leave','Set up eSIM or roaming plan'],['Before You Leave','Tell your bank you\'re traveling'],
+  ],
+};
+const SMART_ACTIVITIES = {
+  beach:   [['Clothing','Swimsuit',2],['Clothing','Cover-up or swim shirt'],['Shoes','Flip-flops'],['Toiletries','Sunscreen'],['Toiletries','After-sun lotion'],['Accessories','Hat'],['Activities','Beach bag']],
+  gym:     [['Clothing','Workout clothes','half'],['Shoes','Sneakers']],
+  golf:    [['Clothing','Golf shirts','half'],['Clothing','Golf shorts / pants','third'],['Shoes','Golf shoes'],['Accessories','Hat'],['Activities','Golf glove'],['Activities','Golf balls & tees']],
+  dinner:  [['Clothing','Dressy outfit','third'],['Shoes','Dress shoes'],['Toiletries','Fragrance']],
+  hiking:  [['Clothing','Hiking pants / shorts','half'],['Shoes','Hiking boots / trail shoes'],['Health & Meds','Bug spray'],['Health & Meds','Blister care'],['Activities','Daypack']],
+  meetings:[['Essentials','Business cards'],['Clothing','Business outfit','third'],['Shoes','Dress shoes'],['Tech','Laptop & charger']],
+  walking: [['Shoes','Comfortable walking shoes'],['Health & Meds','Blister care'],['Bags & Laundry','Day bag / tote']],
+  snow:    [['Clothing','Warm coat'],['Clothing','Thermal base layers','half'],['Clothing','Sweaters','half'],['Shoes','Snow boots'],['Accessories','Gloves'],['Accessories','Beanie'],['Accessories','Scarf'],['Activities','Ski or snow gear']],
+  family:  [['Activities','Gifts'],['Activities','Host gift']],
+};
+
+function smartTripDays(start, end) {
+  if (!start) return 3;
+  if (!end) return 3;
+  const d = Math.round((parseLocalDate(end) - parseLocalDate(start)) / 86400000) + 1;
+  return d > 0 ? Math.min(d, 60) : 3;
+}
+function smartQty(rule, days) {
+  if (typeof rule === 'number') return rule;
+  const nights = Math.max(days - 1, 0);
+  switch (rule) {
+    case 'days':  return Math.min(Math.max(days, 1), 7);
+    case 'n1':    return Math.min(nights + 1, 8);
+    case 'half':  return Math.min(Math.max(Math.ceil(days / 2), 1), 4);
+    case 'third': return Math.min(Math.max(Math.ceil(days / 3), 1), 3);
+  }
+  return 1;
+}
+function smartCategoryName(cat) { return LEGACY_CATEGORY_MAP[cat] || cat || 'Other'; }
+// Add one item unless something with the same name is already on the list (then keep the larger count)
+function smartAdd(cats, cat, name, qty, extra) {
+  const n = gapNorm(name);
+  if (!n) return false;
+  for (const items of Object.values(cats)) {
+    const hit = (items || []).find(i => gapNorm(i.name) === n);
+    if (hit) { if ((qty || 1) > (hit.qty || 1)) hit.qty = qty; return false; }
+  }
+  cat = smartCategoryName(cat);
+  (cats[cat] = cats[cat] || []).push(Object.assign({ id: uid(), name, description: '', notes: '', qty: qty || 1, checked: false, essential: false }, extra || {}));
+  return true;
+}
+function orderCategories(cats) {
+  const out = {};
+  CATEGORY_ORDER.forEach(c => { if (cats[c] && cats[c].length) out[c] = cats[c]; });
+  Object.keys(cats).forEach(c => { if (!(c in out) && cats[c] && cats[c].length) out[c] = cats[c]; });
+  return out;
+}
+function buildSmartList(opts) {
+  const o = opts || {};
+  const days = Math.max(o.days || 3, 1), nights = days - 1;
+  const type = SMART_TYPES[o.type] ? o.type : 'leisure';
+  const cats = {};
+  const addAll = specs => (specs || []).forEach(([c, n, q]) => smartAdd(cats, c, n, smartQty(q === undefined ? 1 : q, days)));
+  addAll(SMART_BASE);
+  addAll(type === 'international' ? SMART_TYPES.leisure.concat(SMART_TYPES.international) : SMART_TYPES[type]);
+  (o.activities || []).forEach(a => addAll(SMART_ACTIVITIES[a]));
+  if (nights >= 2) addAll([['Bags & Laundry','Packing cubes'],['Bags & Laundry','Laundry bag']]);
+  if (nights >= 3) addAll([['Before You Leave','Take out trash & clear the fridge']]);
+  if (nights >= 4) addAll([['Health & Meds','Small first aid kit'],['Bags & Laundry','Stain remover pen']]);
+  if (nights >= 5) addAll([['Before You Leave','Hold mail or ask a neighbor']]);
+  if (days > 7) addAll([['Bags & Laundry','Laundry detergent sheets']]);
+  (o.library || []).filter(i => i && i.always && i.name).forEach(i =>
+    smartAdd(cats, i.cat, i.name, 1, { description: i.desc || '', notes: i.notes || '' }));
+  return orderCategories(cats);
+}
+
+// Forecast items: added once, the first time a smart trip gets a forecast
+const WX_RAIN = [51,53,55,56,57,61,63,65,66,67,80,81,82,95,96,99];
+const WX_SNOW = [71,73,75,77,85,86];
+function smartWeatherItems(daily) {
+  const days = (daily || []).filter(d => d && typeof d.tempMax === 'number');
+  if (!days.length) return [];
+  const wd = list => list.slice(0, 3).map(d => { try { return new Date(d.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' }); } catch (e) { return d.date; } }).join(', ') + (list.length > 3 ? ' +' + (list.length - 3) : '');
+  const out = [];
+  const rain = days.filter(d => WX_RAIN.includes(d.code));
+  const snow = days.filter(d => WX_SNOW.includes(d.code));
+  const minLow = Math.min(...days.map(d => d.tempMin));
+  const maxHigh = Math.max(...days.map(d => d.tempMax));
+  if (rain.length) { const why = 'Rain in the forecast: ' + wd(rain); out.push(['Accessories','Compact umbrella',why], ['Clothing','Rain jacket',why]); }
+  if (snow.length) { const why = 'Snow in the forecast: ' + wd(snow); out.push(['Shoes','Waterproof boots',why], ['Accessories','Gloves',why]); }
+  if (minLow < 50) out.push(['Clothing','Warm jacket','Lows near ' + Math.round(minLow) + '°F']);
+  if (minLow < 40) out.push(['Clothing','Sweater','Lows near ' + Math.round(minLow) + '°F'], ['Accessories','Beanie','Lows near ' + Math.round(minLow) + '°F']);
+  if (maxHigh >= 85) { const why = 'Highs near ' + Math.round(maxHigh) + '°F'; out.push(['Toiletries','Sunscreen',why], ['Accessories','Hat',why]); }
+  return out;
+}
+function applySmartWeather(trip, daily) {
+  if (!trip || !trip.smartWeatherPending) return [];
+  const added = [];
+  smartWeatherItems(daily).forEach(([c, n, why]) => {
+    if (smartAdd(trip.categories, c, n, 1, { description: why })) added.push(n);
+  });
+  delete trip.smartWeatherPending;
+  return added;
+}
+
+function renderActivityChips() {
+  const box = document.getElementById('new-trip-activities'); if (!box) return;
+  const on = state._newTripActivities || new Set();
+  box.innerHTML = TRIP_ACTIVITIES.map(a =>
+    `<button type="button" class="activity-chip${on.has(a.id) ? ' on' : ''}" aria-pressed="${on.has(a.id)}" onclick="toggleActivity(${jsArg(a.id)}, this)">${a.icon} ${esc(a.label)}</button>`).join('');
+}
+function toggleActivity(id, el) {
+  const on = state._newTripActivities = state._newTripActivities || new Set();
+  if (on.has(id)) on.delete(id); else on.add(id);
+  if (el && el.classList) { el.classList.toggle('on'); el.setAttribute('aria-pressed', String(on.has(id))); }
+}
+function updateSmartHint() {
+  const sel = document.getElementById('new-trip-template');
+  const smart = !sel || sel.value === '__smart';
+  const hint = document.getElementById('new-trip-smart-hint'); if (hint) hint.style.display = smart ? 'block' : 'none';
+  const btn = document.getElementById('new-trip-create-btn'); if (btn) btn.textContent = smart ? 'Build my list' : 'Create Trip';
+}
+
+// Packing mode: show only what's left (remembered on this device)
+function isHidePacked() { try { return localStorage.getItem('pr_hide_packed') === '1'; } catch (e) { return false; } }
+function toggleHidePacked() {
+  const on = !isHidePacked();
+  try { localStorage.setItem('pr_hide_packed', on ? '1' : '0'); } catch (e) {}
+  renderPackingList();
+}
+function syncHidePackedButton() {
+  const b = document.getElementById('hide-packed-btn'); if (!b) return;
+  const on = isHidePacked();
+  b.className = 'hide-packed-toggle' + (on ? ' on' : '');
+  b.setAttribute('aria-pressed', String(on));
+  b.textContent = on ? 'Showing what\'s left · Show all' : 'Show only what\'s left';
 }
 
 // ═══════════════════════════════════════════════
 // PACKING LIST — with qty, descriptions, outfit badges
 // ═══════════════════════════════════════════════
-const CATEGORY_ICONS={'Clothing':'👕','Undergarments':'🩲','Toiletries':'🧴','Documents':'📄','Tech':'💻','Gear':'🎒','Accessories':'💍','Misc':'📦','Personal Care':'🌸','Imported':'📥','Outfits':'👔'};
+const CATEGORY_ICONS={'Clothing':'👕','Undergarments':'🩲','Toiletries':'🧴','Documents':'📄','Tech':'💻','Gear':'🎒','Accessories':'💍','Misc':'📦','Personal Care':'🌸','Imported':'📥','Outfits':'👔',
+  'Essentials':'🔑','Underwear & Sleep':'🧦','Shoes':'👟','Health & Meds':'💊','Health':'💊','Travel Day':'✈️','Bags & Laundry':'🧺','Activities':'🎯','Before You Leave':'✅','Other':'📦'};
 
 // Build a map of itemName → outfit days that use it
 function buildOutfitItemMap() {
@@ -2857,6 +3100,8 @@ function renderPackingList() {
   const outfitMap = buildOutfitItemMap();
   const container = document.getElementById('packing-categories');
   container.innerHTML = '';
+  const hidePacked = isHidePacked();
+  syncHidePackedButton();
 
   // Personal care notice
   if (trip.categories['Personal Care'] && state.currentUser.showPersonalCare) {
@@ -2894,8 +3139,9 @@ function renderPackingList() {
       </div>
       <div class="cat-bar"><div class="cat-bar-fill" style="width:${pct}%"></div></div>
       <div class="packing-items" id="cat-${sanitize(catName)}">
-        ${items.map(item=>renderPackingItem(catName,item,outfitMap)).join('')}
+        ${(hidePacked ? items.filter(i=>!i.checked) : items).map(item=>renderPackingItem(catName,item,outfitMap)).join('')}
       </div>
+      ${hidePacked && allPacked ? '<div class="cat-all-done">All packed ✓</div>' : ''}
       <div class="add-item-row">
         <button class="add-item-toggle" onclick="openAddItem(${jsArg(catName)})">+ Add item</button>
         <div class="add-item-form">
@@ -2969,6 +3215,11 @@ function toggleItem(catName, itemId) {
   updateCategoryProgress(catName, checkEl);
   // Update progress ring without full re-render
   updateProgressRing();
+  if (isHidePacked() && item.checked) {
+    const row = document.getElementById('item-' + itemId);
+    if (row && row.classList) row.classList.add('leaving');
+    setTimeout(() => { if (state.currentTrip && isHidePacked()) renderPackingList(); }, 350);
+  }
 }
 
 function changeQty(catName, itemId, delta) {
@@ -3040,7 +3291,7 @@ function addItem(catName) {
 // Returns all categories: built-in + any custom ones on current trip
 // ═══════════════════════════════════════════
 function getAllCategories() {
-  const base = ['Clothing','Undergarments','Toiletries','Documents','Tech','Accessories','Gear','Misc'];
+  const base = CATEGORY_ORDER.concat(['Other']);
   if (!state.currentTrip) return base;
   const tripCats = Object.keys(state.currentTrip.categories || {});
   const merged = [...base];
@@ -3049,12 +3300,13 @@ function getAllCategories() {
 }
 
 // Rebuild the library category dropdown with all current categories
-function refreshLibraryCategoryDropdown() {
+function refreshLibraryCategoryDropdown(want) {
   const sel = document.getElementById('library-item-cat');
   if (!sel) return;
-  const current = sel.value;
+  const current = want || sel.value;
   const cats = getAllCategories();
-  sel.innerHTML = cats.map(c => '<option value="' + c + '">' + c + '</option>').join('');
+  if (current && !cats.includes(current)) cats.push(current); // keep an item's older category selectable
+  sel.innerHTML = cats.map(c => '<option value="' + escAttr(c) + '">' + esc(c) + '</option>').join('');
   if (current && cats.includes(current)) sel.value = current;
 }
 
@@ -3484,7 +3736,12 @@ async function fetchWeather(trip) {
     }
     const location = multi ? stops.map(s => cityOnly(s.city)).join(' → ') : singleLocation;
     trip.weatherCache = { daily, location, multi };
+    const wxAdded = applySmartWeather(trip, daily);
     saveTrips();
+    if (wxAdded.length && state.currentTrip === trip) {
+      renderPackingList();
+      toast('Added for the forecast: ' + wxAdded.join(', '), 'success');
+    }
     if (state.currentTrip !== trip) return; // user moved to another trip while loading
     state.weather = { daily, location, multi, notFound };
     renderWeatherTab(state.weather);
@@ -4185,7 +4442,10 @@ function syncOutfitToPackingList(outfit) {
   ['top','bottom','shoes','outer','accessories','bag'].forEach(piece => {
     const val = outfit[piece]; if (!val?.trim()) return;
     const exists = Object.values(trip.categories).flat().some(item => item.name.toLowerCase() === val.toLowerCase().trim());
-    if (!exists) trip.categories['Clothing'].push({id:uid(),name:val.trim(),description:'From outfit: '+(outfit.event||outfit.occasion||''),notes:'',qty:1,checked:false,essential:false});
+    const dest = piece === 'shoes' && trip.categories['Shoes'] ? 'Shoes'
+      : (piece === 'accessories' || piece === 'bag') && trip.categories['Accessories'] && trip.categories['Shoes'] ? 'Accessories'
+      : 'Clothing';
+    if (!exists) trip.categories[dest].push({id:uid(),name:val.trim(),description:'From outfit: '+(outfit.event||outfit.occasion||''),notes:'',qty:1,checked:false,essential:false});
   });
 }
 
@@ -4484,7 +4744,7 @@ function addTemplateCategory(templateId) {
   toast('Category added', 'success');
 }
 
-function useTemplate(templateId){document.getElementById('new-trip-template').value=templateId;openNewTripModal();}
+function useTemplate(templateId){openNewTripModal(templateId);}
 function deleteTemplate(templateId){if(!confirm('Delete this template?')) return;state.templates=state.templates.filter(t=>t.id!==templateId);saveTemplates();renderTemplates();toast('Template deleted');}
 
 // ═══════════════════════════════════════════════
@@ -4683,7 +4943,7 @@ function renderLibrary(searchQuery) {
   ) : allItems;
 
   if (!allItems.length) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📦</div><p>No saved items yet.<br>Add items you pack on every trip — sunscreen, AirPods, travel pillow.</p></div>`;
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📦</div><p>No saved items yet.<br>Add things you always bring, like your AirPods or travel pillow, and mark them Every trip.</p></div>`;
     return;
   }
   if (q && !items.length) {
@@ -4699,7 +4959,7 @@ function renderLibrary(searchQuery) {
       <div class="closet-list">
         ${catItems.map(item => `
           <div class="closet-list-row">
-            <span class="closet-list-name">${esc(item.name)}</span>
+            <span class="closet-list-name">${esc(item.name)}${item.always ? '<span class="every-trip-badge">Every trip</span>' : ''}</span>
             ${item.desc ? '<span class="closet-list-desc">' + esc(item.desc) + '</span>' : ''}
             <div style="margin-left:auto;display:flex;gap:0.3rem;flex-shrink:0;">
               <button class="btn btn-secondary" style="font-size:0.65rem;padding:0.18rem 0.5rem;" onclick="addLibraryItemToTrip(${jsArg(item.id)})">+ Add to Trip</button>
@@ -4714,8 +4974,9 @@ function openAddLibraryItem() {
   document.getElementById('library-modal-title').textContent = 'Add Item';
   document.getElementById('library-edit-id').value = '';
   ['library-item-name','library-item-desc','library-item-notes'].forEach(id => document.getElementById(id).value = '');
-  refreshLibraryCategoryDropdown();
-  document.getElementById('library-item-cat').value = 'Misc';
+  refreshLibraryCategoryDropdown('Other');
+  document.getElementById('library-item-cat').value = 'Other';
+  document.getElementById('library-item-always').checked = false;
   document.getElementById('library-delete-btn').style.display = 'none';
   openModal('modal-add-library');
 }
@@ -4725,8 +4986,9 @@ function openEditLibraryItem(itemId) {
   document.getElementById('library-modal-title').textContent = 'Edit Item';
   document.getElementById('library-edit-id').value = itemId;
   document.getElementById('library-item-name').value = item.name;
-  refreshLibraryCategoryDropdown();
-  document.getElementById('library-item-cat').value = item.cat || 'Misc';
+  refreshLibraryCategoryDropdown(item.cat || 'Other');
+  document.getElementById('library-item-cat').value = item.cat || 'Other';
+  document.getElementById('library-item-always').checked = !!item.always;
   document.getElementById('library-item-desc').value = item.desc || '';
   document.getElementById('library-item-notes').value = item.notes || '';
   document.getElementById('library-delete-btn').style.display = 'inline-flex';
@@ -4743,6 +5005,7 @@ function saveLibraryItem() {
     cat: document.getElementById('library-item-cat').value,
     desc: document.getElementById('library-item-desc').value.trim(),
     notes: document.getElementById('library-item-notes').value.trim(),
+    always: !!document.getElementById('library-item-always').checked,
   };
   if (editId) { const idx = items.findIndex(i => i.id === editId); if (idx >= 0) items[idx] = item; else items.push(item); }
   else items.push(item);
@@ -4761,7 +5024,8 @@ function deleteLibraryItem() {
 function addLibraryItemToTrip(itemId) {
   if (!state.currentTrip) { toast('Open a trip first', 'error'); return; }
   const item = getLibrary().find(i => i.id === itemId); if (!item) return;
-  const cat = item.cat || 'Misc';
+  let cat = item.cat || 'Misc';
+  if (!state.currentTrip.categories[cat] && state.currentTrip.categories[smartCategoryName(cat)]) cat = smartCategoryName(cat);
   if (!state.currentTrip.categories[cat]) state.currentTrip.categories[cat] = [];
   const exists = state.currentTrip.categories[cat].some(i => i.name.toLowerCase() === item.name.toLowerCase());
   if (exists) { toast(item.name + ' already in list', 'error'); return; }
