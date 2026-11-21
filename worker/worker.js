@@ -1,11 +1,21 @@
 /**
- * PacktRite - Cloudflare Worker v4 (stability)
+ * PacktRite - Cloudflare Worker v5 (gap check)
  * =============================================
  * KV Namespace binding: PACKTR_KV
  * Environment variables required:
  *   ANTHROPIC_API_KEY - your Anthropic API key
  *   ADMIN_SECRET      - any secret string for first-time setup
  *   INVITE_CODE       - code friends need to create an account
+ *
+ * v5 changes (adds to v4; the current app keeps working):
+ *   - New POST /api/ai/gaps: "What am I forgetting?". The app sends the trip's list, outfits,
+ *     closet, My Items and forecast as plain fields; the worker caps them, writes the prompt
+ *     itself and returns {items:[{item, category, reason, source}]} (at most 8).
+ *   - /api/ai/suggest no longer accepts a free-form prompt from the app. It still answers the
+ *     older app with 14 suggestions, but writes that prompt itself from the trip fields.
+ *   - AI answers get more room (max_tokens 1000 -> 2000, gap check 4000). Claude Haiku 5.5 thinks
+ *     before answering and that counts toward the limit, so 1000 could run out before any answer.
+ *     An empty reply now says whether it ran out of room, and the reason is logged.
  *
  * v4 changes (same API as v3, so the current app keeps working):
  *   - Each trip is stored in its own KV record (trip:<id>) instead of one shared "trips" record,
@@ -31,6 +41,7 @@ const BACKUP_KEEP = 30;                         // keep the last 30 per record
 const BACKUP_TTL_SECONDS = 60 * 60 * 24 * 60;   // routine backups expire after 60 days
 const DELETED_TTL_SECONDS = 60 * 60 * 24 * 90;  // deleted trips kept 90 days
 const MAX_PROMPT_CHARS = 6000;
+const GAP_PROMPT_CHARS = 12000;               // gap check prompt cap (written by the worker)
 const LOCK_STEPS_MIN = [1, 5, 15, 30, 60];      // waits after the 5th, 6th, ... wrong try
 const FREE_TRIES = 5;
 
@@ -92,6 +103,7 @@ async function route(request, env) {
   if (path === '/api/backups/restore'    && m === 'POST')   return handleRestoreBackup(request, env);
   if (path === '/api/admin/export'       && m === 'GET')    return handleAdminExport(request, env);
   if (path === '/api/ai/suggest'         && m === 'POST')   return handleAISuggest(request, env);
+  if (path === '/api/ai/gaps'            && m === 'POST')   return handleAIGaps(request, env);
   if (path === '/api/ai/weather'         && m === 'POST')   return handleAIWeather(request, env);
   if (path === '/api/setup'              && m === 'POST')   return handleSetup(request, env);
   return json({ error: 'Not found' }, 404);
@@ -796,17 +808,27 @@ async function handleSaveProfile(request, env) {
 // ── AI ──
 
 async function handleAISuggest(request, env) {
+  // Kept for the older app. Any "prompt" it sends is ignored; the worker writes its own.
   await authenticate(request, env);
-  const body = await request.json();
-  const prompt = (typeof body.prompt === 'string' && body.prompt.trim()) ? body.prompt : (
+  const body = await request.json().catch(() => ({}));
+  const clip = (v, n) => String(v == null ? '' : v).replace(/[\r\n]+/g, ' ').slice(0, n);
+  const prompt =
     'Travel packing assistant. Generate 14 specific packing suggestions tailored to this trip.' +
-    '\n\nDestination: ' + (body.destination || '') +
-    '\nType: ' + (body.type || 'leisure') +
-    (body.reason ? '\nReason: ' + body.reason : '') +
-    (body.weatherSummary ? '\nWeather: ' + body.weatherSummary : '') +
-    '\n\nReturn ONLY a JSON array of 14 strings. No preamble.'
-  );
+    '\n\nDestination: ' + clip(body.destination, 120) +
+    '\nType: ' + (clip(body.type, 40) || 'leisure') +
+    (body.reason ? '\nReason: ' + clip(body.reason, 200) : '') +
+    (body.weatherSummary ? '\nWeather: ' + clip(body.weatherSummary, 400) : '') +
+    '\n\nReturn ONLY a JSON array of 14 strings. No preamble.';
   return callAI(env, prompt);
+}
+
+async function handleAIGaps(request, env) {
+  await authenticate(request, env);
+  const d = cleanGapData(await request.json().catch(() => ({})));
+  const text = await askAI(env, buildGapPrompt(d, GAP_PROMPT_CHARS), 4000, GAP_PROMPT_CHARS);
+  const items = parseGapItems(text, d.categories);
+  if (!items) throw new HttpError(502, 'The check came back unreadable. Please try again.');
+  return json({ items });
 }
 
 async function handleAIWeather(request, env) {
@@ -816,22 +838,134 @@ async function handleAIWeather(request, env) {
   return callAI(env, prompt);
 }
 
-async function callAI(env, prompt) {
+async function askAI(env, prompt, maxTokens, maxChars) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: 'claude-haiku-5-5', max_tokens: 1000,
-      messages: [{ role: 'user', content: String(prompt).slice(0, MAX_PROMPT_CHARS) }] }),
+    body: JSON.stringify({ model: 'claude-haiku-5-5', max_tokens: maxTokens || 1000,
+      messages: [{ role: 'user', content: String(prompt).slice(0, maxChars || MAX_PROMPT_CHARS) }] }),
   });
   if (!res.ok) {
     console.error('AI error', res.status, await res.text().catch(() => ''));
-    return json({ error: 'AI suggestions are unavailable right now.' }, 502);
+    throw new HttpError(502, 'AI suggestions are unavailable right now.');
   }
   const data = await res.json();
   const text = data.content?.map(c => c.text || '').join('') || '';
-  if (!text) return json({ error: 'AI returned no suggestions.' }, 502);
-  return json({ result: text });
+  if (!text) {
+    console.error('AI empty reply', data.stop_reason, JSON.stringify(data.usage || {}));
+    throw new HttpError(502, data.stop_reason === 'max_tokens' ? 'AI ran out of room before answering.' : 'AI returned no suggestions.');
+  }
+  return text;
 }
+
+async function callAI(env, prompt) {
+  // 2000, not 1000: the model thinks before it answers, and that thinking counts toward this limit.
+  return json({ result: await askAI(env, prompt, 2000, MAX_PROMPT_CHARS) });
+}
+
+// ── GAP CHECK: shared code (the app and the worker carry identical copies) ──
+// cleanGapData caps every field, buildGapPrompt writes the prompt, parseGapItems
+// turns the AI's reply into at most 6 safe {item, category, reason, source} rows.
+function gapClip(v, n) { return String(v == null ? '' : v).replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n); }
+function gapList(a, maxItems, maxLen) { return (Array.isArray(a) ? a : []).map(x => gapClip(x, maxLen)).filter(Boolean).slice(0, maxItems); }
+function cleanGapData(b) {
+  b = (b && typeof b === 'object') ? b : {};
+  const cats = gapList(b.categories, 24, 40);
+  if (!cats.some(c => c.toLowerCase() === 'misc')) cats.push('Misc');
+  return {
+    destination: gapClip(b.destination, 120),
+    itinerary: gapList(b.itinerary, 10, 120),
+    type: gapClip(b.type, 40),
+    reason: gapClip(b.reason, 200),
+    dates: gapClip(b.dates, 80),
+    days: Math.max(0, Math.min(90, parseInt(b.days, 10) || 0)),
+    weather: gapList(b.weather, 20, 80),
+    categories: cats,
+    packing: (Array.isArray(b.packing) ? b.packing : []).slice(0, 24)
+      .map(c => ({ category: gapClip(c && c.category, 40), items: gapList(c && c.items, 100, 70) }))
+      .filter(c => c.category),
+    outfits: gapList(b.outfits, 40, 160),
+    myItems: gapList(b.myItems, 80, 70),
+    closet: gapList(b.closet, 150, 70),
+  };
+}
+function gapFit(lines, budget, sep) {
+  // Keep whole lines until the budget runs out, then say how many were left out.
+  const out = []; let used = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i];
+    if (used + l.length + sep.length > budget) { out.push('(+' + (lines.length - i) + ' more)'); break; }
+    out.push(l); used += l.length + sep.length;
+  }
+  return out.join(sep);
+}
+function buildGapPrompt(d, maxChars) {
+  const rules =
+    'You check a traveler\'s packing list and find what they are forgetting for this specific trip.\n\n' +
+    'RULES\n' +
+    '- Suggest only things that are missing AND that this trip actually needs. At most 6; fewer is better. If nothing important is missing, return [].\n' +
+    '- Read the FORECAST day by day: rain, storms, snow, heat and cold nights should drive suggestions (umbrella, rain shell, warm layer, sun protection), unless the list already covers them.\n' +
+    '- Never suggest anything already on the packing list or in the planned outfits, even in other words, or when something listed already covers the same need.\n' +
+    '- Check MY ITEMS first: things the traveler usually packs that fit this trip but are not on the list are the likeliest misses.\n' +
+    '- When a clothing piece is missing, pick one from CLOSET and use its exact name.\n' +
+    '- Flag a quantity shortfall only when it is clear (for example 2 shirts for 7 days), as an item like "3 more shirts".\n' +
+    '- Think about the forecast, the purpose and planned outfits, travel documents, chargers and adapters, and toiletries.\n' +
+    '- "category" must be exactly one of: ' + d.categories.join(', ') + '.\n' +
+    '- "reason" is one short phrase under 12 words tied to this trip. When the suggestion is because of the weather, the reason must name the weather and the days or city, like "Rain Tue and Wed" or "Lows near 40°F in Paris".\n' +
+    '- "source" is "my-items" if from MY ITEMS, "closet" if from CLOSET, otherwise "new".\n' +
+    '- Decide quickly and keep any reasoning brief; the answer must be short.\n\n';
+  const tail = '\n\nAnswer with ONLY a JSON array and no other text: [{"item":"...","category":"...","reason":"...","source":"new"}]';
+  // The forecast is always sent in full (at most 20 short lines); the rest shares what's left.
+  const forecast = d.weather.length ? d.weather.join('\n') : 'No forecast yet (forecasts only cover the next 16 days).';
+  const room = Math.max(1200, (maxChars || 12000) - rules.length - tail.length - forecast.length - 450);
+  const trip = [
+    'Destination: ' + (d.destination || 'unknown'),
+    d.itinerary.length > 1 ? 'Itinerary: ' + d.itinerary.join('; ') : '',
+    'Trip type: ' + (d.type || 'leisure'),
+    d.reason ? 'Purpose: ' + d.reason : '',
+    d.dates ? 'Dates: ' + d.dates + (d.days ? ' (' + d.days + ' days)' : '') : (d.days ? 'Length: ' + d.days + ' days' : ''),
+  ].filter(Boolean).join('\n');
+  const packLines = d.packing.map(c => c.category + ': ' + (c.items.length ? c.items.join(', ') : '(empty)'));
+  return rules +
+    'TRIP\n' + trip + '\n\n' +
+    'FORECAST (day, city, high/low in °F, conditions)\n' + forecast + '\n\n' +
+    'ALREADY ON THE PACKING LIST\n' + (packLines.length ? gapFit(packLines, Math.floor(room * 0.46), '\n') : '(nothing yet)') + '\n\n' +
+    'ALREADY PLANNED IN OUTFITS (count as packed)\n' + (d.outfits.length ? gapFit(d.outfits, Math.floor(room * 0.12), '\n') : '(none)') + '\n\n' +
+    'MY ITEMS (things this traveler usually packs)\n' + (d.myItems.length ? gapFit(d.myItems, Math.floor(room * 0.14), '; ') : '(none saved)') + '\n\n' +
+    'CLOSET (clothes this traveler owns)\n' + (d.closet.length ? gapFit(d.closet, Math.floor(room * 0.24), '; ') : '(none saved)') +
+    tail;
+}
+function parseGapItems(text, categories) {
+  if (typeof text !== 'string') return null;
+  const a = text.indexOf('['), z = text.lastIndexOf(']');
+  if (a < 0) return null;
+  let arr = null;
+  if (z > a) { try { arr = JSON.parse(text.slice(a, z + 1)); } catch (e) { arr = null; } }
+  if (!Array.isArray(arr)) {
+    // A reply cut off part-way: keep every complete {...} row that came before the cut.
+    arr = [];
+    for (const m of text.slice(a).match(/\{[^{}]*\}/g) || []) { try { arr.push(JSON.parse(m)); } catch (e) {} }
+    if (!arr.length) return null;
+  }
+  const cats = Array.isArray(categories) && categories.length ? categories : ['Misc'];
+  const seen = {};
+  const out = [];
+  for (const r of arr) {
+    if (!r || typeof r !== 'object') continue;
+    const item = gapClip(r.item, 60);
+    if (!item) continue;
+    const key = item.toLowerCase();
+    if (seen[key]) continue;
+    seen[key] = 1;
+    const want = gapClip(r.category, 40).toLowerCase();
+    const category = cats.find(c => c.toLowerCase() === want) || cats.find(c => c.toLowerCase() === 'misc') || 'Misc';
+    const source = ['my-items', 'closet', 'new'].includes(r.source) ? r.source : 'new';
+    out.push({ item, category, reason: gapClip(r.reason, 120), source });
+    if (out.length >= 6) break;
+  }
+  return out;
+}
+// ── end of shared gap-check code ──
 
 // ── SETUP (first run only) ── unchanged from v3
 
