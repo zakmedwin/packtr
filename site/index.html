@@ -1241,19 +1241,19 @@
       <div id="outfit-step-1">
         <div class="label-small mb-1">Outfit Pieces <span class="italic text-muted" style="font-weight:400;text-transform:none;letter-spacing:0;">— pick from your closet or type freely</span></div>
         <div class="piece-grid">
-          <div class="piece-row"><span class="piece-label">Top</span><input type="text" id="piece-top" placeholder="e.g. white linen blouse" list="closet-tops" autocomplete="off"></div>
+          <div class="piece-row"><span class="piece-label">Top</span><input type="text" id="piece-top" placeholder="e.g. white linen shirt" list="closet-tops" autocomplete="off"></div>
           <datalist id="closet-tops"></datalist>
-          <div class="piece-row"><span class="piece-label">Bottom</span><input type="text" id="piece-bottom" placeholder="e.g. high-waist trousers" list="closet-bottoms" autocomplete="off"></div>
+          <div class="piece-row"><span class="piece-label">Bottom</span><input type="text" id="piece-bottom" placeholder="e.g. navy chinos" list="closet-bottoms" autocomplete="off"></div>
           <datalist id="closet-bottoms"></datalist>
-          <div class="piece-row"><span class="piece-label">Undergarment</span><input type="text" id="piece-undergarment" placeholder="e.g. sports bra" list="closet-undergarments" autocomplete="off"></div>
+          <div class="piece-row"><span class="piece-label">Undergarment</span><input type="text" id="piece-undergarment" placeholder="e.g. undershirt" list="closet-undergarments" autocomplete="off"></div>
           <datalist id="closet-undergarments"></datalist>
           <div class="piece-row"><span class="piece-label">Shoes</span><input type="text" id="piece-shoes" placeholder="e.g. tan leather sandals" list="closet-shoes" autocomplete="off"></div>
           <datalist id="closet-shoes"></datalist>
           <div class="piece-row"><span class="piece-label">Outerwear</span><input type="text" id="piece-outer" placeholder="e.g. light trench coat" list="closet-outerwear" autocomplete="off"></div>
           <datalist id="closet-outerwear"></datalist>
-          <div class="piece-row"><span class="piece-label">Accessories</span><input type="text" id="piece-accessories" placeholder="e.g. gold hoops, silk scarf" list="closet-accessories" autocomplete="off"></div>
+          <div class="piece-row"><span class="piece-label">Accessories</span><input type="text" id="piece-accessories" placeholder="e.g. watch, sunglasses" list="closet-accessories" autocomplete="off"></div>
           <datalist id="closet-accessories"></datalist>
-          <div class="piece-row"><span class="piece-label">Bag</span><input type="text" id="piece-bag" placeholder="e.g. crossbody rattan bag" list="closet-bags" autocomplete="off"></div>
+          <div class="piece-row"><span class="piece-label">Bag</span><input type="text" id="piece-bag" placeholder="e.g. leather crossbody bag" list="closet-bags" autocomplete="off"></div>
           <datalist id="closet-bags"></datalist>
         </div>
         <div class="form-group mt-2"><label>Notes (optional)</label><textarea id="outfit-notes" placeholder="Styling notes..." style="min-height:55px;"></textarea></div>
@@ -1450,7 +1450,7 @@ let state = {
 document.addEventListener('DOMContentLoaded', async () => {
   applyTheme();
   try { const t = JSON.parse(localStorage.getItem('pr_trips')||'[]'); if(Array.isArray(t)) state.trips=t; } catch(e) {}
-  try { const t = JSON.parse(localStorage.getItem('pr_templates')||'[]'); if(Array.isArray(t)&&t.length) state.templates=t; } catch(e) {}
+  try { const t = JSON.parse(localStorage.getItem('pr_templates')||'[]'); if(Array.isArray(t)&&t.length) { state.templates=refreshBuiltInTemplates(t); saveTemplates(); } } catch(e) {}
   if (!state.templates.length) loadDefaultTemplates();
   // Check for read-only share link
   const shareToken = new URLSearchParams(window.location.search).get('share');
@@ -2076,12 +2076,12 @@ async function loadTemplates() {
     // Merge cloud templates with defaults
     const defaults = getDefaultTemplates();
     const cloudIds = cloud.map(t => t.id);
-    const merged = [...defaults.filter(d => !cloudIds.includes(d.id)), ...cloud];
+    const merged = refreshBuiltInTemplates([...defaults.filter(d => !cloudIds.includes(d.id)), ...cloud]);
     state.templates = merged;
     try { localStorage.setItem('pr_templates', JSON.stringify(merged)); } catch(e) {}
     return;
   }
-  try { const t = JSON.parse(localStorage.getItem('pr_templates') || '[]'); if (Array.isArray(t) && t.length) { state.templates = t; return; } } catch(e) {}
+  try { const t = JSON.parse(localStorage.getItem('pr_templates') || '[]'); if (Array.isArray(t) && t.length) { state.templates = refreshBuiltInTemplates(t); saveTemplates(); return; } } catch(e) {}
   loadDefaultTemplates();
 }
 
@@ -2125,6 +2125,33 @@ function getDefaultTemplates() {
       'Before You Leave':['Check in online','Charge phone & headphones','Lock up and set the thermostat'],
     }},
   ];
+}
+
+// Built-in lists from before Nov 2026. A phone that saved one of these keeps showing it
+// (sun dress, sports bra), so an unedited copy is swapped for today's neutral version.
+const OLD_BUILTIN_TEMPLATE_ITEMS = {
+  'tpl-business': ['Dress shirts (x3)','Dress pants (x2)','Blazer','Socks (x5)','Dress shoes','Belt','Tie','Casual outfit (evenings)','Boxer briefs / underwear (x5)','Undershirts (x3)','Undershirt (sleeveless, x2)','Toothbrush & toothpaste','Deodorant','Razor & shaving cream','Cologne/Perfume','Face wash & moisturizer','Hair products','Passport / ID','Business cards','Travel itinerary','Hotel confirmation','Flight tickets','Laptop & charger','Phone charger','Headphones','Power bank','Universal adapter','Watch','Sunglasses','Belt','Tie clip','Cufflinks','Notebook & pen','Pain relievers','Snacks','Reusable water bottle'],
+  'tpl-leisure': ['T-shirts (x4)','Shorts/Casual pants (x3)','Swimsuit (x2)','Sundress/Casual dress','Light jacket/Cardigan','Comfortable shoes','Sandals','Underwear (x5)','Socks (x5)','Sports bra / bralette (x2)','Toothbrush & toothpaste','Deodorant','Sunscreen SPF 50+','After-sun lotion','Shampoo & conditioner','Face care routine','Passport / ID','Travel insurance docs','Hotel confirmation','Flight tickets','Emergency contacts','Phone & charger','Camera','Power bank','Universal adapter','Headphones','Sunglasses','Watch','Hat / Sun hat','Jewelry','Beach bag','Snacks','Reusable water bottle','Guidebook / Maps','First aid kit','Portable umbrella'],
+};
+// Items that assumed who you are; taken out of a built-in list even if it was edited
+const RETIRED_BUILTIN_ITEMS = ['Sundress/Casual dress','Sports bra / bralette (x2)'];
+function sameItemSet(a, b) {
+  const A = new Set(a), B = new Set(b);
+  return A.size === B.size && [...A].every(x => B.has(x));
+}
+function refreshBuiltInTemplates(list) {
+  if (!Array.isArray(list)) return list;
+  const defs = getDefaultTemplates();
+  return list.map(t => {
+    const def = t && defs.find(d => d.id === t.id);
+    if (!def || t.edited) return t;
+    const items = Object.values(t.categories || {}).flat();
+    if (sameItemSet(items, OLD_BUILTIN_TEMPLATE_ITEMS[t.id] || []) || sameItemSet(items, Object.values(def.categories).flat())) return def;
+    // Edited before edits were tracked: keep it, minus the retired items
+    const cats = {};
+    Object.entries(t.categories || {}).forEach(([c, its]) => { cats[c] = (its || []).filter(i => !RETIRED_BUILTIN_ITEMS.includes(i)); });
+    return Object.assign({}, t, { categories: cats });
+  });
 }
 
 function loadDefaultTemplates() {
@@ -4716,6 +4743,7 @@ function addTemplateItem(templateId, cat) {
   const template = state.templates.find(t => t.id === templateId);
   if (!template || !template.categories[cat]) return;
   template.categories[cat].push(name);
+  template.edited = true;
   input.value = '';
   saveTemplates();
   renderTemplateEditor(templateId);
@@ -4727,6 +4755,7 @@ function removeTemplateItem(templateId, cat, idx) {
   const template = state.templates.find(t => t.id === templateId);
   if (!template || !template.categories[cat]) return;
   template.categories[cat].splice(idx, 1);
+  template.edited = true;
   saveTemplates();
   renderTemplateEditor(templateId);
   document.getElementById('edit-template-subtitle').textContent = Object.values(template.categories).flat().length + ' items';
@@ -4739,6 +4768,7 @@ function addTemplateCategory(templateId) {
   if (!template) return;
   if (template.categories[name.trim()]) { toast('Category already exists', 'error'); return; }
   template.categories[name.trim()] = [];
+  template.edited = true;
   saveTemplates();
   renderTemplateEditor(templateId);
   toast('Category added', 'success');
