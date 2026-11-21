@@ -186,6 +186,7 @@
   .tabs-inner{max-width:1100px;margin:0 auto;padding:0 1.5rem;display:flex;gap:0;overflow-x:auto;scrollbar-width:none;}
   .tab-btn{padding:1rem 1.25rem;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-family:var(--font-body);font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all var(--transition);white-space:nowrap;flex-shrink:0;}
   .tab-btn:hover{color:var(--text-primary);}
+  .tab-btn .tab-ico{margin-right:0.4rem;}
   .tab-btn.active{color:var(--espresso);border-bottom-color:var(--gold);}
   [data-theme="dark"] .tab-btn.active{color:var(--gold);}
   .tab-content{display:none;padding:2rem 0;}
@@ -579,7 +580,11 @@
   @media(max-width:640px){
     .container{padding:0 1rem;}
     .tab-content{padding:1.25rem 0 2.5rem;}
-    .tab-btn{padding:0.95rem 0.9rem;}
+    /* Trip tabs: five equal tabs that fit the screen, icon over a short label */
+    .tabs-inner{padding:0;overflow-x:visible;}
+    .tab-btn{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.2rem;padding:0.6rem 0.1rem 0.55rem;font-size:0.75rem;font-weight:600;border-bottom-width:3px;}
+    .tab-btn .tab-ico{font-size:1.25rem;line-height:1;margin:0;}
+    .tab-btn .tab-label{max-width:100%;overflow:hidden;text-overflow:ellipsis;}
     #detail-info-row{flex-direction:column;align-items:flex-start;gap:0.35rem!important;}
     .flex-between{flex-wrap:wrap;gap:0.75rem;}
     .outfit-builder-footer{flex-wrap:wrap;}
@@ -844,11 +849,11 @@
     </div>
     <div class="trip-detail-tabs">
       <div class="tabs-inner">
-        <button class="tab-btn active" onclick="showTab('packing')">📋 Packing List</button>
-        <button class="tab-btn" onclick="showTab('weather')">🌤 Weather</button>
-        <button class="tab-btn" onclick="showTab('outfits');loadClosetFromCloud().then(()=>renderClosetPalette());">👗 Outfits</button>
-        <button class="tab-btn" onclick="showTab('share')">👥 Sharing</button>
-        <button class="tab-btn" onclick="showTab('settings')">⚙ Settings</button>
+        <button class="tab-btn active" data-tab="packing" onclick="showTab('packing')"><span class="tab-ico" aria-hidden="true">📋</span><span class="tab-label">Packing</span></button>
+        <button class="tab-btn" data-tab="weather" onclick="showTab('weather')"><span class="tab-ico" aria-hidden="true">🌤</span><span class="tab-label">Weather</span></button>
+        <button class="tab-btn" data-tab="outfits" onclick="showTab('outfits');loadClosetFromCloud().then(()=>renderClosetPalette());"><span class="tab-ico" aria-hidden="true">👗</span><span class="tab-label">Outfits</span></button>
+        <button class="tab-btn" data-tab="share" onclick="showTab('share')"><span class="tab-ico" aria-hidden="true">👥</span><span class="tab-label">Sharing</span></button>
+        <button class="tab-btn" data-tab="settings" onclick="showTab('settings')"><span class="tab-ico" aria-hidden="true">⚙</span><span class="tab-label">Settings</span></button>
       </div>
     </div>
     <div class="container">
@@ -2385,7 +2390,7 @@ function showTab(tabName) {
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
   document.getElementById('tab-'+tabName).classList.add('active');
-  document.querySelectorAll('.tab-btn').forEach(b=>{ if(b.getAttribute('onclick')==='showTab(\'' + tabName + '\')') b.classList.add('active'); });
+  document.querySelectorAll('.tab-btn').forEach(b=>{ if(b.dataset.tab===tabName) b.classList.add('active'); });
   // When switching to weather tab, render cached data immediately then refresh
   if (tabName === 'weather') {
     if (state.weather) renderWeatherTab(state.weather);
