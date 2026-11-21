@@ -389,6 +389,9 @@
   .template-count{font-size:0.75rem;color:var(--text-muted);}
 
   /* TOAST */
+  .undo-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(4.75rem + env(safe-area-inset-bottom));z-index:10001;display:flex;align-items:center;gap:0.75rem;max-width:calc(100vw - 32px);padding:0.5rem 0.5rem 0.5rem 1rem;border-radius:12px;background:var(--espresso);color:var(--cream);border-left:3px solid var(--gold);box-shadow:0 6px 24px var(--shadow-deep);font-size:0.88rem;}
+  .undo-bar span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .undo-bar button{font:inherit;font-weight:700;min-height:44px;min-width:72px;padding:0.4rem 1rem;border-radius:8px;border:0;background:var(--gold);color:var(--espresso);cursor:pointer;}
   #toast-container{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:0.5rem;}
   .toast{background:var(--espresso);color:var(--cream);padding:0.75rem 1.25rem;border-radius:var(--radius);font-size:0.85rem;box-shadow:0 4px 16px var(--shadow-deep);animation:slideIn 0.3s ease,fadeOut 0.3s ease 2.7s forwards;border-left:3px solid var(--gold);max-width:320px;}
   [data-theme="dark"] .toast{background:#261a0f;}
@@ -1807,9 +1810,10 @@ async function loadUserRecord(kind) {
 
 window.addEventListener('online', () => { _retryDelay = 4000; retrySaves(); updateSaveBanner(); });
 window.addEventListener('offline', () => updateSaveBanner());
-window.addEventListener('pagehide', () => { flushAllSaves({ keepalive: true }); });
+window.addEventListener('pagehide', () => { commitPendingDelete(); flushAllSaves({ keepalive: true }); });
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') {
+    commitPendingDelete();
     _hiddenAt = Date.now();
     flushAllSaves({ keepalive: true });
   } else {
@@ -1889,6 +1893,94 @@ async function downloadFullBackup() {
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 5000);
   toast('Backup downloaded', 'success');
+}
+
+// ── Deleting a trip: stronger check for upcoming trips, and Undo ──
+const UNDO_DELETE_MS = 8000;
+let _pendingDelete = null;     // { trip, index, timer } while Undo is still possible
+let _lastDeleted = null;       // { id, name } after the delete reached the cloud
+
+function tripIsUpcoming(trip) {
+  let last = null;
+  const consider = v => {
+    if (!v) return;
+    const d = parseLocalDate(v);
+    if (d && !isNaN(d) && (!last || d > last)) last = d;
+  };
+  consider(trip.startDate); consider(trip.endDate);
+  try { (getTripStops(trip) || []).forEach(s => { consider(s && s.startDate); consider(s && s.endDate); }); } catch (e) {}
+  if (!last) return false;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  return last >= today;
+}
+
+function deleteTrip() {
+  const trip = state.currentTrip;
+  if (!trip) return;
+  const name = trip.tripName || trip.destination || 'this trip';
+  if (tripIsUpcoming(trip)) {
+    const when = formatDateRange(trip.startDate, trip.endDate);
+    const typed = prompt('"' + name + '" is an upcoming trip' + (when ? ' (' + when + ')' : '') + '.\n\nTo delete it, type DELETE.');
+    if (typed == null) return;
+    if (typed.trim().toUpperCase() !== 'DELETE') { toast('Not deleted. Type DELETE to delete an upcoming trip.'); return; }
+  } else if (!confirm('Delete "' + name + '"?')) return;
+  commitPendingDelete();                       // finish any earlier delete first
+  const index = state.trips.indexOf(trip);
+  state.trips = state.trips.filter(t => t.id !== trip.id);
+  persistTripsLocal();
+  state.currentTrip = null; showDashboard();
+  _pendingDelete = { trip, index, timer: setTimeout(commitPendingDelete, UNDO_DELETE_MS) };
+  showUndoBar('"' + name + '" deleted');
+}
+
+function commitPendingDelete() {
+  const p = _pendingDelete;
+  if (!p) return;
+  _pendingDelete = null;
+  clearTimeout(p.timer);
+  _lastDeleted = { id: p.trip.id, name: p.trip.tripName || p.trip.destination || 'Trip' };
+  deleteTripInCloud(p.trip.id);
+}
+
+async function undoDeleteTrip() {
+  hideUndoBar();
+  const p = _pendingDelete;
+  if (p) {
+    _pendingDelete = null;
+    clearTimeout(p.timer);
+    if (!state.trips.some(t => t.id === p.trip.id)) state.trips.splice(Math.max(0, Math.min(p.index, state.trips.length)), 0, p.trip);
+    persistTripsLocal();
+    rerenderAfterTripChange(p.trip.id);
+    toast('"' + (p.trip.tripName || p.trip.destination || 'Trip') + '" is back', 'success');
+    return;
+  }
+  // The delete already went through: bring it back from Recently Deleted.
+  const last = _lastDeleted;
+  if (!last) return;
+  await flushAllSaves();
+  const r = await apiCall('GET', '/api/backups?kind=deleted');
+  const b = r.ok && Array.isArray(r.data) ? r.data.find(x => x.key.split(':')[2] === last.id) : null;
+  if (!b) { toast('Couldn\'t undo. Restore it from Account, Recently Deleted Trips.', 'error'); return; }
+  _lastDeleted = null;
+  await restoreDeletedTrip(b);
+  rerenderAfterTripChange(last.id);
+}
+
+function showUndoBar(message) {
+  hideUndoBar();
+  const bar = document.createElement('div');
+  bar.id = 'undo-bar'; bar.className = 'undo-bar'; bar.setAttribute('role', 'status');
+  const span = document.createElement('span'); span.textContent = message;
+  const btn = document.createElement('button'); btn.type = 'button'; btn.textContent = 'Undo';
+  btn.addEventListener('click', undoDeleteTrip);
+  bar.appendChild(span); bar.appendChild(btn);
+  document.body.appendChild(bar);
+  bar._timer = setTimeout(hideUndoBar, UNDO_DELETE_MS);
+}
+
+function hideUndoBar() {
+  const bar = document.getElementById('undo-bar');
+  if (bar) { clearTimeout(bar._timer); bar.remove(); }
 }
 
 // ── TEMPLATES ──
@@ -4030,14 +4122,6 @@ function saveAsTemplate(){
     template.categories[cat]=items.map(i=>i.name);
   });
   state.templates.push(template); saveTemplates(); toast(`Template "${name}" saved!`,'success');
-}
-function deleteTrip(){
-  if(!confirm('Delete "' + (state.currentTrip.tripName||state.currentTrip.destination) + '"? This cannot be undone.')) return;
-  const id = state.currentTrip.id;
-  state.trips=state.trips.filter(t=>t.id!==id);
-  saveTrips();
-  deleteTripInCloud(id);
-  state.currentTrip=null; showDashboard(); toast('Trip deleted');
 }
 
 // ═══════════════════════════════════════════════
