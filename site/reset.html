@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Reset password · PacktRite</title>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/packtrite-icon-32.png?v=2">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/packtrite-icon-180.png?v=2">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#F0F7FF;--card:#ffffff;--input:#f5f9ff;--text:#0C2D5A;--muted:#5A7FA8;--border:rgba(12,45,90,0.18);--blue:#1A5FA8;--ok:#1D9E75;--bad:#B3261E;}
+  @media (prefers-color-scheme: dark){:root{--bg:#060F1E;--card:#0D1F38;--input:#142845;--text:#E8F0FB;--muted:#85B7EB;--border:rgba(46,125,209,0.3);--blue:#2E7DD1;--bad:#F2B8B5;}}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:2.5rem 1rem;}
+  .card{width:100%;max-width:400px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.75rem 1.25rem;}
+  .brand{text-align:center;margin-bottom:1.25rem;}
+  .brand img{width:64px;height:64px;border-radius:15px;display:block;margin:0 auto 0.6rem;}
+  .brand .name{font-size:1.6rem;font-weight:700;}
+  h1{font-size:1.2rem;font-weight:600;margin-bottom:0.35rem;text-align:center;}
+  .lead{color:var(--muted);font-size:0.95rem;line-height:1.45;text-align:center;margin-bottom:1.25rem;}
+  label{display:block;font-size:0.9rem;font-weight:600;margin:0.9rem 0 0.35rem;}
+  input{width:100%;font:inherit;font-size:1rem;color:var(--text);background:var(--input);border:1px solid var(--border);border-radius:8px;padding:0.75rem 0.85rem;}
+  input:focus{outline:2px solid var(--blue);outline-offset:1px;}
+  button{width:100%;margin-top:1.4rem;min-height:48px;font:inherit;font-size:1rem;font-weight:600;color:#fff;background:var(--blue);border:none;border-radius:8px;cursor:pointer;}
+  button:disabled{opacity:0.6;cursor:default;}
+  .msg{margin-top:1rem;font-size:0.95rem;line-height:1.45;min-height:1.4em;}
+  .msg.bad{color:var(--bad);}
+  .msg.ok{color:var(--ok);font-weight:600;}
+  .done a{display:block;text-align:center;margin-top:1rem;color:var(--blue);font-weight:600;font-size:1rem;}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="brand">
+    <img src="icons/packtrite-icon-180.png?v=2" alt="">
+    <div class="name"><span style="color:#3A82E8;">Packt</span><span style="color:#F5C842;">Rite</span></div>
+  </div>
+  <h1>Reset your password</h1>
+  <p class="lead">Use the reset code you set in Cloudflare. It works once.</p>
+  <form id="f" novalidate>
+    <label for="email">Email</label>
+    <input id="email" type="email" autocomplete="username" autocapitalize="off" spellcheck="false" required>
+    <label for="code">Reset code</label>
+    <input id="code" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" required>
+    <label for="pw">New password</label>
+    <input id="pw" type="password" autocomplete="new-password" minlength="6" required>
+    <label for="pw2">New password again</label>
+    <input id="pw2" type="password" autocomplete="new-password" minlength="6" required>
+    <button id="go" type="submit">Change password</button>
+    <p id="msg" class="msg" role="status" aria-live="polite"></p>
+  </form>
+  <div id="done" class="done" hidden>
+    <p class="msg ok">Password changed. You can sign in now.</p>
+    <a href="/">Go to PacktRite</a>
+  </div>
+</main>
+<script>
+(function () {
+  var WORKER = 'https://packtr-worker.zakmedwin.workers.dev';
+  var f = document.getElementById('f'), msg = document.getElementById('msg'), go = document.getElementById('go');
+  function say(t, bad) { msg.textContent = t; msg.className = 'msg' + (bad ? ' bad' : ''); }
+  f.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var email = document.getElementById('email').value.trim();
+    var code = document.getElementById('code').value.trim();
+    var pw = document.getElementById('pw').value, pw2 = document.getElementById('pw2').value;
+    if (!email || !code || !pw) return say('Please fill in every box.', true);
+    if (pw.length < 6) return say('The new password needs at least 6 characters.', true);
+    if (pw !== pw2) return say('The two new passwords don’t match.', true);
+    go.disabled = true; go.textContent = 'Changing…'; say('');
+    try {
+      var res = await fetch(WORKER + '/api/reset-password', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, code: code, newPassword: pw })
+      });
+      var data = await res.json().catch(function () { return {}; });
+      if (res.ok && data.ok) {
+        try { localStorage.removeItem('pr_session'); } catch (err) {}
+        f.hidden = true; document.getElementById('done').hidden = false;
+        return;
+      }
+      say(res.status === 404 && (!data.error || data.error === 'Not found') ? 'Password reset isn’t switched on yet.' : (data.error || 'That didn’t work. Please try again.'), true);
+    } catch (err) {
+      say('Can’t reach PacktRite. Check your connection and try again.', true);
+    }
+    go.disabled = false; go.textContent = 'Change password';
+  });
+})();
+</script>
+</body>
+</html>
