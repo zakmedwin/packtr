@@ -1,0 +1,1154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F6F1E8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Breeze">
+<title>Breeze</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F6F1E8; --card:#EFE7DA; --paper:#FBF8F2; --ink:#14284B; --ink2:#4A5A78; --muted:#8A93A6;
+  --gold:#C49A3C; --gold2:#E7CF95; --line:rgba(20,40,75,.10); --sky:#7FA9D6; --danger:#B4423A; --ok:#2F7A54;
+  --shadow:0 10px 30px rgba(20,40,75,.10); --r:18px;
+  --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 Inter,-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;overscroll-behavior-y:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+input,select,textarea{font:inherit;font-size:16px;color:var(--ink)}
+.serif{font-family:"Cormorant Garamond",Georgia,serif}
+.hidden{display:none!important}
+
+/* ---------- Sign in ---------- */
+.signin{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:32px 24px calc(32px + var(--safe-b))}
+.wordmark{font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;font-style:italic;font-size:56px;letter-spacing:.5px;line-height:1;color:var(--ink)}
+.wordmark span{color:var(--gold)}
+.tag{color:var(--ink2);margin:10px 0 34px;font-size:17px}
+.field{display:block;margin-bottom:14px}
+.field label{display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-weight:600}
+.input{width:100%;padding:14px 16px;border-radius:14px;border:1px solid var(--line);background:var(--paper);outline:none}
+.input:focus{border-color:var(--gold)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:52px;padding:0 22px;border-radius:16px;font-weight:600;font-size:16px}
+.btn-primary{background:var(--ink);color:#fff;width:100%}
+.btn-primary:active{transform:scale(.99);opacity:.92}
+.btn-ghost{background:var(--paper);border:1px solid var(--line)}
+.btn-gold{background:var(--gold);color:#fff}
+.btn[disabled]{opacity:.5}
+.err{color:var(--danger);font-size:14px;min-height:20px;margin:8px 0}
+.note{color:var(--muted);font-size:13px;margin-top:14px}
+
+/* ---------- Home ---------- */
+.top{position:sticky;top:0;z-index:5;background:linear-gradient(var(--bg) 82%,rgba(246,241,232,0));padding:calc(10px + var(--safe-t)) 18px 10px}
+.toprow{display:flex;align-items:center;justify-content:space-between}
+.top .wordmark{font-size:38px}
+.count{color:var(--muted);font-size:13px;margin-top:2px}
+.iconbtn{width:42px;height:42px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--paper);border:1px solid var(--line);position:relative}
+.iconbtn svg{width:20px;height:20px}
+.badge{position:absolute;top:-4px;right:-4px;background:var(--gold);color:#fff;font-size:11px;font-weight:700;min-width:19px;height:19px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px}
+.search{margin-top:12px;display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:0 14px}
+.search input{border:0;background:none;outline:none;height:44px;flex:1}
+.search svg{width:18px;height:18px;color:var(--muted)}
+.banner{margin:6px 18px 0;padding:12px 14px;border-radius:14px;background:#FFF4D9;border:1px solid var(--gold2);font-size:14px;color:#5b4a1f}
+
+.row{margin-top:18px}
+.rowhead{display:flex;align-items:baseline;justify-content:space-between;padding:0 18px 8px}
+.rowhead h2{margin:0;font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;font-size:26px;letter-spacing:.2px}
+.rowhead .n{color:var(--muted);font-size:14px;margin-left:6px;font-family:Inter,sans-serif;font-weight:500}
+.rowhead button{color:var(--gold);font-weight:600;font-size:14px;padding:6px 0}
+.strip{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 18px 10px;scroll-padding:18px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.strip::-webkit-scrollbar{display:none}
+.card{flex:0 0 auto;width:42vw;max-width:210px;scroll-snap-align:start;position:relative;text-align:left}
+.ph{aspect-ratio:3/4;border-radius:var(--r);background:var(--card);overflow:hidden;position:relative;box-shadow:0 1px 0 rgba(255,255,255,.6) inset, 0 6px 18px rgba(20,40,75,.07)}
+.ph img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .35s}
+.ph img.on{opacity:1}
+.ph img.cut{object-fit:contain;padding:12%;filter:drop-shadow(0 10px 12px rgba(70,52,30,.22))}
+.ph .empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(20,40,75,.22)}
+.ph .empty svg{width:56%;height:56%}
+.cardname{margin-top:7px;font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cardsub{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bagtog{position:absolute;top:8px;right:8px;width:34px;height:34px;border-radius:50%;background:rgba(251,248,242,.92);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.bagtog svg{width:17px;height:17px}
+.bagtog.in{background:var(--gold);color:#fff}
+.addtile{flex:0 0 auto;width:28vw;max-width:140px;scroll-snap-align:start}
+.addtile .ph{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:transparent;border:1.5px dashed rgba(20,40,75,.18);box-shadow:none;color:var(--ink2);font-size:13px;font-weight:500}
+.addtile svg{width:26px;height:26px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:6px 18px 140px}
+.grid .card{width:auto;max-width:none}
+.emptyhome{padding:40px 28px;text-align:center;color:var(--ink2)}
+.emptyhome h3{font-family:"Cormorant Garamond",Georgia,serif;font-size:30px;margin:10px 0 6px;color:var(--ink)}
+.spacer{height:150px}
+
+.fab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + var(--safe-b));z-index:20;height:58px;padding:0 26px;border-radius:29px;background:var(--ink);color:#fff;font-weight:600;display:flex;align-items:center;gap:10px;box-shadow:0 12px 30px rgba(20,40,75,.30)}
+.fab svg{width:22px;height:22px}
+.bagbar{position:fixed;left:12px;right:12px;bottom:calc(88px + var(--safe-b));z-index:19;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:10px 12px 10px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow);font-size:14px}
+.bagbar b{font-weight:600}
+.bagbar button{color:var(--gold);font-weight:600}
+
+/* ---------- Sheets ---------- */
+.sheet{position:fixed;inset:0;z-index:40;background:var(--bg);display:flex;flex-direction:column;transform:translateY(100%);transition:transform .32s cubic-bezier(.2,.8,.2,1)}
+.sheet.open{transform:none}
+.sheethead{display:flex;align-items:center;justify-content:space-between;padding:calc(10px + var(--safe-t)) 14px 8px}
+.sheethead h3{margin:0;font-family:"Cormorant Garamond",Georgia,serif;font-size:26px;font-weight:600}
+.sheetbody{flex:1;overflow-y:auto;padding:4px 18px calc(30px + var(--safe-b));-webkit-overflow-scrolling:touch}
+.close{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--paper);border:1px solid var(--line)}
+.close svg{width:18px;height:18px}
+
+.hero{aspect-ratio:3/4;width:100%;max-width:440px;margin:0 auto;border-radius:22px;background:var(--card);overflow:hidden;position:relative;box-shadow:var(--shadow)}
+.hero img,.hero canvas{width:100%;height:100%;object-fit:cover;display:block}
+.hero img.cut{object-fit:contain;padding:10%;filter:drop-shadow(0 12px 14px rgba(70,52,30,.22))}
+.hero .busy{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(246,241,232,.55);font-size:14px;color:var(--ink2);font-weight:500}
+.seg{display:flex;background:var(--card);border-radius:12px;padding:3px;margin:14px auto 4px;max-width:440px}
+.seg button{flex:1;height:38px;border-radius:9px;font-size:14px;font-weight:600;color:var(--ink2)}
+.seg button.on{background:var(--paper);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.panel{max-width:440px;margin:12px auto 0}
+.slider{display:flex;align-items:center;gap:12px;margin:12px 0}
+.slider span{width:118px;font-size:14px;color:var(--ink2)}
+.slider input{flex:1;accent-color:var(--gold)}
+.switch{display:flex;align-items:center;justify-content:space-between;margin:10px 0;font-size:15px}
+.switch input{width:22px;height:22px;accent-color:var(--gold)}
+.hint{font-size:13px;color:var(--muted);margin:6px 0}
+.warn{font-size:13px;color:#7a5a10;background:#FFF4D9;border-radius:10px;padding:9px 12px;margin:10px 0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:9px 13px;border-radius:12px;background:var(--paper);border:1px solid var(--line);font-size:14px;font-weight:500}
+.chip svg{width:20px;height:20px;opacity:.7}
+.chip.on{border-color:var(--gold);background:#FFF8E8}
+.catpick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.catpick button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px 8px;border-radius:16px;background:var(--paper);border:1px solid var(--line);font-size:14px;font-weight:500}
+.catpick svg{width:44px;height:44px;color:var(--ink2)}
+.actions{display:flex;gap:10px;margin-top:16px}
+.actions .btn{flex:1}
+.linkbtn{color:var(--ink2);font-size:14px;font-weight:500;padding:10px 0;text-decoration:underline;text-underline-offset:3px}
+.danger{color:var(--danger)}
+.shimmer{background:linear-gradient(90deg,var(--paper),#F3EBDD,var(--paper));background-size:200% 100%;animation:sh 1.2s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+
+/* ---------- Camera ---------- */
+.cam{position:fixed;inset:0;z-index:60;background:#000;display:flex;flex-direction:column}
+.cam video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cam .guide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.cam .guide svg{width:78%;max-height:68%;color:rgba(255,255,255,.88)}
+.cam .camtop{position:relative;z-index:2;padding:calc(12px + var(--safe-t)) 14px 0;display:flex;justify-content:space-between;align-items:flex-start}
+.cam .tip{position:relative;z-index:2;margin:10px auto 0;color:#fff;background:rgba(0,0,0,.45);padding:8px 14px;border-radius:12px;font-size:14px;text-align:center;max-width:86%}
+.cam .cambottom{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:16px 26px calc(26px + var(--safe-b));display:flex;align-items:center;justify-content:space-between;background:linear-gradient(transparent,rgba(0,0,0,.55))}
+.shutter{width:76px;height:76px;border-radius:50%;border:5px solid #fff;background:rgba(255,255,255,.25)}
+.shutter:active{background:rgba(255,255,255,.6)}
+.camside{width:64px;color:#fff;font-size:13px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:4px}
+.camside svg{width:26px;height:26px}
+.camclose{width:42px;height:42px;border-radius:50%;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;color:#fff}
+.camclose svg{width:18px;height:18px}
+.camcat{color:#fff;background:rgba(0,0,0,.45);border-radius:12px;padding:9px 13px;font-size:14px;font-weight:600}
+.camflash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .15s}
+.camflash.on{opacity:.8;transition:none}
+
+.toast{position:fixed;left:50%;bottom:calc(96px + var(--safe-b));transform:translateX(-50%) translateY(20px);opacity:0;z-index:80;background:var(--ink);color:#fff;padding:11px 16px;border-radius:14px;font-size:14px;font-weight:500;transition:all .25s;max-width:88%;text-align:center;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.menu{position:fixed;top:calc(62px + var(--safe-t));right:14px;z-index:30;background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);min-width:230px;overflow:hidden}
+.menu button,.menu label{display:flex;align-items:center;justify-content:space-between;width:100%;padding:14px 16px;font-size:15px;border-bottom:1px solid var(--line)}
+.menu :last-child{border-bottom:0}
+.menu .who{padding:12px 16px;font-size:13px;color:var(--muted);border-bottom:1px solid var(--line)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast" class="toast"></div>
+<input id="filepick" type="file" accept="image/*" class="hidden">
+<input id="filecam" type="file" accept="image/*" capture="environment" class="hidden">
+
+<script>
+(() => {
+'use strict';
+
+// ============================================================
+// Config
+// ============================================================
+const API = 'https://breeze-worker.zakmedwin.workers.dev';
+const TOKEN_KEY = 'breeze_v1_token';
+const BAG_KEY = 'breeze_v1_bag';
+const PREF_KEY = 'breeze_v1_prefs';
+const OUT_W = 1080, OUT_H = 1440;          // finished photo size (3:4)
+const BACKDROP = '#EFE7DA';                // matches --card
+const ORIGINAL_MAX = 2400;                 // long side of the saved original
+const WORK_MAX = 1400;                     // long side used for cleanup
+
+const SHAPES = {
+  tee: 'M112 62 Q150 88 188 62 L252 94 L284 160 L238 182 L224 152 L224 342 L76 342 L76 152 L62 182 L16 160 L48 94 Z',
+  jacket: 'M110 50 Q150 80 190 50 L248 78 L282 330 L246 336 L222 142 L222 362 L78 362 L78 142 L54 336 L18 330 L52 78 Z M150 82 L150 362',
+  pants: 'M86 40 L214 40 L240 370 L170 370 L150 142 L130 370 L60 370 Z',
+  shoes: 'M96 74 C60 74 54 150 58 222 C62 302 70 352 100 356 C130 352 136 302 136 222 C138 150 132 74 96 74 Z M204 74 C168 74 162 150 164 222 C166 302 172 352 202 356 C232 352 242 302 242 222 C246 150 240 74 204 74 Z',
+  box: 'M90 110 h120 a26 26 0 0 1 26 26 v128 a26 26 0 0 1 -26 26 h-120 a26 26 0 0 1 -26 -26 v-128 a26 26 0 0 1 26 -26 Z',
+};
+const CATS = [
+  { key: 'Tops',          label: 'Shirts & tops',    pick: 'Shirt or top',  shape: 'tee' },
+  { key: 'Bottoms',       label: 'Pants & shorts',   pick: 'Pants or shorts', shape: 'pants' },
+  { key: 'Outerwear',     label: 'Jackets & layers', pick: 'Jacket or layer', shape: 'jacket' },
+  { key: 'Shoes',         label: 'Shoes & sneakers', pick: 'Shoes',         shape: 'shoes' },
+  { key: 'Formal',        label: 'Dressy',           pick: 'Dressy',        shape: 'jacket' },
+  { key: 'Activewear',    label: 'Active',           pick: 'Active',        shape: 'tee' },
+  { key: 'Sleepwear',     label: 'Sleep & lounge',   pick: 'Sleep & lounge', shape: 'tee' },
+  { key: 'Undergarments', label: 'Basics',           pick: 'Basics',        shape: 'box' },
+  { key: 'Accessories',   label: 'Accessories',      pick: 'Accessory',     shape: 'box' },
+  { key: 'Other',         label: 'Other',            pick: 'Something else', shape: 'box' },
+];
+const catOf = (key) => CATS.find(c => c.key === key) || CATS[CATS.length - 1];
+
+// ============================================================
+// Helpers
+// ============================================================
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+function toast(msg, ms = 2200) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('on'), ms);
+}
+const ICON = {
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  camera: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.6"/></svg>',
+  photos: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M3.5 16l5-5 4 4 3-3 5 5"/><circle cx="15.5" cy="9" r="1.6"/></svg>',
+  close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+  bag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>',
+  bagfill: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8" fill="none" stroke="currentColor" stroke-width="1.9"/></svg>',
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></svg>',
+  user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.5 20c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4"/></svg>',
+};
+const shapeSvg = (shape, opts = {}) =>
+  `<svg viewBox="0 0 300 400" fill="none" stroke="currentColor" stroke-width="${opts.w || 6}" stroke-linejoin="round" ${opts.dash ? 'stroke-dasharray="14 12"' : ''}><path d="${SHAPES[shape] || SHAPES.box}"/></svg>`;
+
+// ============================================================
+// State
+// ============================================================
+const S = {
+  token: lsGet(TOKEN_KEY, null),
+  user: null,
+  items: [],
+  loaded: false,
+  server: null,           // health info
+  view: { name: 'home', cat: null },
+  q: '',
+  bag: new Set(lsGet(BAG_KEY, [])),
+  prefs: Object.assign({ autoName: true }, lsGet(PREF_KEY, {})),
+  menuOpen: false,
+};
+const hasV3 = () => !!(S.server && Array.isArray(S.server.features) && S.server.features.includes('display-upload'));
+const hasPolish = () => !!(S.server && Array.isArray(S.server.features) && S.server.features.includes('polish') && S.server.hasRemoveBgKey);
+function saveBag() { lsSet(BAG_KEY, [...S.bag]); }
+const photoUrl = (key) => !key ? '' : key.startsWith('blob:') ? key : API + '/' + key.split('/').map(encodeURIComponent).join('/');
+
+// Demo mode (?demo): in-memory closet for testing the screens without an account
+const DEMO = /[?&]demo\b/.test(location.search);
+const demoDb = { items: [
+  { id: 'd1', name: 'Navy linen shirt', category: 'Tops', color: 'Navy', notes: '', createdAt: 5 },
+  { id: 'd2', name: 'White Oxford', category: 'Tops', color: 'White', notes: '', createdAt: 4 },
+  { id: 'd3', name: 'Stone chinos', category: 'Bottoms', color: 'Stone', notes: '', createdAt: 3 },
+  { id: 'd4', name: 'White sneakers', category: 'Shoes', color: 'White', notes: '', createdAt: 2 },
+  { id: 'd5', name: 'Brown loafers', category: 'Shoes', color: 'Brown', notes: '', createdAt: 1 },
+] };
+async function demoApi(path, opts) {
+  await sleep(120);
+  const m = opts.method || 'GET', body = opts.body && typeof opts.body === 'string' ? JSON.parse(opts.body) : opts.body;
+  if (path === '/api/me') return { user: { email: 'demo@breeze', name: 'Demo' } };
+  if (path === '/api/closet' && m === 'GET') return { items: demoDb.items };
+  if (path === '/api/closet' && m === 'POST') { const it = { id: 'd' + Date.now(), notes: '', photoKey: null, createdAt: Date.now(), ...body }; demoDb.items.push(it); return { item: it }; }
+  if (path === '/api/ai/identify-garment') return { name: 'Demo piece', color: 'Blue', category: 'Tops', confidence: 0.5 };
+  const pm = path.match(/^\/api\/closet\/([^/]+)\/photo\?kind=(\w+)(?:&style=(\w[\w-]*))?/);
+  if (pm) { const it = demoDb.items.find(i => i.id === decodeURIComponent(pm[1])); const url = URL.createObjectURL(opts.body);
+    if (pm[2] === 'original') it.originalKey = url; else { it.photoKey = url; it.photoStyle = pm[3]; } return { item: { ...it } }; }
+  const im = path.match(/^\/api\/closet\/([^/]+)$/);
+  if (im) { const id = decodeURIComponent(im[1]); const it = demoDb.items.find(i => i.id === id);
+    if (m === 'PUT') { Object.assign(it, body); return { item: { ...it } }; }
+    if (m === 'DELETE') { demoDb.items = demoDb.items.filter(i => i.id !== id); return { ok: true }; } }
+  throw new Error('Not available in demo');
+}
+
+// ============================================================
+// API
+// ============================================================
+async function api(path, opts = {}) {
+  if (DEMO) return demoApi(path, opts);
+  const headers = Object.assign({}, opts.headers || {});
+  if (S.token) headers.Authorization = 'Bearer ' + S.token;
+  let body = opts.body;
+  if (body && !(body instanceof Blob) && !(body instanceof ArrayBuffer) && typeof body === 'object') {
+    headers['Content-Type'] = 'application/json'; body = JSON.stringify(body);
+  }
+  const res = await fetch(API + path, { method: opts.method || 'GET', headers, body });
+  if (res.status === 401 && path !== '/api/login') { signOut(true); throw new Error('Please sign in again'); }
+  if (opts.raw) { if (!res.ok) throw new Error(await errText(res)); return res; }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || ('Request failed (' + res.status + ')'));
+  return data;
+}
+async function errText(res) { try { const j = await res.json(); return j.error || res.status; } catch { return 'Request failed (' + res.status + ')'; } }
+async function uploadPhoto(itemId, blob, kind, style) {
+  const qs = '?kind=' + kind + (style ? '&style=' + encodeURIComponent(style) : '');
+  return api('/api/closet/' + encodeURIComponent(itemId) + '/photo' + qs, { method: 'POST', body: blob, headers: { 'Content-Type': blob.type || 'image/jpeg' } });
+}
+
+// ============================================================
+// Image pipeline (all on the phone, free)
+// ============================================================
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.decoding = 'async';
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Could not read that photo'));
+    img.src = src;
+  });
+}
+async function blobToImage(blob) {
+  const url = URL.createObjectURL(blob);
+  try { return await loadImage(url); } finally { setTimeout(() => URL.revokeObjectURL(url), 4000); }
+}
+async function fetchImage(url) {
+  const res = await fetch(url, { mode: 'cors', cache: 'no-store' });
+  if (!res.ok) throw new Error('Could not load the photo');
+  return blobToImage(await res.blob());
+}
+function makeCanvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+function drawScaled(src, maxSide) {
+  const sw = src.naturalWidth || src.videoWidth || src.width, sh = src.naturalHeight || src.videoHeight || src.height;
+  const k = Math.min(1, maxSide / Math.max(sw, sh));
+  const c = makeCanvas(Math.round(sw * k), Math.round(sh * k));
+  const ctx = c.getContext('2d'); ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(src, 0, 0, c.width, c.height);
+  return c;
+}
+const canvasToBlob = (c, type = 'image/jpeg', q = 0.88) => new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(new Error('Could not save image')), type, q));
+
+// sRGB -> Lab (D65), returns [L,a,b]
+const LIN = new Float32Array(256);
+for (let i = 0; i < 256; i++) { const v = i / 255; LIN[i] = v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
+function labF(t) { return t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116; }
+
+// Finds the garment against a plain background by growing the background in
+// from the edges of the photo. Returns a soft alpha mask at small size.
+function computeMask(srcCanvas, sensitivity) {
+  const long = 640;
+  const k = Math.min(1, long / Math.max(srcCanvas.width, srcCanvas.height));
+  const w = Math.max(8, Math.round(srcCanvas.width * k)), h = Math.max(8, Math.round(srcCanvas.height * k));
+  const c = makeCanvas(w, h), ctx = c.getContext('2d');
+  ctx.imageSmoothingQuality = 'high'; ctx.drawImage(srcCanvas, 0, 0, w, h);
+  const px = ctx.getImageData(0, 0, w, h).data, n = w * h;
+  const L = new Float32Array(n), A = new Float32Array(n), B = new Float32Array(n);
+  for (let i = 0, j = 0; i < n; i++, j += 4) {
+    const r = LIN[px[j]], g = LIN[px[j + 1]], b = LIN[px[j + 2]];
+    const x = labF((r * 0.4124 + g * 0.3576 + b * 0.1805) / 0.95047);
+    const y = labF(r * 0.2126 + g * 0.7152 + b * 0.0722);
+    const z = labF((r * 0.0193 + g * 0.1192 + b * 0.9505) / 1.08883);
+    L[i] = 116 * y - 16; A[i] = 500 * (x - y); B[i] = 200 * (y - z);
+  }
+  // Border ring
+  const ring = Math.max(2, Math.round(Math.min(w, h) * 0.03));
+  const border = [];
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    if (x < ring || y < ring || x >= w - ring || y >= h - ring) border.push(y * w + x);
+  }
+  const med = (arr) => { const s = Float32Array.from(arr); s.sort(); return s[s.length >> 1]; };
+  const step = Math.max(1, Math.floor(border.length / 3000));
+  const bL = [], bA = [], bB = [];
+  for (let i = 0; i < border.length; i += step) { const p = border[i]; bL.push(L[p]); bA.push(A[p]); bB.push(B[p]); }
+  const mL = med(bL), mA = med(bA), mB = med(bB);
+  const dist0 = (p) => { const dl = (L[p] - mL) * 0.6, da = A[p] - mA, db = B[p] - mB; return Math.sqrt(dl * dl + da * da + db * db); };
+  const dists = border.filter((_, i) => i % step === 0).map(dist0).sort((a, b) => a - b);
+  const spread = dists[Math.floor(dists.length * 0.7)] || 0;
+  const sens = 0.55 + (sensitivity / 100) * 1.3;          // 0.55 .. 1.85
+  const T = clamp(Math.max(spread * 1.6, 8) * sens, 5, 48);
+  const stepT = clamp(4 * sens, 2.5, 9);
+
+  const bg = new Uint8Array(n), queue = new Int32Array(n);
+  let qh = 0, qt = 0;
+  for (const p of border) if (dist0(p) < T) { bg[p] = 1; queue[qt++] = p; }
+  const T2 = T * 1.7;
+  while (qh < qt) {
+    const p = queue[qh++], x = p % w, y = (p / w) | 0;
+    const nb = [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, y > 0 ? p - w : -1, y < h - 1 ? p + w : -1];
+    for (const q of nb) {
+      if (q < 0 || bg[q]) continue;
+      const dl = (L[q] - L[p]) * 0.7, da = A[q] - A[p], db = B[q] - B[p];
+      if (Math.sqrt(dl * dl + da * da + db * db) < stepT && dist0(q) < T2) { bg[q] = 1; queue[qt++] = q; }
+    }
+  }
+  // fg = not background; tidy up with an open (erode then dilate)
+  let fg = new Uint8Array(n);
+  for (let i = 0; i < n; i++) fg[i] = bg[i] ? 0 : 1;
+  fg = morph(morph(fg, w, h, false), w, h, true);
+  // Keep the big pieces; drop small specks and bits stuck to the frame edge
+  const lab = new Int32Array(n).fill(-1), sizes = [], touches = [];
+  let ncomp = 0;
+  for (let i = 0; i < n; i++) {
+    if (!fg[i] || lab[i] >= 0) continue;
+    let size = 0, touch = false; qh = qt = 0; queue[qt++] = i; lab[i] = ncomp;
+    while (qh < qt) {
+      const p = queue[qh++], x = p % w, y = (p / w) | 0; size++;
+      if (x === 0 || y === 0 || x === w - 1 || y === h - 1) touch = true;
+      const nb = [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, y > 0 ? p - w : -1, y < h - 1 ? p + w : -1];
+      for (const q of nb) if (q >= 0 && fg[q] && lab[q] < 0) { lab[q] = ncomp; queue[qt++] = q; }
+    }
+    sizes.push(size); touches.push(touch); ncomp++;
+  }
+  let largest = -1, ls = 0;
+  sizes.forEach((s, i) => { if (s > ls) { ls = s; largest = i; } });
+  const keep = sizes.map((s, i) => i === largest || (s >= ls * 0.05 && !touches[i]));
+  let count = 0, x0 = w, y0 = h, x1 = 0, y1 = 0;
+  const mask = new Uint8ClampedArray(n);
+  for (let i = 0; i < n; i++) {
+    if (fg[i] && keep[lab[i]]) {
+      mask[i] = 255; count++;
+      const x = i % w, y = (i / w) | 0;
+      if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+    }
+  }
+  const frac = count / n;
+  const bboxFrac = count ? ((x1 - x0 + 1) * (y1 - y0 + 1)) / n : 0;
+  const ok = frac > 0.03 && frac < 0.9 && bboxFrac < 0.97;
+  return { mask, w, h, ok, frac };
+}
+function morph(src, w, h, dilate) {
+  const out = new Uint8Array(src.length);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = y * w + x;
+    let v = src[i];
+    const l = x > 0 ? src[i - 1] : src[i], r = x < w - 1 ? src[i + 1] : src[i];
+    const u = y > 0 ? src[i - w] : src[i], d = y < h - 1 ? src[i + w] : src[i];
+    out[i] = dilate ? (v | l | r | u | d) : (v & l & r & u & d);
+  }
+  return out;
+}
+// Mask from a grey matte image (remove.bg alpha) or an RGBA cutout
+function maskFromMatte(img) {
+  const c = drawScaled(img, 900), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+  const n = c.width * c.height, mask = new Uint8ClampedArray(n);
+  let hasAlpha = false;
+  for (let i = 0; i < n; i++) if (d[i * 4 + 3] < 250) { hasAlpha = true; break; }
+  for (let i = 0; i < n; i++) mask[i] = hasAlpha ? d[i * 4 + 3] : d[i * 4];
+  return { mask, w: c.width, h: c.height, ok: true, frac: 0.5, soft: true };
+}
+
+// Box blur (running sum), separable; both passes walk rows so it stays fast on phones
+function boxBlur(src, w, h, r) {
+  const tmp = new Float32Array(src.length), out = new Float32Array(src.length);
+  const inv = 1 / (2 * r + 1), wm = w - 1, hm = h - 1;
+  for (let y = 0; y < h; y++) {
+    const o = y * w; let acc = 0;
+    for (let x = -r; x <= r; x++) acc += src[o + (x < 0 ? 0 : x > wm ? wm : x)];
+    for (let x = 0; x < w; x++) {
+      tmp[o + x] = acc * inv;
+      const add = x + r + 1, sub = x - r;
+      acc += src[o + (add > wm ? wm : add)] - src[o + (sub < 0 ? 0 : sub)];
+    }
+  }
+  const acc = new Float32Array(w);
+  for (let y = -r; y <= r; y++) { const o = (y < 0 ? 0 : y > hm ? hm : y) * w; for (let x = 0; x < w; x++) acc[x] += tmp[o + x]; }
+  for (let y = 0; y < h; y++) {
+    const o = y * w, add = y + r + 1, sub = y - r;
+    const oa = (add > hm ? hm : add) * w, os = (sub < 0 ? 0 : sub) * w;
+    for (let x = 0; x < w; x++) { out[o + x] = acc[x] * inv; acc[x] += tmp[oa + x] - tmp[os + x]; }
+  }
+  return out;
+}
+
+// Builds the finished photo. opts: { cutout, mask, smooth (0-100), bright (-50..50), mode }
+function renderFinished(work, maskInfo, opts) {
+  const w = work.width, h = work.height, n = w * h;
+  const ctx = work.getContext('2d');
+  const src = ctx.getImageData(0, 0, w, h);
+  const d = new Uint8ClampedArray(src.data);           // copy, keep work untouched
+  // Alpha from mask
+  const alpha = new Float32Array(n).fill(1);
+  const useCut = opts.cutout && maskInfo && maskInfo.ok;
+  if (useCut) {
+    const mc = makeCanvas(maskInfo.w, maskInfo.h), mctx = mc.getContext('2d');
+    const md = mctx.createImageData(maskInfo.w, maskInfo.h);
+    for (let i = 0; i < maskInfo.mask.length; i++) { md.data[i * 4] = md.data[i * 4 + 1] = md.data[i * 4 + 2] = maskInfo.mask[i]; md.data[i * 4 + 3] = 255; }
+    mctx.putImageData(md, 0, 0);
+    const big = makeCanvas(w, h), bctx = big.getContext('2d');
+    bctx.imageSmoothingEnabled = true; bctx.imageSmoothingQuality = 'high';
+    bctx.drawImage(mc, 0, 0, w, h);
+    const bd = bctx.getImageData(0, 0, w, h).data;
+    // Smooth the upscaled outline so edges read as curves, not steps
+    let m = new Float32Array(n);
+    for (let i = 0; i < n; i++) m[i] = bd[i * 4] / 255;
+    const er = Math.max(1, Math.round((w / maskInfo.w) * 0.8));
+    m = boxBlur(boxBlur(m, w, h, er), w, h, er);
+    const lo = maskInfo.soft ? 0.1 : 0.4, hi = maskInfo.soft ? 0.9 : 0.72;
+    for (let i = 0; i < n; i++) {
+      let t = (m[i] - lo) / (hi - lo); t = t < 0 ? 0 : t > 1 ? 1 : t;
+      alpha[i] = t * t * (3 - 2 * t);
+    }
+  }
+  // Luminance + levels (measured on the garment only)
+  const Y = new Float32Array(n);
+  const hist = new Uint32Array(256); let hn = 0;
+  for (let i = 0, j = 0; i < n; i++, j += 4) {
+    const y = 0.299 * d[j] + 0.587 * d[j + 1] + 0.114 * d[j + 2];
+    Y[i] = y / 255;
+    if (alpha[i] > 0.5) { hist[y | 0]++; hn++; }
+  }
+  let plo = 0, phi = 255;
+  if (hn > 50) {
+    let acc = 0; for (let v = 0; v < 256; v++) { acc += hist[v]; if (acc > hn * 0.01) { plo = v; break; } }
+    acc = 0; for (let v = 255; v >= 0; v--) { acc += hist[v]; if (acc > hn * 0.01) { phi = v; break; } }
+  }
+  // Gentle auto-contrast: widen the garment's own tonal range a little, never repaint it
+  const range = Math.max(1, phi - plo);
+  const newLo = plo * 0.88, newHi = phi + (255 - phi) * 0.3;
+  const gain = clamp((newHi - newLo) / range, 1, 1.25);
+  const gamma = Math.pow(2, -(opts.bright || 0) / 55);
+  // Wrinkle smoothing: edge-preserving guided filter on luminance
+  let Q = Y;
+  const s = opts.smooth || 0;
+  if (s > 0) {
+    const r = Math.max(2, Math.round(Math.max(w, h) * (0.006 + s / 100 * 0.012)));
+    const eps = Math.pow(s / 100, 2) * 0.010 + 0.00008;
+    const mI = boxBlur(Y, w, h, r);
+    const II = new Float32Array(n); for (let i = 0; i < n; i++) II[i] = Y[i] * Y[i];
+    const mII = boxBlur(II, w, h, r);
+    const a = new Float32Array(n), b = new Float32Array(n);
+    for (let i = 0; i < n; i++) { const v = mII[i] - mI[i] * mI[i]; a[i] = v / (v + eps); b[i] = mI[i] - a[i] * mI[i]; }
+    const ma = boxBlur(a, w, h, r), mb = boxBlur(b, w, h, r);
+    Q = new Float32Array(n);
+    for (let i = 0; i < n; i++) Q[i] = ma[i] * Y[i] + mb[i];
+  }
+  // Light sharpen so fabric still looks crisp
+  const Qb = boxBlur(Q, w, h, 1);
+  const sharpen = 0.45;
+  const out = ctx.createImageData(w, h), o = out.data;
+  const sat = 1.05;
+  // Levels + brightness as one lookup table (input 0..1023 -> output 0..255)
+  const LUT = new Float32Array(1024);
+  for (let v = 0; v < 1024; v++) {
+    const x = v / 1023 * 255;
+    let t = (newLo + (x - plo) * gain) / 255;
+    t = t < 0 ? 0 : t > 1 ? 1 : t;
+    LUT[v] = 255 * Math.pow(t, gamma);
+  }
+  for (let i = 0, j = 0; i < n; i++, j += 4) {
+    const y0 = Y[i] > 0.004 ? Y[i] : 0.004;
+    const yq = Q[i] + sharpen * (Q[i] - Qb[i]);
+    let ratio = yq / y0; ratio = ratio < 0.4 ? 0.4 : ratio > 2.5 ? 2.5 : ratio;
+    let ri = d[j] * ratio * 4.012, gi = d[j + 1] * ratio * 4.012, bi = d[j + 2] * ratio * 4.012;
+    const r = LUT[ri > 1023 ? 1023 : ri | 0], g = LUT[gi > 1023 ? 1023 : gi | 0], bl = LUT[bi > 1023 ? 1023 : bi | 0];
+    const l = 0.299 * r + 0.587 * g + 0.114 * bl;
+    o[j] = l + (r - l) * sat; o[j + 1] = l + (g - l) * sat; o[j + 2] = l + (bl - l) * sat;
+    o[j + 3] = alpha[i] * 255 + 0.5;
+  }
+  const fgc = makeCanvas(w, h); fgc.getContext('2d').putImageData(out, 0, 0);
+
+  const outC = makeCanvas(OUT_W, OUT_H), octx = outC.getContext('2d');
+  octx.imageSmoothingQuality = 'high';
+  octx.fillStyle = BACKDROP; octx.fillRect(0, 0, OUT_W, OUT_H);
+  if (useCut) {
+    // bounding box of the garment
+    let x0 = w, y0 = h, x1 = 0, y1 = 0;
+    for (let y = 0; y < h; y += 2) for (let x = 0; x < w; x += 2) {
+      if (alpha[y * w + x] > 0.5) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    }
+    if (x1 <= x0 || y1 <= y0) { x0 = 0; y0 = 0; x1 = w - 1; y1 = h - 1; }
+    const bw = x1 - x0 + 1, bh = y1 - y0 + 1;
+    const k = Math.min((OUT_W * 0.82) / bw, (OUT_H * 0.80) / bh, 2.4);
+    const dw = bw * k, dh = bh * k;
+    const dx = (OUT_W - dw) / 2, dy = (OUT_H - dh) / 2 - OUT_H * 0.01;
+    octx.save();
+    octx.shadowColor = 'rgba(70,52,30,0.24)'; octx.shadowBlur = 42; octx.shadowOffsetY = 22;
+    octx.drawImage(fgc, x0, y0, bw, bh, dx, dy, dw, dh);
+    octx.restore();
+  } else {
+    // cover-fit the whole (enhanced) photo into 3:4
+    const k = Math.max(OUT_W / w, OUT_H / h);
+    const dw = w * k, dh = h * k;
+    octx.drawImage(fgc, (OUT_W - dw) / 2, (OUT_H - dh) / 2, dw, dh);
+  }
+  return { canvas: outC, usedCutout: useCut };
+}
+function coverOriginal(src) {
+  const c = makeCanvas(OUT_W, OUT_H), ctx = c.getContext('2d');
+  ctx.imageSmoothingQuality = 'high';
+  ctx.fillStyle = BACKDROP; ctx.fillRect(0, 0, OUT_W, OUT_H);
+  const k = Math.max(OUT_W / src.width, OUT_H / src.height);
+  ctx.drawImage(src, (OUT_W - src.width * k) / 2, (OUT_H - src.height * k) / 2, src.width * k, src.height * k);
+  return c;
+}
+
+// ============================================================
+// Rendering: sign in
+// ============================================================
+const app = $('#app');
+function renderSignin(msg = '') {
+  app.innerHTML = `
+    <div class="signin">
+      <div class="wordmark">Bree<span>ze</span></div>
+      <div class="tag">Your closet, in your pocket.</div>
+      <form id="signinForm" autocomplete="on">
+        <div class="field"><label for="em">Email</label>
+          <input class="input" id="em" name="email" type="email" autocomplete="username" inputmode="email" autocapitalize="off" required></div>
+        <div class="field"><label for="pw">Password</label>
+          <input class="input" id="pw" name="password" type="password" autocomplete="current-password" required></div>
+        <div class="err" id="signErr">${esc(msg)}</div>
+        <button class="btn btn-primary" type="submit" id="signBtn">Sign in</button>
+      </form>
+      <div class="note">Same email and password as your Breeze account.</div>
+    </div>`;
+  $('#signinForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = $('#signBtn'); btn.disabled = true; btn.textContent = 'Signing in…';
+    try {
+      const data = await api('/api/login', { method: 'POST', body: { email: $('#em').value.trim(), password: $('#pw').value } });
+      S.token = data.token; S.user = data.user; lsSet(TOKEN_KEY, S.token);
+      await boot();
+    } catch (err) {
+      $('#signErr').textContent = err.message === 'Invalid credentials' ? 'That email and password didn’t match.' : err.message;
+      btn.disabled = false; btn.textContent = 'Sign in';
+    }
+  });
+}
+function signOut(expired) {
+  if (DEMO) { location.href = location.pathname; return; }
+  if (S.token) fetch(API + '/api/logout', { method: 'POST', headers: { Authorization: 'Bearer ' + S.token } }).catch(() => {});
+  S.token = null; S.user = null; S.items = []; S.loaded = false;
+  try { localStorage.removeItem(TOKEN_KEY); } catch {}
+  closeAllSheets();
+  renderSignin(expired ? 'Please sign in again.' : '');
+}
+
+// ============================================================
+// Rendering: home + category
+// ============================================================
+function matches(it) {
+  if (!S.q) return true;
+  const q = S.q.toLowerCase();
+  return [it.name, it.color, it.notes, catOf(it.category).label].some(v => (v || '').toLowerCase().includes(q));
+}
+function grouped() {
+  const map = new Map(CATS.map(c => [c.key, []]));
+  for (const it of S.items) {
+    if (!matches(it)) continue;
+    const key = map.has(it.category) ? it.category : 'Other';
+    map.get(key).push(it);
+  }
+  for (const arr of map.values()) arr.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  return map;
+}
+function cardHtml(it) {
+  const inBag = S.bag.has(it.id);
+  const isCut = it.photoKey && (!it.photoStyle) && it.photoBgRemoved;   // older cutout PNGs
+  const img = it.photoKey
+    ? `<img class="${isCut ? 'cut' : ''}" loading="lazy" decoding="async" src="${esc(photoUrl(it.photoKey))}" alt="" onload="this.classList.add('on')">`
+    : `<div class="empty">${shapeSvg(catOf(it.category).shape, { w: 5 })}</div>`;
+  return `<div class="card" data-open="${esc(it.id)}">
+      <div class="ph">${img}
+        <button class="bagtog ${inBag ? 'in' : ''}" data-bag="${esc(it.id)}" aria-label="${inBag ? 'Remove from bag' : 'Add to bag'}">${inBag ? ICON.bagfill : ICON.bag}</button>
+      </div>
+      <div class="cardname">${esc(it.name || 'Untitled')}</div>
+      <div class="cardsub">${esc(it.color || ' ')}</div>
+    </div>`;
+}
+function bodyHtml() {
+  const g = grouped();
+  const total = S.items.length;
+  const view = S.view;
+  let body = '';
+  if (!S.loaded) {
+    body = `<div class="emptyhome">Loading your closet…</div>`;
+  } else if (view.name === 'cat') {
+    const c = catOf(view.cat), list = g.get(c.key) || [];
+    body = `<div class="rowhead" style="padding-top:8px"><h2>${esc(c.label)}<span class="n">${list.length}</span></h2></div>
+      <div class="grid">${list.map(cardHtml).join('')}
+        <button class="addtile" data-add="${esc(c.key)}" style="width:auto;max-width:none"><div class="ph">${ICON.camera}<span>Add ${esc(c.pick.toLowerCase())}</span></div></button>
+      </div>`;
+  } else if (total === 0) {
+    body = `<div class="emptyhome">${shapeSvg('tee', { w: 4 }).replace('<svg', '<svg style="width:90px;height:120px;color:var(--gold)"')}
+      <h3>Let’s fill your closet</h3>
+      <div>Open your closet, lay a piece flat, and snap it. Breeze cleans up the photo and files it for you.</div></div>`;
+  } else {
+    let rows = '';
+    for (const c of CATS) {
+      const list = g.get(c.key);
+      if (!list.length) continue;
+      rows += `<section class="row">
+        <div class="rowhead"><h2>${esc(c.label)}<span class="n">${list.length}</span></h2>
+          <button data-cat="${esc(c.key)}">See all</button></div>
+        <div class="strip">${list.map(cardHtml).join('')}
+          <button class="addtile" data-add="${esc(c.key)}"><div class="ph">${ICON.plus}<span>Add</span></div></button>
+        </div></section>`;
+    }
+    body = rows || `<div class="emptyhome">Nothing matches “${esc(S.q)}”.</div>`;
+  }
+  return body;
+}
+function renderHome() {
+  const total = S.items.length;
+  const view = S.view;
+  const body = bodyHtml();
+  const bagN = S.items.filter(i => S.bag.has(i.id)).length;
+  const legacy = S.server && !hasV3();
+  app.innerHTML = `
+    <header class="top">
+      <div class="toprow">
+        ${view.name === 'cat'
+          ? `<button class="iconbtn" id="backBtn" aria-label="Back">${ICON.back}</button>`
+          : `<div><div class="wordmark">Bree<span>ze</span></div><div class="count">${total} piece${total === 1 ? '' : 's'}</div></div>`}
+        <div style="display:flex;gap:10px">
+          <button class="iconbtn" id="bagBtn" aria-label="Packing bag">${ICON.bag}${bagN ? `<span class="badge">${bagN}</span>` : ''}</button>
+          <button class="iconbtn" id="menuBtn" aria-label="Menu">${ICON.user}</button>
+        </div>
+      </div>
+      ${view.name === 'home' && total > 0 ? `<label class="search">${ICON.search}<input id="q" type="search" placeholder="Search your closet" value="${esc(S.q)}" autocomplete="off"></label>` : ''}
+    </header>
+    ${legacy ? `<div class="banner">Breeze’s server needs its update before new photos can be saved. Browsing works now.</div>` : ''}
+    <main id="rows">${body}</main>
+    <div class="spacer"></div>
+    ${bagN ? `<div class="bagbar"><span><b>${bagN}</b> in your bag</span><button id="bagOpen">View bag</button></div>` : ''}
+    <button class="fab" id="addBtn">${ICON.camera}Add a piece</button>
+    ${S.menuOpen ? menuHtml() : ''}`;
+  bindHome();
+}
+function menuHtml() {
+  return `<div class="menu" id="menu">
+    <div class="who">${esc(S.user?.email || '')}</div>
+    <label>Auto-name new pieces <input type="checkbox" id="autoName" ${S.prefs.autoName ? 'checked' : ''}></label>
+    <button id="refreshBtn">Refresh closet</button>
+    <button id="signOutBtn" class="danger">Sign out</button>
+  </div>`;
+}
+function bindHome() {
+  const q = $('#q');
+  if (q) q.addEventListener('input', () => { S.q = q.value; $('#rows').innerHTML = bodyHtml(); });
+  $('#addBtn').onclick = () => startAdd();
+  $('#bagBtn').onclick = openBag;
+  const bo = $('#bagOpen'); if (bo) bo.onclick = openBag;
+  $('#menuBtn').onclick = (e) => { e.stopPropagation(); S.menuOpen = !S.menuOpen; renderHome(); };
+  const back = $('#backBtn'); if (back) back.onclick = () => { S.view = { name: 'home' }; renderHome(); window.scrollTo(0, 0); };
+  if (S.menuOpen) {
+    $('#autoName').onchange = (e) => { S.prefs.autoName = e.target.checked; lsSet(PREF_KEY, S.prefs); };
+    $('#signOutBtn').onclick = () => { S.menuOpen = false; signOut(false); };
+    $('#refreshBtn').onclick = async () => { S.menuOpen = false; await loadCloset(); toast('Closet refreshed'); };
+  }
+}
+app.addEventListener('click', (e) => {
+  const bagBtn = e.target.closest('[data-bag]');
+  if (bagBtn) {
+    e.stopPropagation();
+    const id = bagBtn.dataset.bag;
+    if (S.bag.has(id)) S.bag.delete(id); else { S.bag.add(id); toast('Added to your bag', 1200); }
+    saveBag(); renderHome(); return;
+  }
+  const add = e.target.closest('[data-add]');
+  if (add) { startAdd(add.dataset.add); return; }
+  const cat = e.target.closest('[data-cat]');
+  if (cat) { S.view = { name: 'cat', cat: cat.dataset.cat }; renderHome(); window.scrollTo(0, 0); return; }
+  const open = e.target.closest('[data-open]');
+  if (open) { openItem(open.dataset.open); return; }
+  if (S.menuOpen && !e.target.closest('#menu') && !e.target.closest('#menuBtn')) { S.menuOpen = false; renderHome(); }
+});
+
+// ============================================================
+// Sheets
+// ============================================================
+function openSheet(id, title, html, opts = {}) {
+  closeSheet(id, true);
+  const el = document.createElement('div');
+  el.className = 'sheet'; el.id = id;
+  el.innerHTML = `<div class="sheethead">
+      ${opts.left || '<span style="width:42px"></span>'}
+      <h3>${esc(title)}</h3>
+      <button class="close" data-close="${id}" aria-label="Close">${ICON.close}</button>
+    </div><div class="sheetbody">${html}</div>`;
+  document.body.appendChild(el);
+  el.querySelector('[data-close]').onclick = () => { closeSheet(id); opts.onClose && opts.onClose(); };
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('open')));
+  document.body.style.overflow = 'hidden';
+  return el;
+}
+function closeSheet(id, instant) {
+  const el = document.getElementById(id); if (!el) return;
+  if (instant) el.remove(); else { el.classList.remove('open'); setTimeout(() => el.remove(), 330); }
+  setTimeout(() => { if (!document.querySelector('.sheet.open')) document.body.style.overflow = ''; }, 340);
+}
+function closeAllSheets() { document.querySelectorAll('.sheet,.cam').forEach(el => el.remove()); document.body.style.overflow = ''; stopCamera(); }
+
+// ============================================================
+// Bag
+// ============================================================
+function openBag() {
+  const items = S.items.filter(i => S.bag.has(i.id));
+  let html = '';
+  if (!items.length) {
+    html = `<div class="emptyhome"><h3>Your bag is empty</h3><div>Tap the bag on any piece to start packing.</div></div>`;
+  } else {
+    for (const c of CATS) {
+      const list = items.filter(i => (CATS.some(x => x.key === i.category) ? i.category : 'Other') === c.key);
+      if (!list.length) continue;
+      html += `<div class="rowhead" style="padding:14px 0 8px"><h2>${esc(c.label)}<span class="n">${list.length}</span></h2></div>
+        <div class="grid" style="padding:0 0 6px">${list.map(cardHtml).join('')}</div>`;
+    }
+    html += `<button class="linkbtn danger" id="clearBag" style="margin-top:18px">Empty the bag</button>`;
+  }
+  const el = openSheet('bagSheet', `Your bag · ${items.length}`, html);
+  el.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-bag]');
+    if (b) { e.stopPropagation(); S.bag.delete(b.dataset.bag); saveBag(); renderHome(); openBag(); return; }
+    const o = e.target.closest('[data-open]'); if (o) openItem(o.dataset.open);
+  });
+  const cb = el.querySelector('#clearBag');
+  if (cb) cb.onclick = () => { if (confirm('Take everything out of your bag?')) { S.bag.clear(); saveBag(); renderHome(); closeSheet('bagSheet'); } };
+}
+
+// ============================================================
+// Item detail
+// ============================================================
+function catSelect(id, val) {
+  return `<select class="input" id="${id}">${CATS.map(c => `<option value="${c.key}" ${c.key === (CATS.some(x => x.key === val) ? val : 'Other') ? 'selected' : ''}>${esc(c.label)}</option>`).join('')}</select>`;
+}
+function openItem(id) {
+  const it = S.items.find(i => i.id === id); if (!it) return;
+  const isCut = it.photoKey && !it.photoStyle && it.photoBgRemoved;
+  const html = `
+    <div class="hero">${it.photoKey
+      ? `<img id="detImg" class="${isCut ? 'cut' : ''}" src="${esc(photoUrl(it.photoKey))}" alt="">`
+      : `<div class="ph" style="height:100%;border-radius:0"><div class="empty">${shapeSvg(catOf(it.category).shape, { w: 5 })}</div></div>`}</div>
+    ${it.originalKey ? `<div class="seg" id="detSeg"><button class="on" data-v="fin">Finished</button><button data-v="orig">Original</button></div>` : ''}
+    <div class="panel">
+      <div class="field"><label>Name</label><input class="input" id="dName" value="${esc(it.name)}"></div>
+      <div class="field"><label>Type</label>${catSelect('dCat', it.category)}</div>
+      <div class="field"><label>Color</label><input class="input" id="dColor" value="${esc(it.color)}"></div>
+      <div class="field"><label>Notes</label><input class="input" id="dNotes" value="${esc(it.notes)}" placeholder="Fit, where it’s from, what it goes with…"></div>
+      <div class="actions">
+        <button class="btn ${S.bag.has(it.id) ? 'btn-ghost' : 'btn-gold'}" id="dBag">${S.bag.has(it.id) ? 'Take out of bag' : 'Add to bag'}</button>
+      </div>
+      <div class="actions">
+        <button class="btn btn-ghost" id="dRetake">${ICON.camera}${it.photoKey ? 'Retake' : 'Add photo'}</button>
+        ${it.photoKey || it.originalKey ? `<button class="btn btn-ghost" id="dEdit">Edit photo</button>` : ''}
+      </div>
+      ${hasPolish() && (it.originalKey || it.photoKey) ? `<div class="actions"><button class="btn btn-ghost" id="dPolish">✦ Polish the cutout</button></div>
+        <div class="hint">Polish uses remove.bg for a sharper outline. It keeps your original photo.</div>` : ''}
+      <button class="linkbtn danger" id="dDel" style="margin-top:20px">Delete this piece</button>
+    </div>`;
+  const el = openSheet('itemSheet', catOf(it.category).label, html);
+  const seg = el.querySelector('#detSeg');
+  if (seg) seg.onclick = (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    seg.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    const img = el.querySelector('#detImg');
+    img.classList.remove('cut');
+    img.src = photoUrl(b.dataset.v === 'orig' ? it.originalKey : it.photoKey);
+    img.style.objectFit = b.dataset.v === 'orig' ? 'contain' : '';
+    img.style.background = b.dataset.v === 'orig' ? '#111' : '';
+  };
+  const save = async () => {
+    const patch = { name: el.querySelector('#dName').value.trim() || it.name, category: el.querySelector('#dCat').value, color: el.querySelector('#dColor').value.trim(), notes: el.querySelector('#dNotes').value.trim() };
+    if (patch.name === it.name && patch.category === it.category && patch.color === (it.color || '') && patch.notes === (it.notes || '')) return;
+    try { const r = await api('/api/closet/' + encodeURIComponent(it.id), { method: 'PUT', body: patch }); Object.assign(it, r.item); renderHome(); toast('Saved', 1000); }
+    catch (err) { toast(err.message); }
+  };
+  ['#dName', '#dColor', '#dNotes'].forEach(s => el.querySelector(s).addEventListener('change', save));
+  el.querySelector('#dCat').addEventListener('change', save);
+  el.querySelector('#dBag').onclick = () => {
+    if (S.bag.has(it.id)) S.bag.delete(it.id); else S.bag.add(it.id);
+    saveBag(); renderHome(); openItem(it.id);
+  };
+  el.querySelector('#dRetake').onclick = () => {
+    if (!hasV3()) return toast('Breeze’s server needs its update first.');
+    openCamera(it.category, { itemId: it.id });
+  };
+  const ed = el.querySelector('#dEdit');
+  if (ed) ed.onclick = async () => {
+    if (!hasV3()) return toast('Breeze’s server needs its update first.');
+    try {
+      toast('Opening photo…', 900);
+      const img = await fetchImage(photoUrl(it.originalKey || it.photoKey));
+      openReview({ img, itemId: it.id, category: it.category, fromOriginal: !!it.originalKey, legacyCutout: !it.originalKey && it.photoBgRemoved });
+    } catch (err) { toast(err.message); }
+  };
+  const po = el.querySelector('#dPolish');
+  if (po) po.onclick = async () => {
+    po.disabled = true; po.textContent = 'Polishing…';
+    try {
+      const img = await fetchImage(photoUrl(it.originalKey || it.photoKey));
+      const res = await api('/api/closet/' + encodeURIComponent(it.id) + '/polish', { method: 'POST', raw: true });
+      const matte = await blobToImage(await res.blob());
+      openReview({ img, itemId: it.id, category: it.category, fromOriginal: !!it.originalKey, matte });
+    } catch (err) { toast(err.message, 3500); }
+    po.disabled = false; po.textContent = '✦ Polish the cutout';
+  };
+  el.querySelector('#dDel').onclick = async () => {
+    if (!confirm(`Delete “${it.name}” and its photos? This can’t be undone.`)) return;
+    try {
+      await api('/api/closet/' + encodeURIComponent(it.id), { method: 'DELETE' });
+      S.items = S.items.filter(x => x.id !== it.id); S.bag.delete(it.id); saveBag();
+      closeSheet('itemSheet'); renderHome(); toast('Deleted');
+    } catch (err) { toast(err.message); }
+  };
+}
+
+// ============================================================
+// Add flow: pick type -> camera -> review
+// ============================================================
+function startAdd(cat) {
+  if (S.server && !hasV3()) return toast('Breeze’s server needs its update before new photos can be saved.', 3200);
+  if (cat) return openCamera(cat, {});
+  const html = `<div class="hint" style="margin-bottom:8px">Pick what you’re snapping. Breeze shows a matching outline to line it up.</div>
+    <div class="catpick">${CATS.map(c => `<button data-pick="${c.key}">${shapeSvg(c.shape, { w: 10 })}<span>${esc(c.pick)}</span></button>`).join('')}</div>`;
+  const el = openSheet('pickSheet', 'What is it?', html);
+  el.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-pick]'); if (!b) return;
+    closeSheet('pickSheet', true);
+    openCamera(b.dataset.pick, {});
+  });
+}
+
+let camStream = null;
+function stopCamera() { if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; } }
+async function openCamera(category, ctx) {
+  const c = catOf(category);
+  const el = document.createElement('div');
+  el.className = 'cam'; el.id = 'cam';
+  el.innerHTML = `
+    <video playsinline muted autoplay></video>
+    <div class="guide">${shapeSvg(c.shape, { w: 4, dash: true })}</div>
+    <div class="camflash"></div>
+    <div class="camtop">
+      <button class="camclose" id="camX" aria-label="Close">${ICON.close}</button>
+      <button class="camcat" id="camCat">${esc(c.pick)} ▾</button>
+    </div>
+    <div class="tip" id="camTip">Lay it flat on a plain surface that contrasts with it. Fill the outline.</div>
+    <div class="cambottom">
+      <button class="camside" id="camLib">${ICON.photos}<span>Photos</span></button>
+      <button class="shutter" id="shutter" aria-label="Take photo"></button>
+      <button class="camside" id="camNative">${ICON.camera}<span>iPhone<br>camera</span></button>
+    </div>`;
+  document.body.appendChild(el);
+  document.body.style.overflow = 'hidden';
+  const video = el.querySelector('video');
+  const close = () => { stopCamera(); el.remove(); if (!document.querySelector('.sheet.open')) document.body.style.overflow = ''; };
+  el.querySelector('#camX').onclick = close;
+  el.querySelector('#camCat').onclick = () => {
+    const i = CATS.findIndex(x => x.key === c.key);
+    const next = CATS[(i + 1) % CATS.length];
+    close(); openCamera(next.key, ctx);
+  };
+  const usePick = (input) => {
+    input.value = '';
+    input.onchange = async () => {
+      const f = input.files && input.files[0]; if (!f) return;
+      close();
+      try { const img = await blobToImage(f); openReview({ img, category: c.key, itemId: ctx.itemId, fresh: true }); }
+      catch (err) { toast(err.message); }
+    };
+    input.click();
+  };
+  el.querySelector('#camLib').onclick = () => usePick($('#filepick'));
+  el.querySelector('#camNative').onclick = () => usePick($('#filecam'));
+
+  try {
+    stopCamera();
+    camStream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 3840 }, height: { ideal: 2160 } },
+    });
+    video.srcObject = camStream;
+    await video.play().catch(() => {});
+  } catch (err) {
+    el.querySelector('#camTip').textContent = 'Camera preview isn’t available here. Use Photos or the iPhone camera below.';
+    el.querySelector('#shutter').style.opacity = .3;
+  }
+  el.querySelector('#shutter').onclick = async () => {
+    if (!camStream || !video.videoWidth) return;
+    el.querySelector('.camflash').classList.add('on');
+    setTimeout(() => el.querySelector('.camflash')?.classList.remove('on'), 60);
+    // Crop the frame to what was visible on screen (video is object-fit: cover)
+    const vw = video.videoWidth, vh = video.videoHeight;
+    const sw = el.clientWidth, sh = el.clientHeight;
+    const k = Math.max(sw / vw, sh / vh);
+    const cw = Math.round(sw / k), ch = Math.round(sh / k);
+    const cx = Math.round((vw - cw) / 2), cy = Math.round((vh - ch) / 2);
+    const frame = makeCanvas(cw, ch);
+    frame.getContext('2d').drawImage(video, cx, cy, cw, ch, 0, 0, cw, ch);
+    await sleep(80);
+    close();
+    openReview({ img: frame, category: c.key, itemId: ctx.itemId, fresh: true });
+  };
+}
+
+// Review: shows the cleaned photo with simple controls, then saves.
+function openReview(o) {
+  const existing = o.itemId ? S.items.find(i => i.id === o.itemId) : null;
+  const st = {
+    mode: o.matte ? 'polished' : (o.legacyCutout ? 'polished' : 'clean'),
+    cutout: true, sens: 50, smooth: 35, bright: 0,
+    name: existing ? existing.name : '', color: existing ? existing.color || '' : '', category: o.category || (existing && existing.category) || 'Other',
+    touched: { name: !!existing, color: !!existing, category: !!existing },
+    blob: null, aiDone: !!existing || !S.prefs.autoName,
+  };
+  const original = drawScaled(o.img, ORIGINAL_MAX);
+  const work = drawScaled(original, WORK_MAX);
+  let maskAuto = null, maskSens = null;
+  const maskPolished = o.matte ? maskFromMatte(o.matte) : (o.legacyCutout ? maskFromMatte(o.img) : null);
+
+  const html = `
+    <div class="hero"><img id="rvImg" alt=""><div class="busy" id="rvBusy">Cleaning up…</div></div>
+    <div class="seg" id="rvSeg">
+      ${maskPolished ? `<button data-m="polished">Polished</button>` : ''}
+      <button data-m="clean">Clean</button>
+      <button data-m="original">Original</button>
+    </div>
+    <div class="panel">
+      <div id="rvCtl"></div>
+      <div class="field" style="margin-top:14px"><label>Name</label><input class="input" id="rvName" value="${esc(st.name)}" placeholder="e.g. Navy linen shirt"></div>
+      <div class="field"><label>Type</label>${catSelect('rvCat', st.category)}</div>
+      <div class="field"><label>Color</label><input class="input" id="rvColor" value="${esc(st.color)}" placeholder="e.g. Navy"></div>
+      <div class="actions">
+        <button class="btn btn-ghost" id="rvRetake">${o.fresh ? 'Retake' : 'Cancel'}</button>
+        <button class="btn btn-primary" id="rvSave" style="flex:1.4">Save</button>
+      </div>
+      ${o.fresh && !o.itemId ? `<div class="hint" style="text-align:center">After saving, the camera opens again for the next piece.</div>` : ''}
+    </div>`;
+  const el = openSheet('reviewSheet', existing ? 'Edit photo' : 'Looks good?', html);
+  const img = el.querySelector('#rvImg'), busy = el.querySelector('#rvBusy');
+  const nameI = el.querySelector('#rvName'), colorI = el.querySelector('#rvColor'), catI = el.querySelector('#rvCat');
+  nameI.oninput = () => { st.touched.name = true; };
+  colorI.oninput = () => { st.touched.color = true; };
+  catI.onchange = () => { st.touched.category = true; };
+
+  function ctlHtml() {
+    if (st.mode === 'original') return `<div class="hint">Saves your photo as it is, cropped to fit.</div>`;
+    const failed = st.mode === 'clean' && st.cutout && maskAuto && !maskAuto.ok;
+    return `
+      ${st.mode === 'clean' ? `<label class="switch">Cut out the background <input type="checkbox" id="cCut" ${st.cutout ? 'checked' : ''}></label>` : ''}
+      ${failed ? `<div class="warn">Couldn’t find clean edges. A plainer surface that contrasts with the piece works best. You can still save this lit-and-cropped version.</div>` : ''}
+      ${st.mode === 'clean' && st.cutout ? `<div class="slider"><span>Edge finder</span><input type="range" id="cSens" min="0" max="100" value="${st.sens}"></div>` : ''}
+      <div class="slider"><span>Smooth wrinkles</span><input type="range" id="cSmooth" min="0" max="100" value="${st.smooth}"></div>
+      <div class="slider"><span>Brightness</span><input type="range" id="cBright" min="-50" max="50" value="${st.bright}"></div>`;
+  }
+  function bindCtl() {
+    const c = el.querySelector('#rvCtl'); c.innerHTML = ctlHtml();
+    const cut = c.querySelector('#cCut'); if (cut) cut.onchange = () => { st.cutout = cut.checked; bindCtl(); schedule(); };
+    const sens = c.querySelector('#cSens'); if (sens) sens.oninput = () => { st.sens = +sens.value; schedule(250); };
+    const sm = c.querySelector('#cSmooth'); if (sm) sm.oninput = () => { st.smooth = +sm.value; schedule(250); };
+    const br = c.querySelector('#cBright'); if (br) br.oninput = () => { st.bright = +br.value; schedule(250); };
+  }
+  function setSeg() { el.querySelectorAll('#rvSeg button').forEach(b => b.classList.toggle('on', b.dataset.m === st.mode)); }
+  el.querySelector('#rvSeg').onclick = (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    st.mode = b.dataset.m; setSeg(); bindCtl(); schedule();
+  };
+
+  let timer = null, version = 0, lastUrl = null;
+  function schedule(delay = 0) { clearTimeout(timer); busy.classList.remove('hidden'); timer = setTimeout(run, delay); }
+  async function run() {
+    const v = ++version;
+    await sleep(30);   // let the busy layer paint
+    let outC;
+    if (st.mode === 'original') {
+      outC = coverOriginal(original);
+    } else {
+      let m = null;
+      if (st.mode === 'polished') m = maskPolished;
+      else if (st.cutout) {
+        if (!maskAuto || maskSens !== st.sens) { maskAuto = computeMask(work, st.sens); maskSens = st.sens; }
+        m = maskAuto;
+      }
+      outC = renderFinished(work, m, { cutout: st.mode === 'polished' || st.cutout, smooth: st.smooth, bright: st.bright }).canvas;
+    }
+    const blob = await canvasToBlob(outC, 'image/jpeg', 0.86);
+    if (v !== version) return;
+    st.blob = blob;
+    if (lastUrl) URL.revokeObjectURL(lastUrl);
+    lastUrl = URL.createObjectURL(blob); img.src = lastUrl;
+    busy.classList.add('hidden');
+    if (st.mode === 'clean' && st.cutout && maskAuto && !maskAuto.ok) bindCtl();
+    if (!st.aiDone) { st.aiDone = true; autoName(outC); }
+  }
+  async function autoName(outC) {
+    nameI.classList.add('shimmer'); nameI.placeholder = 'Naming it…';
+    try {
+      const small = makeCanvas(576, 768); small.getContext('2d').drawImage(outC, 0, 0, 576, 768);
+      const blob = await canvasToBlob(small, 'image/jpeg', 0.8);
+      const r = await api('/api/ai/identify-garment', { method: 'POST', body: blob, headers: { 'Content-Type': 'image/jpeg' } });
+      if (r.name && !st.touched.name && !nameI.value) nameI.value = r.name;
+      if (r.color && !st.touched.color && !colorI.value) colorI.value = r.color;
+      // Only switch type when the AI is sure and you didn't pick a specific one
+      if (r.category && !st.touched.category && r.confidence >= 0.75 && CATS.some(c => c.key === r.category) && r.category !== catI.value && (catI.value === 'Other')) catI.value = r.category;
+    } catch (err) { /* naming is optional */ }
+    nameI.classList.remove('shimmer'); nameI.placeholder = 'e.g. Navy linen shirt';
+  }
+
+  el.querySelector('#rvRetake').onclick = () => {
+    closeSheet('reviewSheet');
+    if (o.fresh) openCamera(catI.value, { itemId: o.itemId });
+  };
+  el.querySelector('#rvSave').onclick = async () => {
+    const btn = el.querySelector('#rvSave');
+    if (!st.blob) return;
+    const name = nameI.value.trim() || catOf(catI.value).pick;
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      let item = existing;
+      const fields = { name, category: catI.value, color: colorI.value.trim() };
+      if (!item) {
+        item = (await api('/api/closet', { method: 'POST', body: fields })).item;
+        S.items.push(item);
+      } else if (fields.name !== item.name || fields.category !== item.category || fields.color !== (item.color || '')) {
+        Object.assign(item, (await api('/api/closet/' + encodeURIComponent(item.id), { method: 'PUT', body: fields })).item);
+      }
+      if (o.fresh) {
+        const origBlob = await canvasToBlob(original, 'image/jpeg', 0.9);
+        Object.assign(item, (await uploadPhoto(item.id, origBlob, 'original')).item);
+      }
+      const style = st.mode === 'original' ? 'original' : st.mode === 'polished' ? 'polished' : (st.cutout && maskAuto && maskAuto.ok ? 'studio' : 'studio-plain');
+      Object.assign(item, (await uploadPhoto(item.id, st.blob, 'display', style)).item);
+      if (lastUrl) URL.revokeObjectURL(lastUrl);
+      closeSheet('reviewSheet', true);
+      closeSheet('itemSheet', true);
+      renderHome();
+      toast(`Saved ${name}`);
+      if (o.fresh && !o.itemId) setTimeout(() => openCamera(catI.value, {}), 350);
+    } catch (err) {
+      toast(err.message, 3500);
+      btn.disabled = false; btn.textContent = 'Save';
+      renderHome();
+    }
+  };
+  setSeg(); bindCtl(); schedule();
+}
+
+// ============================================================
+// Boot
+// ============================================================
+async function loadCloset() {
+  const r = await api('/api/closet');
+  S.items = Array.isArray(r.items) ? r.items : [];
+  S.loaded = true;
+  renderHome();
+}
+async function boot() {
+  if (DEMO) S.token = 'demo';
+  if (!S.token) return renderSignin();
+  S.loaded = false; renderHome();
+  try {
+    const [me, health] = await Promise.all([api('/api/me'), DEMO ? { features: ['originals', 'display-upload'] } : fetch(API + '/api/health').then(r => r.json()).catch(() => null)]);
+    S.user = me.user; S.server = health;
+    await loadCloset();
+  } catch (err) {
+    if (S.token) { app.innerHTML = `<div class="emptyhome"><h3>Couldn’t reach Breeze</h3><div>${esc(err.message)}</div><br><button class="btn btn-ghost" onclick="location.reload()">Try again</button></div>`; }
+  }
+}
+boot();
+
+// Exposed for testing in a desktop browser
+window.__breeze = { computeMask, renderFinished, drawScaled, makeCanvas, maskFromMatte };
+})();
+</script>
+</body>
+</html>
