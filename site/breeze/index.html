@@ -598,7 +598,7 @@ function renderSignin(msg = '') {
         <div class="err" id="signErr">${esc(msg)}</div>
         <button class="btn btn-primary" type="submit" id="signBtn">Sign in</button>
       </form>
-      <div class="note">Same email and password as your Breeze account.</div>
+      <div class="note">Same email and password as your Breeze account. <a href="reset.html" style="color:var(--ink);font-weight:600">Forgot it?</a></div>
     </div>`;
   $('#signinForm').addEventListener('submit', async (e) => {
     e.preventDefault();
