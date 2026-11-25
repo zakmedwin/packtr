@@ -349,6 +349,11 @@ function computeMask(srcCanvas, sensitivity) {
     const z = labF((r * 0.0193 + g * 0.1192 + b * 0.9505) / 1.08883);
     L[i] = 116 * y - 16; A[i] = 500 * (x - y); B[i] = 200 * (y - z);
   }
+  // Shadow-proof colour: a shadow darkens a surface but keeps its colour
+  // relative to its brightness, so compare a/b scaled by lightness and lean
+  // less on lightness itself when the background is colourful (wood, rugs).
+  const SA = new Float32Array(n), SB = new Float32Array(n);
+  for (let i = 0; i < n; i++) { const k2 = 55 / (L[i] + 12); SA[i] = A[i] * k2; SB[i] = B[i] * k2; }
   // Border ring
   const ring = Math.max(2, Math.round(Math.min(w, h) * 0.03));
   const border = [];
@@ -358,9 +363,11 @@ function computeMask(srcCanvas, sensitivity) {
   const med = (arr) => { const s = Float32Array.from(arr); s.sort(); return s[s.length >> 1]; };
   const step = Math.max(1, Math.floor(border.length / 3000));
   const bL = [], bA = [], bB = [];
-  for (let i = 0; i < border.length; i += step) { const p = border[i]; bL.push(L[p]); bA.push(A[p]); bB.push(B[p]); }
+  for (let i = 0; i < border.length; i += step) { const p = border[i]; bL.push(L[p]); bA.push(SA[p]); bB.push(SB[p]); }
   const mL = med(bL), mA = med(bA), mB = med(bB);
-  const dist0 = (p) => { const dl = (L[p] - mL) * 0.6, da = A[p] - mA, db = B[p] - mB; return Math.sqrt(dl * dl + da * da + db * db); };
+  const bgSat = Math.sqrt(mA * mA + mB * mB);
+  const wL = clamp(0.6 - (bgSat - 4) * 0.03, 0.12, 0.6);   // neutral bg: 0.6, wood: ~0.12
+  const dist0 = (p) => { const dl = (L[p] - mL) * wL, da = SA[p] - mA, db = SB[p] - mB; return Math.sqrt(dl * dl + da * da + db * db); };
   const dists = border.filter((_, i) => i % step === 0).map(dist0).sort((a, b) => a - b);
   const spread = dists[Math.floor(dists.length * 0.7)] || 0;
   const sens = 0.55 + (sensitivity / 100) * 1.3;          // 0.55 .. 1.85
@@ -376,7 +383,7 @@ function computeMask(srcCanvas, sensitivity) {
     const nb = [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, y > 0 ? p - w : -1, y < h - 1 ? p + w : -1];
     for (const q of nb) {
       if (q < 0 || bg[q]) continue;
-      const dl = (L[q] - L[p]) * 0.7, da = A[q] - A[p], db = B[q] - B[p];
+      const dl = (L[q] - L[p]) * (wL + 0.1), da = SA[q] - SA[p], db = SB[q] - SB[p];
       if (Math.sqrt(dl * dl + da * da + db * db) < stepT && dist0(q) < T2) { bg[q] = 1; queue[qt++] = q; }
     }
   }
@@ -412,7 +419,9 @@ function computeMask(srcCanvas, sensitivity) {
   }
   const frac = count / n;
   const bboxFrac = count ? ((x1 - x0 + 1) * (y1 - y0 + 1)) / n : 0;
-  const ok = frac > 0.03 && frac < 0.9 && bboxFrac < 0.97;
+  // A shredded result (many separate pieces) means the edges weren't found
+  const pieces = sizes.filter((s, i) => keep[i] && s >= ls * 0.02).length;
+  const ok = frac > 0.03 && frac < 0.9 && bboxFrac < 0.97 && (pieces <= 2 || (pieces <= 3 && ls >= count * 0.7));
   return { mask, w, h, ok, frac };
 }
 function morph(src, w, h, dilate) {
