@@ -241,6 +241,7 @@ const S = {
   menuOpen: false,
 };
 const hasV3 = () => !!(S.server && Array.isArray(S.server.features) && S.server.features.includes('display-upload'));
+const hasTouchup = () => !!(DEMO || (S.server && Array.isArray(S.server.features) && S.server.features.includes('touchup')));
 const hasPolish = () => !!(S.server && Array.isArray(S.server.features) && S.server.features.includes('polish') && S.server.hasRemoveBgKey);
 function saveBag() { lsSet(BAG_KEY, [...S.bag]); }
 const photoUrl = (key) => !key ? '' : key.startsWith('blob:') ? key : API + '/' + key.split('/').map(encodeURIComponent).join('/');
@@ -1010,8 +1011,10 @@ function openReview(o) {
     <div class="seg" id="rvSeg">
       ${maskPolished ? `<button data-m="polished">Polished</button>` : ''}
       <button data-m="clean">Clean</button>
+      <button data-m="touchup" class="hidden" id="segTouch">Touched up</button>
       <button data-m="original">Original</button>
     </div>
+    ${hasTouchup() ? `<div class="actions" style="margin:8px auto 0;max-width:440px"><button class="btn btn-ghost" id="rvTouch" style="width:100%">✦ Touch up wrinkles (AI)</button></div>` : ''}
     <div class="panel">
       <div id="rvCtl"></div>
       <div class="field" style="margin-top:14px"><label>Name</label><input class="input" id="rvName" value="${esc(st.name)}" placeholder="e.g. Navy linen shirt"></div>
@@ -1032,6 +1035,7 @@ function openReview(o) {
 
   function ctlHtml() {
     if (st.mode === 'original') return `<div class="hint">Saves your photo as it is, cropped to fit.</div>`;
+    if (st.mode === 'touchup') return `<div class="hint">AI-pressed version. Check that logos, prints and seams still look right. Your original photo is always kept.</div>`;
     const failed = st.mode === 'clean' && st.cutout && maskAuto && !maskAuto.ok;
     return `
       ${st.mode === 'clean' ? `<label class="switch">Cut out the background <input type="checkbox" id="cCut" ${st.cutout ? 'checked' : ''}></label>` : ''}
@@ -1047,13 +1051,37 @@ function openReview(o) {
     const sm = c.querySelector('#cSmooth'); if (sm) sm.oninput = () => { st.smooth = +sm.value; schedule(250); };
     const br = c.querySelector('#cBright'); if (br) br.oninput = () => { st.bright = +br.value; schedule(250); };
   }
-  function setSeg() { el.querySelectorAll('#rvSeg button').forEach(b => b.classList.toggle('on', b.dataset.m === st.mode)); }
+  function setSeg() { el.querySelectorAll('#rvSeg button').forEach(b => b.classList.toggle('on', b.dataset.m === st.mode)); syncTouchBtn(); }
   el.querySelector('#rvSeg').onclick = (e) => {
     const b = e.target.closest('button'); if (!b) return;
     st.mode = b.dataset.m; setSeg(); bindCtl(); schedule();
   };
 
-  let timer = null, version = 0, lastUrl = null;
+  let timer = null, version = 0, lastUrl = null, touchC = null;
+  const touchBtn = el.querySelector('#rvTouch');
+  function syncTouchBtn() { if (touchBtn) touchBtn.classList.toggle('hidden', st.mode === 'original' || st.mode === 'touchup'); }
+  if (touchBtn) touchBtn.onclick = async () => {
+    if (!st.blob || touchBtn.disabled) return;
+    touchBtn.disabled = true; touchBtn.textContent = 'Touching up… (about 10 seconds)';
+    busy.textContent = 'Pressing out wrinkles…'; busy.classList.remove('hidden');
+    try {
+      let outBlob;
+      if (DEMO) { await sleep(900); outBlob = st.blob; }
+      else {
+        const res = await api('/api/touchup', { method: 'POST', body: st.blob, headers: { 'Content-Type': 'image/jpeg' }, raw: true });
+        outBlob = await res.blob();
+      }
+      touchC = coverOriginal(await blobToImage(outBlob));
+      el.querySelector('#segTouch').classList.remove('hidden');
+      st.mode = 'touchup'; setSeg(); bindCtl(); schedule();
+    } catch (err) {
+      busy.classList.add('hidden');
+      toast(err.message || 'Touch-up didn’t work', 4000);
+    }
+    busy.textContent = 'Cleaning up…';
+    touchBtn.disabled = false; touchBtn.textContent = '✦ Touch up again (AI)';
+    syncTouchBtn();
+  };
   function schedule(delay = 0) { clearTimeout(timer); busy.classList.remove('hidden'); timer = setTimeout(run, delay); }
   async function run() {
     const v = ++version;
@@ -1061,6 +1089,8 @@ function openReview(o) {
     let outC;
     if (st.mode === 'original') {
       outC = coverOriginal(original);
+    } else if (st.mode === 'touchup' && touchC) {
+      outC = touchC;
     } else {
       let m = null;
       if (st.mode === 'polished') m = maskPolished;
@@ -1115,7 +1145,7 @@ function openReview(o) {
         const origBlob = await canvasToBlob(original, 'image/jpeg', 0.9);
         Object.assign(item, (await uploadPhoto(item.id, origBlob, 'original')).item);
       }
-      const style = st.mode === 'original' ? 'original' : st.mode === 'polished' ? 'polished' : (st.cutout && maskAuto && maskAuto.ok ? 'studio' : 'studio-plain');
+      const style = st.mode === 'original' ? 'original' : st.mode === 'polished' ? 'polished' : st.mode === 'touchup' ? 'touchup' : (st.cutout && maskAuto && maskAuto.ok ? 'studio' : 'studio-plain');
       Object.assign(item, (await uploadPhoto(item.id, st.blob, 'display', style)).item);
       if (lastUrl) URL.revokeObjectURL(lastUrl);
       closeSheet('reviewSheet', true);
